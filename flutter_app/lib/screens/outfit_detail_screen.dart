@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/outfit_look.dart';
+import '../models/wardrobe.dart';
 import '../theme/app_theme.dart';
 import '../widgets/placeholder_image.dart';
 
 class OutfitDetailScreen extends StatefulWidget {
   const OutfitDetailScreen({super.key, required this.look});
 
-  final OutfitLook look;
+  final Look look;
 
   @override
   State<OutfitDetailScreen> createState() => _OutfitDetailScreenState();
@@ -18,7 +18,7 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
   late bool _isFavorite = true;
   var _selectedItem = 0;
 
-  OutfitLook get look => widget.look;
+  Look get look => widget.look;
 
   void _swapItem() {
     setState(() {
@@ -209,7 +209,7 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
 class _HeroLook extends StatelessWidget {
   const _HeroLook({required this.look});
 
-  final OutfitLook look;
+  final Look look;
 
   @override
   Widget build(BuildContext context) => ClipRRect(
@@ -259,7 +259,7 @@ class _LookItems extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<OutfitLookItem> items;
+  final List<LookItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
 

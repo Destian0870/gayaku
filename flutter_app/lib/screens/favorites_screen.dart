@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/outfit_look.dart';
+import '../models/wardrobe.dart';
+import '../navigation.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 import '../widgets/placeholder_image.dart';
@@ -17,36 +18,38 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   static const filters = ['All', 'Casual', 'Office'];
   var selectedFilter = 'All';
-  var selectedSort = OutfitSortOption.newest;
-  var favoriteLooks = favoriteOutfitLooks;
+  var selectedSort = LookSortOption.newest;
+  var savedLooks = favoriteLooks;
 
-  List<OutfitLook> get visibleLooks {
+  List<Look> get visibleLooks {
     final filtered = selectedFilter == 'All'
-        ? [...favoriteLooks]
-        : favoriteLooks
+        ? [...savedLooks]
+        : savedLooks
             .where((look) => look.styleTag == selectedFilter)
             .toList();
     filtered.sort((a, b) => switch (selectedSort) {
-          OutfitSortOption.newest => b.savedAt.compareTo(a.savedAt),
-          OutfitSortOption.oldest => a.savedAt.compareTo(b.savedAt),
-          OutfitSortOption.titleAscending =>
+          LookSortOption.newest => (b.savedAt ?? DateTime(0))
+              .compareTo(a.savedAt ?? DateTime(0)),
+          LookSortOption.oldest => (a.savedAt ?? DateTime(0))
+              .compareTo(b.savedAt ?? DateTime(0)),
+          LookSortOption.titleAscending =>
             a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-          OutfitSortOption.titleDescending =>
+          LookSortOption.titleDescending =>
             b.title.toLowerCase().compareTo(a.title.toLowerCase()),
         });
     return filtered;
   }
 
   String get selectedSortLabel => switch (selectedSort) {
-        OutfitSortOption.newest => 'Newest',
-        OutfitSortOption.oldest => 'Oldest',
-        OutfitSortOption.titleAscending => 'A-Z',
-        OutfitSortOption.titleDescending => 'Z-A',
+        LookSortOption.newest => 'Newest',
+        LookSortOption.oldest => 'Oldest',
+        LookSortOption.titleAscending => 'A-Z',
+        LookSortOption.titleDescending => 'Z-A',
       };
 
-  void removeFavorite(OutfitLook look) {
+  void removeFavorite(Look look) {
     setState(() {
-      favoriteLooks = favoriteLooks
+      savedLooks = savedLooks
           .where((favorite) => favorite.id != look.id)
           .toList(growable: false);
     });
@@ -58,7 +61,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Future<void> openLook(OutfitLook look) async {
+  Future<void> openLook(Look look) async {
     await Navigator.of(context).push<bool>(
       MaterialPageRoute<bool>(
         builder: (_) => OutfitDetailScreen(look: look),
@@ -67,7 +70,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void showSortOptions() {
-    showModalBottomSheet<OutfitSortOption>(
+    showModalBottomSheet<LookSortOption>(
       context: context,
       backgroundColor: AppColors.warmBackground,
       showDragHandle: true,
@@ -90,32 +93,32 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             _SortOptionTile(
               label: 'Newest first',
               icon: Icons.schedule,
-              selected: selectedSort == OutfitSortOption.newest,
+              selected: selectedSort == LookSortOption.newest,
               onTap: () => Navigator.of(sheetContext)
-                  .pop(OutfitSortOption.newest),
+                  .pop(LookSortOption.newest),
             ),
             _SortOptionTile(
               label: 'Oldest first',
               icon: Icons.history,
-              selected: selectedSort == OutfitSortOption.oldest,
+              selected: selectedSort == LookSortOption.oldest,
               onTap: () => Navigator.of(sheetContext)
-                  .pop(OutfitSortOption.oldest),
+                  .pop(LookSortOption.oldest),
             ),
             const SizedBox(height: 8),
             const _SortSectionLabel(label: 'Title'),
             _SortOptionTile(
               label: 'A-Z',
               icon: Icons.sort_by_alpha,
-              selected: selectedSort == OutfitSortOption.titleAscending,
+              selected: selectedSort == LookSortOption.titleAscending,
               onTap: () => Navigator.of(sheetContext)
-                  .pop(OutfitSortOption.titleAscending),
+                  .pop(LookSortOption.titleAscending),
             ),
             _SortOptionTile(
               label: 'Z-A',
               icon: Icons.sort_by_alpha,
-              selected: selectedSort == OutfitSortOption.titleDescending,
+              selected: selectedSort == LookSortOption.titleDescending,
               onTap: () => Navigator.of(sheetContext)
-                  .pop(OutfitSortOption.titleDescending),
+                  .pop(LookSortOption.titleDescending),
             ),
           ],
         ),
@@ -123,28 +126,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     ).then((sort) {
       if (sort != null && mounted) setState(() => selectedSort = sort);
     });
-  }
-
-  void showModuleDialog(int index) {
-    final title = switch (index) {
-      1 => 'Wardrobe',
-      3 => 'Planner',
-      _ => 'Profile',
-    };
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.white,
-        title: Text(title),
-        content: Text('$title is available from the main navigation.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -220,7 +201,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           final look = looks[index];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
-                            child: _OutfitLookCard(
+                            child: _LookCard(
                               look: look,
                               onTap: () => openLook(look),
                               onFavoriteTap: () => removeFavorite(look),
@@ -236,13 +217,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: HomeBottomNav(
                 currentIndex: 0,
-                onTap: (index) {
-                  if (index == 0 || index == 2) {
-                    Navigator.of(context).pop();
-                  } else {
-                    showModuleDialog(index);
-                  }
-                },
+                onTap: (index) => openNavDestination(context, index),
               ),
             ),
           ],
@@ -375,14 +350,14 @@ class _SortOptionTile extends StatelessWidget {
       );
 }
 
-class _OutfitLookCard extends StatelessWidget {
-  const _OutfitLookCard({
+class _LookCard extends StatelessWidget {
+  const _LookCard({
     required this.look,
     required this.onTap,
     required this.onFavoriteTap,
   });
 
-  final OutfitLook look;
+  final Look look;
   final VoidCallback onTap;
   final VoidCallback onFavoriteTap;
 
