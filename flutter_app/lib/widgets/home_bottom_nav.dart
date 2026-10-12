@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_theme.dart';
 
@@ -43,12 +44,14 @@ class HomeBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           for (var i = 0; i < _items.length; i++)
-            _NavButton(
-              icon: _items[i].icon,
-              label: _items[i].label,
-              selected: i == currentIndex,
-              isScan: i == 2,
-              onTap: () => onTap(i),
+            Flexible(
+              child: _NavButton(
+                icon: _items[i].icon,
+                label: _items[i].label,
+                selected: i == currentIndex,
+                isScan: i == 2,
+                onTap: () => onTap(i),
+              ),
             ),
         ],
       ),
@@ -86,8 +89,26 @@ class _NavButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: const BorderRadius.all(Radius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Icon(icon, color: color),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: color),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

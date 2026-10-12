@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../navigation.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
-import 'add_item_stub.dart';
 
 class WeeklyPlanner extends StatefulWidget {
   const WeeklyPlanner({super.key});
@@ -226,7 +226,10 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(currentIndex: 3, onTap: _onNavigationTap),
+              child: HomeBottomNav(
+                currentIndex: 3,
+                onTap: (index) => openNavDestination(context, index),
+              ),
             ),
           ],
         ),
@@ -305,22 +308,6 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                 ),
         ),
       ],
-    );
-  }
-
-  void _onNavigationTap(int index) {
-    if (index == 2) {
-      Navigator.of(context)
-          .push(MaterialPageRoute<void>(builder: (_) => const AddItemStub()));
-      return;
-    }
-    if (index == 0 && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-      return;
-    }
-    final labels = ['Home', 'Wardrobe', 'Scan', 'Planner', 'Profile'];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${labels[index]} is not available yet')),
     );
   }
 }

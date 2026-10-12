@@ -3,12 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
+import '../navigation.dart';
 import '../state/outfit_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 import '../widgets/placeholder_image.dart';
 import '../widgets/wardrobe_item_card.dart';
-import 'add_item_stub.dart';
 import 'outfit_builder_screen.dart';
 
 /// Wardrobe hub with two tabs: the item catalog and the saved combinations.
@@ -27,21 +27,6 @@ class WardrobeScreen extends StatefulWidget {
 class _WardrobeScreenState extends State<WardrobeScreen> {
   String _category = wardrobeCategories.first;
   int _tab = 0;
-
-  void _onNavTap(int index) {
-    switch (index) {
-      case 0:
-        if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-      case 1:
-        break;
-      case 2:
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const AddItemStub()),
-        );
-      default:
-        showComingSoon(context, index == 3 ? 'Planner' : 'Profile');
-    }
-  }
 
   Future<void> _openBuilder({SavedOutfit? existing}) async {
     await Navigator.of(context).push(
@@ -118,7 +103,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(currentIndex: 1, onTap: _onNavTap),
+              child: HomeBottomNav(
+                currentIndex: 1,
+                onTap: (index) => openNavDestination(context, index),
+              ),
             ),
           ],
         ),
