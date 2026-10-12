@@ -22,25 +22,28 @@ class _OccasionSearchBarState extends State<OccasionSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.beige,
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: const BorderRadius.all(Radius.circular(32)),
       ),
       child: TextField(
         controller: _controller,
         textInputAction: TextInputAction.search,
         style: GoogleFonts.inter(
-          fontSize: 14,
-          color: AppColors.espresso,
+          fontSize: 16,
+          height: 23 / 16,
+          color: palette.ink,
         ),
         decoration: InputDecoration(
           hintText: 'Search by occasion, style, or item…',
           hintStyle: GoogleFonts.inter(
-            fontSize: 14,
-            color: AppColors.taupe,
+            fontSize: 16,
+            height: 23 / 16,
+            color: palette.inkMuted,
           ),
-          prefixIcon: const Icon(Icons.search, color: AppColors.taupe),
+          prefixIcon: Icon(Icons.search, size: 22, color: palette.inkMuted),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,

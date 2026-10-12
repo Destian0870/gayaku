@@ -70,10 +70,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void showSortOptions() {
+    final palette = AppColors.of(context);
     showModalBottomSheet<LookSortOption>(
       context: context,
-      backgroundColor: AppColors.warmBackground,
+      backgroundColor: palette.sheet,
       showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
       builder: (sheetContext) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         child: Column(
@@ -82,10 +86,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           children: [
             Text(
               'Sort Favorite Looks',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 22,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 24,
+                height: 30 / 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.espresso,
+                color: palette.ink,
               ),
             ),
             const SizedBox(height: 14),
@@ -130,9 +135,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final looks = visibleLooks;
     return Scaffold(
-      backgroundColor: AppColors.warmBackground,
+      backgroundColor: palette.sheet,
       body: SafeArea(
         child: Column(
           children: [
@@ -147,28 +153,30 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
                             tooltip: 'Back',
-                            icon: const Icon(Icons.arrow_back),
-                            color: AppColors.espresso,
+                            icon: const Icon(Icons.arrow_back, size: 22),
+                            color: palette.ink,
                             style: IconButton.styleFrom(
-                              backgroundColor: AppColors.white,
+                              backgroundColor: palette.sheet,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Favorite Looks',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 25,
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 20,
+                                height: 26 / 20,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.espresso,
+                                color: palette.ink,
                               ),
                             ),
                           ),
                           Text(
                             '${looks.length} looks',
                             style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.taupe,
+                              fontSize: 11,
+                              height: 15 / 11,
+                              color: palette.inkMuted,
                             ),
                           ),
                         ],
@@ -241,7 +249,9 @@ class _FilterBar extends StatelessWidget {
   final VoidCallback onSortTap;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
@@ -252,26 +262,30 @@ class _FilterBar extends StatelessWidget {
                   label: Text(filter),
                   selected: selectedFilter == filter,
                   onSelected: (_) => onFilterChanged(filter),
-                  selectedColor: AppColors.tan,
-                  backgroundColor: AppColors.white,
+                  selectedColor: palette.action,
+                  backgroundColor: palette.sheet,
                   labelStyle: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 13,
+                    height: 18 / 13,
                     fontWeight: FontWeight.w600,
                     color: selectedFilter == filter
-                        ? AppColors.white
-                        : AppColors.espresso,
+                        ? palette.onAction
+                        : palette.ink,
                   ),
                   side: BorderSide.none,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                 ),
               ),
             IconButton(
               onPressed: onSortTap,
               tooltip: 'Sort favorites',
-              icon: const Icon(Icons.tune, size: 19),
-              color: AppColors.espresso,
+              icon: const Icon(Icons.tune, size: 22),
+              color: palette.ink,
               style: IconButton.styleFrom(
-                backgroundColor: AppColors.white,
+                backgroundColor: palette.sheet,
               ),
             ),
             const SizedBox(width: 6),
@@ -279,13 +293,15 @@ class _FilterBar extends StatelessWidget {
               selectedSortLabel,
               style: GoogleFonts.inter(
                 fontSize: 11,
+                height: 15 / 11,
                 fontWeight: FontWeight.w600,
-                color: AppColors.taupe,
+                color: palette.inkMuted,
               ),
             ),
           ],
         ),
-      );
+    );
+  }
 }
 
 class _SortSectionLabel extends StatelessWidget {
@@ -293,18 +309,22 @@ class _SortSectionLabel extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Padding(
         padding: const EdgeInsets.only(left: 12, bottom: 4),
         child: Text(
           label.toUpperCase(),
           style: GoogleFonts.inter(
             fontSize: 11,
+            height: 15 / 11,
             letterSpacing: 1,
             fontWeight: FontWeight.w600,
-            color: AppColors.taupe,
+            color: palette.inkMuted,
           ),
         ),
-      );
+    );
+  }
 }
 
 class _SortOptionTile extends StatelessWidget {
@@ -321,33 +341,38 @@ class _SortOptionTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Container(
         margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.white : AppColors.beige,
-          borderRadius: BorderRadius.circular(18),
+          color: selected ? palette.sheet : palette.surface,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Material(
-          color: selected ? AppColors.white : AppColors.beige,
-          borderRadius: BorderRadius.circular(18),
+          color: selected ? palette.sheet : palette.surface,
+          borderRadius: BorderRadius.circular(16),
           child: ListTile(
             onTap: onTap,
-            leading: Icon(icon, color: AppColors.tan),
+            leading: Icon(icon, size: 22, color: palette.accentInk),
             title: Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: 16,
+                height: 23 / 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.espresso,
+                color: palette.ink,
               ),
             ),
             trailing: Icon(
               selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? AppColors.tan : AppColors.taupe,
+              size: 22,
+              color: selected ? palette.accentInk : palette.inkMuted,
             ),
           ),
         ),
-      );
+    );
+  }
 }
 
 class _LookCard extends StatelessWidget {
@@ -362,13 +387,15 @@ class _LookCard extends StatelessWidget {
   final VoidCallback onFavoriteTap;
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return GestureDetector(
         onTap: onTap,
         child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.all(Radius.circular(30)),
-            boxShadow: [AppDecorations.cardShadow],
+          decoration: BoxDecoration(
+            color: palette.sheet,
+            borderRadius: const BorderRadius.all(Radius.circular(32)),
+            boxShadow: const [AppDecorations.cardShadow],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -382,7 +409,7 @@ class _LookCard extends StatelessWidget {
                     PlaceholderImage(
                       imagePath: look.imagePath,
                       icon: Icons.checkroom,
-                      color: AppColors.imageSurface,
+                      color: palette.surfaceMuted,
                     ),
                     Positioned(
                       top: 14,
@@ -395,10 +422,10 @@ class _LookCard extends StatelessWidget {
                       child: IconButton(
                         onPressed: onFavoriteTap,
                         tooltip: 'Remove favorite',
-                        icon: const Icon(Icons.favorite, size: 19),
-                        color: AppColors.tan,
+                        icon: const Icon(Icons.favorite, size: 22),
+                        color: palette.accentInk,
                         style: IconButton.styleFrom(
-                          backgroundColor: AppColors.warmBackground,
+                          backgroundColor: palette.sheet,
                         ),
                       ),
                     ),
@@ -409,11 +436,12 @@ class _LookCard extends StatelessWidget {
                       child: Text(
                         look.subtitle,
                         style: GoogleFonts.inter(
-                          color: AppColors.white,
-                          fontSize: 12,
+                          color: palette.onAction,
+                          fontSize: 11,
+                          height: 15 / 11,
                           fontWeight: FontWeight.w600,
-                          shadows: const [
-                            Shadow(color: AppColors.espresso, blurRadius: 8),
+                          shadows: [
+                            Shadow(color: palette.ink, blurRadius: 8),
                           ],
                         ),
                       ),
@@ -430,10 +458,11 @@ class _LookCard extends StatelessWidget {
                         look.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.playfairDisplay(
+                        style: GoogleFonts.bricolageGrotesque(
                           fontSize: 20,
+                          height: 26 / 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.espresso,
+                          color: palette.ink,
                         ),
                       ),
                     ),
@@ -442,8 +471,9 @@ class _LookCard extends StatelessWidget {
                       '${look.colorHarmony}% match',
                       style: GoogleFonts.inter(
                         fontSize: 11,
+                        height: 15 / 11,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.tan,
+                        color: palette.action,
                       ),
                     ),
                   ],
@@ -452,7 +482,8 @@ class _LookCard extends StatelessWidget {
             ],
           ),
         ),
-      );
+    );
+  }
 }
 
 class _Tag extends StatelessWidget {
@@ -460,51 +491,63 @@ class _Tag extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: AppColors.warmBackground.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(18),
+          color: palette.sheet.withValues(alpha: 0.92),
+          borderRadius: const BorderRadius.all(Radius.circular(999)),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 11,
+            height: 15 / 11,
             fontWeight: FontWeight.w600,
-            color: AppColors.espresso,
+            color: palette.ink,
           ),
         ),
-      );
+    );
+  }
 }
 
 class _EmptyLooks extends StatelessWidget {
   const _EmptyLooks();
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.favorite_border, size: 48, color: AppColors.tan),
+              Icon(Icons.favorite_border, size: 28, color: palette.accentInk),
               const SizedBox(height: 14),
               Text(
                 'No favorite looks yet',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 21,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  height: 26 / 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 'Save a complete outfit recommendation to see it here.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 13, color: AppColors.taupe),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  height: 23 / 16,
+                  color: palette.inkMuted,
+                ),
               ),
             ],
           ),
         ),
-      );
+    );
+  }
 }

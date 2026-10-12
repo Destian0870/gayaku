@@ -27,17 +27,12 @@ class HomeBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.beige,
+        color: palette.surface,
         borderRadius: const BorderRadius.all(Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.espresso.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: const [AppDecorations.cardShadow],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Row(
@@ -76,18 +71,19 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     if (isScan) {
       return IconButton(
         tooltip: label,
         onPressed: onTap,
-        icon: Icon(icon, color: Colors.white),
-        style: IconButton.styleFrom(backgroundColor: AppColors.tan),
+        icon: Icon(icon, size: 22, color: palette.onAction),
+        style: IconButton.styleFrom(backgroundColor: palette.action),
       );
     }
-    final color = selected ? AppColors.espresso : AppColors.taupe;
+    final color = selected ? palette.ink : palette.inkMuted;
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.all(Radius.circular(20)),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Column(
@@ -101,7 +97,8 @@ class _NavButton extends StatelessWidget {
                 label,
                 maxLines: 1,
                 style: GoogleFonts.inter(
-                  fontSize: 10,
+                  fontSize: 11,
+                  height: 15 / 11,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: color,
                 ),

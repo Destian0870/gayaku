@@ -17,15 +17,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: Stack(
         children: [
           // 1. Header Bagian Atas
           Container(
             height: MediaQuery.of(context).size.height * 0.35,
             width: double.infinity,
-            color: AppColors.espresso,
+            color: palette.ink,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,22 +34,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, size: 22, color: palette.onAction),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   "Sign Up",
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.bricolageGrotesque(
                     fontSize: 32,
+                    height: 38 / 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: palette.onAction,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   "Sign up to discover amazing things near around you.",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(
+                    color: palette.onAction.withValues(alpha: 0.7),
+                    fontSize: 13,
+                    height: 18 / 13,
+                  ),
                 ),
               ],
             ),
@@ -63,15 +69,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: palette.sheet,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    boxShadow: const [AppDecorations.cardShadow],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,13 +79,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Full Name
                       TextField(
                         controller: _nameController,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          height: 23 / 16,
+                          color: palette.ink,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Full Name',
-                          prefixIcon: const Icon(Icons.person_outline, size: 20),
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 16,
+                            height: 23 / 16,
+                            color: palette.inkMuted,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            size: 22,
+                            color: palette.inkMuted,
+                          ),
                           filled: true,
-                          fillColor: AppColors.cream.withValues(alpha: 0.5),
+                          fillColor: palette.canvas.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -95,13 +109,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Email
                       TextField(
                         controller: _emailController,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          height: 23 / 16,
+                          color: palette.ink,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 16,
+                            height: 23 / 16,
+                            color: palette.inkMuted,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            size: 22,
+                            color: palette.inkMuted,
+                          ),
                           filled: true,
-                          fillColor: AppColors.cream.withValues(alpha: 0.5),
+                          fillColor: palette.canvas.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -112,13 +140,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          height: 23 / 16,
+                          color: palette.ink,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 16,
+                            height: 23 / 16,
+                            color: palette.inkMuted,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            size: 22,
+                            color: palette.inkMuted,
+                          ),
                           filled: true,
-                          fillColor: AppColors.cream.withValues(alpha: 0.5),
+                          fillColor: palette.canvas.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
                         ),
@@ -133,15 +175,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.espresso,
+                          backgroundColor: palette.ink,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           "Sign Up",
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: palette.onAction,
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -153,14 +200,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Already have an account? "),
+                    const Text(
+                      "Already have an account? ",
+                      style: TextStyle(fontSize: 16, height: 23 / 16),
+                    ),
                     GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
                       child: Text(
                         "Sign In",
                         style: TextStyle(
+                          fontSize: 16,
+                          height: 23 / 16,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.espresso,
+                          color: palette.ink,
                         ),
                       ),
                     ),

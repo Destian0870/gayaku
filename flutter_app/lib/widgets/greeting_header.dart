@@ -17,6 +17,7 @@ class GreetingHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Row(
       children: [
         Expanded(
@@ -26,17 +27,19 @@ class GreetingHeader extends StatelessWidget {
               Text(
                 greetingFor(DateTime.now()),
                 style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.taupe,
+                  fontSize: 13,
+                  height: 18 / 13,
+                  color: palette.inkMuted,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 'Isabella',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 28,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 32,
+                  height: 38 / 32,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
             ],
@@ -44,9 +47,9 @@ class GreetingHeader extends StatelessWidget {
         ),
         IconButton(
           onPressed: () => showComingSoon(context, 'Notifications'),
-          icon: const Icon(Icons.notifications_outlined),
-          color: AppColors.espresso,
-          style: IconButton.styleFrom(backgroundColor: AppColors.beige),
+          icon: const Icon(Icons.notifications_outlined, size: 22),
+          color: palette.ink,
+          style: IconButton.styleFrom(backgroundColor: palette.surface),
         ),
       ],
     );

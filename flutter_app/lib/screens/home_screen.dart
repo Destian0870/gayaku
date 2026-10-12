@@ -21,8 +21,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -36,10 +37,11 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       "Today's Look",
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 20,
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 24,
+                        height: 30 / 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.espresso,
+                        color: palette.ink,
                       ),
                     ),
                     const SizedBox(height: 12),

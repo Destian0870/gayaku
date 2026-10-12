@@ -66,6 +66,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   Future<void> _pick(String slot) async {
+    final palette = AppColors.of(context);
     final options = widget.catalog.where((i) => i.category == slot).toList();
     if (options.isEmpty) {
       showNote(context, 'Belum ada item $slot');
@@ -73,9 +74,9 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     }
     final chosen = await showModalBottomSheet<WardrobeItem>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => _PickerSheet(slot: slot, options: options),
     );
@@ -107,6 +108,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final swaps = improveOutfit(
       _picked,
       widget.catalog,
@@ -114,7 +116,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -137,10 +139,11 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Susun Kombinasi',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 20,
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 24,
+                        height: 30 / 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.espresso,
+                        color: palette.ink,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -172,22 +175,23 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _save,
-                  icon: const Icon(Icons.check, size: 20),
+                  icon: const Icon(Icons.check, size: 18),
                   label: Text(
                     widget.existing == null
                         ? 'Simpan Kombinasi'
                         : 'Simpan Perubahan',
                     style: GoogleFonts.inter(
-                      fontSize: 14,
+                      fontSize: 13,
+                      height: 18 / 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.espresso,
-                    foregroundColor: AppColors.cream,
+                    backgroundColor: palette.ink,
+                    foregroundColor: palette.canvas,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(18)),
+                      borderRadius: BorderRadius.all(Radius.circular(24)),
                     ),
                   ),
                 ),
@@ -207,15 +211,16 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Row(
       children: [
         IconButton(
           tooltip: 'Kembali',
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.espresso,
+          icon: const Icon(Icons.arrow_back, size: 22),
+          color: palette.ink,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: palette.sheet,
             minimumSize: const Size(44, 44),
           ),
         ),
@@ -223,10 +228,11 @@ class _TopBar extends StatelessWidget {
         Expanded(
           child: Text(
             editing ? 'Edit Kombinasi' : 'Kombinasi Baru',
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 22,
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 20,
+              height: 26 / 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.espresso,
+              color: palette.ink,
             ),
           ),
         ),
@@ -242,32 +248,35 @@ class _NameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: palette.sheet,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: AppColors.beige),
+        border: Border.all(color: palette.surface),
       ),
       child: Row(
         children: [
-          const Icon(Icons.edit_outlined, size: 18, color: AppColors.taupe),
+          Icon(Icons.edit_outlined, size: 18, color: palette.inkMuted),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
               style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.espresso,
+                fontSize: 16,
+                height: 23 / 16,
+                color: palette.ink,
               ),
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Nama kombinasi, mis. Kantor Senin',
                 hintStyle: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.taupe,
+                  fontSize: 16,
+                  height: 23 / 16,
+                  color: palette.inkMuted,
                 ),
               ),
             ),
@@ -294,6 +303,7 @@ class _ScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final percent = (score * 100).round();
     final meets = score >= threshold;
     final weak = weakest;
@@ -301,11 +311,11 @@ class _ScoreCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        color: palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.espresso.withValues(alpha: 0.04),
+            color: palette.ink.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -319,10 +329,11 @@ class _ScoreCard extends StatelessWidget {
             children: [
               Text(
                 '$percent%',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 36,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 32,
+                  height: 38 / 32,
                   fontWeight: FontWeight.bold,
-                  color: meets ? AppColors.espresso : AppColors.tan,
+                  color: meets ? palette.ink : palette.action,
                 ),
               ),
               const SizedBox(width: 10),
@@ -336,8 +347,9 @@ class _ScoreCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.taupe,
+                      fontSize: 11,
+                      height: 15 / 11,
+                      color: palette.inkMuted,
                     ),
                   ),
                 ),
@@ -346,13 +358,13 @@ class _ScoreCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
             child: LinearProgressIndicator(
               value: score,
               minHeight: 8,
-              backgroundColor: AppColors.beige,
+              backgroundColor: palette.surface,
               valueColor: AlwaysStoppedAnimation(
-                meets ? AppColors.espresso : AppColors.tan,
+                meets ? palette.ink : palette.action,
               ),
             ),
           ),
@@ -363,7 +375,8 @@ class _ScoreCard extends StatelessWidget {
               '(${(weak.score * 100).round()}%)',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: AppColors.taupe,
+                height: 15 / 11,
+                color: palette.inkMuted,
               ),
             ),
           ],
@@ -373,9 +386,10 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 'Batas minimum',
                 style: GoogleFonts.inter(
-                  fontSize: 12,
+                  fontSize: 13,
+                  height: 18 / 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
               Expanded(
@@ -384,8 +398,8 @@ class _ScoreCard extends StatelessWidget {
                   min: 0.50,
                   max: 0.95,
                   divisions: 9,
-                  activeColor: AppColors.tan,
-                  inactiveColor: AppColors.beige,
+                  activeColor: palette.action,
+                  inactiveColor: palette.surface,
                   label: '${(threshold * 100).round()}%',
                   onChanged: onThreshold,
                 ),
@@ -393,8 +407,9 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 '${(threshold * 100).round()}%',
                 style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.taupe,
+                  fontSize: 11,
+                  height: 15 / 11,
+                  color: palette.inkMuted,
                 ),
               ),
             ],
@@ -422,16 +437,17 @@ class _SlotRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final chosen = item;
     return GestureDetector(
       onTap: onPick,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.all(Radius.circular(18)),
+          color: palette.sheet,
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           border: Border.all(
-            color: chosen == null ? AppColors.beige : Colors.transparent,
+            color: chosen == null ? palette.surface : Colors.transparent,
           ),
         ),
         child: Row(
@@ -443,11 +459,11 @@ class _SlotRow extends StatelessWidget {
                 height: 52,
                 child: chosen == null
                     ? Container(
-                        color: AppColors.beige,
-                        child: const Icon(
+                        color: palette.surface,
+                        child: Icon(
                           Icons.add,
-                          size: 20,
-                          color: AppColors.tan,
+                          size: 22,
+                          color: palette.accentInk,
                         ),
                       )
                     : PlaceholderImage(
@@ -464,8 +480,9 @@ class _SlotRow extends StatelessWidget {
                   Text(
                     slot + (optional ? ' · opsional' : ''),
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.taupe,
+                      fontSize: 13,
+                      height: 18 / 13,
+                      color: palette.inkMuted,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -473,12 +490,13 @@ class _SlotRow extends StatelessWidget {
                     chosen?.name ?? 'Pilih item',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 15,
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 16,
+                      height: 23 / 16,
                       fontWeight: FontWeight.bold,
                       color: chosen == null
-                          ? AppColors.taupe
-                          : AppColors.espresso,
+                          ? palette.inkMuted
+                          : palette.ink,
                     ),
                   ),
                 ],
@@ -489,7 +507,7 @@ class _SlotRow extends StatelessWidget {
                 tooltip: 'Hapus dari kombinasi',
                 onPressed: onClear,
                 icon: const Icon(Icons.close, size: 18),
-                color: AppColors.taupe,
+                color: palette.inkMuted,
               ),
           ],
         ),
@@ -512,22 +530,28 @@ class _ImproveSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Rekomendasi Peningkatan',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 24,
+            height: 30 / 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.espresso,
+            color: palette.ink,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           'Skor masih di bawah batas ${(threshold * 100).round()}%. '
           'Ganti salah satu item:',
-          style: GoogleFonts.inter(fontSize: 12, color: AppColors.taupe),
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            height: 15 / 11,
+            color: palette.inkMuted,
+          ),
         ),
         const SizedBox(height: 12),
         for (final swap in swaps) ...[
@@ -536,9 +560,9 @@ class _ImproveSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(18)),
-                border: Border.all(color: AppColors.tan),
+                color: palette.sheet,
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
+                border: Border.all(color: palette.accentInk),
               ),
               child: Row(
                 children: [
@@ -563,8 +587,9 @@ class _ImproveSection extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.taupe,
+                            fontSize: 13,
+                            height: 18 / 13,
+                            color: palette.inkMuted,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -572,17 +597,19 @@ class _ImproveSection extends StatelessWidget {
                           swap.to.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 15,
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 16,
+                            height: 23 / 16,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.espresso,
+                            color: palette.ink,
                           ),
                         ),
                         Text(
                           '${swap.to.category} • ${swap.to.colorName}',
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: AppColors.taupe,
+                            height: 15 / 11,
+                            color: palette.inkMuted,
                           ),
                         ),
                       ],
@@ -594,17 +621,19 @@ class _ImproveSection extends StatelessWidget {
                     children: [
                       Text(
                         '${swap.gainPercent}%',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 16,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 11,
+                          height: 15 / 11,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.tan,
+                          color: palette.action,
                         ),
                       ),
                       Text(
                         'Terapkan',
                         style: GoogleFonts.inter(
-                          fontSize: 10,
-                          color: AppColors.taupe,
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: palette.inkMuted,
                         ),
                       ),
                     ],
@@ -629,6 +658,7 @@ class _PickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -638,10 +668,11 @@ class _PickerSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
             child: Text(
               'Pilih $slot',
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 20,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 24,
+                height: 30 / 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.espresso,
+                color: palette.ink,
               ),
             ),
           ),
@@ -654,7 +685,7 @@ class _PickerSheet extends StatelessWidget {
                 return ListTile(
                   onTap: () => Navigator.of(context).pop(item),
                   leading: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
                     child: SizedBox(
                       width: 44,
                       height: 44,
@@ -666,17 +697,19 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   title: Text(
                     item.name,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 15,
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 16,
+                      height: 23 / 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.espresso,
+                      color: palette.ink,
                     ),
                   ),
                   subtitle: Text(
                     '${item.colorName} • Formalitas ${item.formality}/5',
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.taupe,
+                      fontSize: 13,
+                      height: 18 / 13,
+                      color: palette.inkMuted,
                     ),
                   ),
                 );

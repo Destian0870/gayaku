@@ -11,22 +11,23 @@ class PlaceholderImage extends StatelessWidget {
     required this.imagePath,
     required this.icon,
     this.fit = BoxFit.cover,
-    this.color = AppColors.beige,
+    this.color,
   });
 
   final String imagePath;
   final IconData icon;
   final BoxFit fit;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
-      color: color,
+      color: color ?? palette.surface,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Center(child: Icon(icon, size: 42, color: AppColors.tan)),
+          Center(child: Icon(icon, size: 28, color: palette.accentInk)),
           Image.asset(
             imagePath,
             fit: fit,

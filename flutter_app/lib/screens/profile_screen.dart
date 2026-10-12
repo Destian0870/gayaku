@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../navigation.dart';
+import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -9,13 +10,10 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const backgroundColor = Color(0xFFFFFBEA); // Warna cream background
-    const primaryTextColor = Color(0xFF2C221E); // Warna espresso teks
-    const accentColor = Color(0xFFC9A27A); // Warna cokelat aksen
-    const iconBgColor = Color(0xFFFFF8EE); // Warna background lingkaran icon
+    final palette = AppColors.of(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -32,22 +30,23 @@ class ProfileScreen extends StatelessWidget {
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: primaryTextColor),
+                          icon: Icon(Icons.arrow_back, size: 22, color: palette.ink),
                           onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Settings',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 26,
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 20,
+                            height: 26 / 20,
                             fontWeight: FontWeight.bold,
-                            color: primaryTextColor,
+                            color: palette.ink,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
-      
+
                     // --- PROFILE HEADER ---
                     Row(
                       children: [
@@ -56,16 +55,17 @@ class ProfileScreen extends StatelessWidget {
                             Container(
                               width: 72,
                               height: 72,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFF3E7D3),
+                                color: palette.surface,
                               ),
                               child: Center(
                                 child: Text(
                                   'I',
-                                  style: GoogleFonts.playfairDisplay(
+                                  style: GoogleFonts.bricolageGrotesque(
                                     fontSize: 32,
-                                    color: accentColor,
+                                    height: 38 / 32,
+                                    color: palette.accentInk,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -77,14 +77,17 @@ class ProfileScreen extends StatelessWidget {
                               child: Container(
                                 padding: const EdgeInsets.all(5),
                                 decoration: BoxDecoration(
-                                  color: accentColor,
+                                  color: palette.accent,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: backgroundColor, width: 2),
+                                  border: Border.all(
+                                    color: palette.canvas,
+                                    width: 2,
+                                  ),
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.edit,
-                                  size: 10,
-                                  color: Colors.white,
+                                  size: 18,
+                                  color: palette.onAccent,
                                 ),
                               ),
                             ),
@@ -96,18 +99,20 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             Text(
                               'Isabella',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 22,
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 32,
+                                height: 38 / 32,
                                 fontWeight: FontWeight.bold,
-                                color: primaryTextColor,
+                                color: palette.ink,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Premium Member',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: primaryTextColor.withValues(alpha: 0.6),
+                                fontSize: 11,
+                                height: 15 / 11,
+                                color: palette.ink.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -115,65 +120,56 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 28),
-      
+
                     // --- SECTION 1: PERSONALIZATION ---
-                    _buildSectionTitle('PERSONALIZATION'),
+                    _sectionTitle(palette, 'PERSONALIZATION'),
                     const SizedBox(height: 12),
-                    _buildSettingsTile(
+                    _settingsTile(
+                      palette,
                       icon: Icons.checkroom_outlined,
                       title: 'Style Profile',
-                      iconBgColor: iconBgColor,
-                      accentColor: accentColor,
-                      primaryTextColor: primaryTextColor,
                     ),
                     const SizedBox(height: 12),
-                    _buildSettingsTile(
+                    _settingsTile(
+                      palette,
                       icon: Icons.tune,
                       title: 'Preferences',
-                      iconBgColor: iconBgColor,
-                      accentColor: accentColor,
-                      primaryTextColor: primaryTextColor,
                     ),
                     const SizedBox(height: 24),
-      
+
                     // --- SECTION 2: GENERAL ---
-                    _buildSectionTitle('GENERAL'),
+                    _sectionTitle(palette, 'GENERAL'),
                     const SizedBox(height: 12),
-                    _buildSettingsTile(
+                    _settingsTile(
+                      palette,
                       icon: Icons.person_outline,
                       title: 'Account',
-                      iconBgColor: iconBgColor,
-                      accentColor: accentColor,
-                      primaryTextColor: primaryTextColor,
                     ),
                     const SizedBox(height: 12),
-                    _buildSettingsTile(
+                    _settingsTile(
+                      palette,
                       icon: Icons.notifications_none_outlined,
                       title: 'Notifications',
-                      iconBgColor: iconBgColor,
-                      accentColor: accentColor,
-                      primaryTextColor: primaryTextColor,
                     ),
                     const SizedBox(height: 12),
-                    _buildSettingsTile(
+                    _settingsTile(
+                      palette,
                       icon: Icons.lock_outline,
                       title: 'Data & Privacy',
-                      iconBgColor: iconBgColor,
-                      accentColor: accentColor,
-                      primaryTextColor: primaryTextColor,
                     ),
                     const SizedBox(height: 36),
-      
+
                     // --- TOMBOL LOG OUT ---
                     Center(
                       child: GestureDetector(
                         onTap: () {},
-                        child: const Text(
+                        child: Text(
                           'Log Out',
                           style: TextStyle(
-                            color: Color(0xFFE57373),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            color: palette.action,
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -196,29 +192,28 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _sectionTitle(AppPalette palette, String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
+        height: 15 / 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
-        color: Color(0xFF9E8B7D),
+        color: palette.inkMuted,
       ),
     );
   }
 
-  Widget _buildSettingsTile({
+  Widget _settingsTile(
+    AppPalette palette, {
     required IconData icon,
     required String title,
-    required Color iconBgColor,
-    required Color accentColor,
-    required Color primaryTextColor,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: palette.sheet,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -226,27 +221,28 @@ class ProfileScreen extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: iconBgColor,
+            color: palette.accentTint,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: accentColor, size: 22),
+          child: Icon(icon, color: palette.accentInk, size: 22),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 16,
+            height: 23 / 16,
             fontWeight: FontWeight.w600,
-            color: primaryTextColor,
+            color: palette.ink,
           ),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right,
-          color: Color(0xFFC4C4C4),
-          size: 20,
+          color: palette.inkMuted,
+          size: 22,
         ),
         onTap: () {},
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );

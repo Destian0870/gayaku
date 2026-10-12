@@ -14,6 +14,7 @@ class TodaysLookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return GestureDetector(
       onTap: () => showComingSoon(context, 'Outfit details'),
       child: Card(
@@ -43,16 +44,19 @@ class TodaysLookCard extends StatelessWidget {
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        decoration: const BoxDecoration(
-                          color: AppColors.cream,
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                        decoration: BoxDecoration(
+                          color: palette.canvas,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(999),
+                          ),
                         ),
                         child: Text(
                           look.styleTag,
                           style: GoogleFonts.inter(
-                            fontSize: 12,
+                            fontSize: 11,
+                            height: 15 / 11,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.espresso,
+                            color: palette.ink,
                           ),
                         ),
                       ),
@@ -64,9 +68,9 @@ class TodaysLookCard extends StatelessWidget {
                         onPressed: () =>
                             showComingSoon(context, 'Outfit details'),
                         icon: const Icon(Icons.check, size: 18),
-                        color: Colors.white,
+                        color: palette.onAction,
                         style: IconButton.styleFrom(
-                          backgroundColor: AppColors.tan,
+                          backgroundColor: palette.action,
                         ),
                       ),
                     ),
@@ -81,10 +85,11 @@ class TodaysLookCard extends StatelessWidget {
                 children: [
                   Text(
                     look.title,
-                    style: GoogleFonts.playfairDisplay(
+                    style: GoogleFonts.bricolageGrotesque(
                       fontSize: 20,
+                      height: 26 / 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.espresso,
+                      color: palette.ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -92,7 +97,8 @@ class TodaysLookCard extends StatelessWidget {
                     look.subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      color: AppColors.taupe,
+                      height: 18 / 13,
+                      color: palette.inkMuted,
                     ),
                   ),
                 ],

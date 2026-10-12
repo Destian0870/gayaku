@@ -51,10 +51,14 @@ class _AddItemStubState extends State<AddItemStub> {
     List<String> values,
     String selected,
   ) {
+    final palette = AppColors.of(context);
     return showModalBottomSheet<String>(
       context: context,
-      backgroundColor: AppColors.warmBackground,
+      backgroundColor: palette.sheet,
       showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -63,10 +67,11 @@ class _AddItemStubState extends State<AddItemStub> {
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(title, style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
+                child: Text(title, style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 24,
+                  height: 30 / 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 )),
               ),
             ),
@@ -76,9 +81,18 @@ class _AddItemStubState extends State<AddItemStub> {
                   value == selected
                       ? Icons.radio_button_checked
                       : Icons.radio_button_off,
-                  color: value == selected ? AppColors.tan : AppColors.taupe,
+                  color: value == selected
+                      ? palette.accentInk
+                      : palette.inkMuted,
                 ),
-                title: Text(value),
+                title: Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    height: 23 / 16,
+                    color: palette.ink,
+                  ),
+                ),
                 onTap: () => Navigator.of(context).pop(value),
               ),
             const SizedBox(height: 10),
@@ -107,8 +121,9 @@ class _AddItemStubState extends State<AddItemStub> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.warmBackground,
+      backgroundColor: palette.sheet,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
@@ -120,10 +135,10 @@ class _AddItemStubState extends State<AddItemStub> {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     tooltip: 'Back',
-                    icon: const Icon(Icons.arrow_back),
-                    color: AppColors.espresso,
+                    icon: const Icon(Icons.arrow_back, size: 22),
+                    color: palette.ink,
                     style: IconButton.styleFrom(
-                      backgroundColor: AppColors.white,
+                      backgroundColor: palette.sheet,
                     ),
                   ),
                   const Expanded(
@@ -141,18 +156,19 @@ class _AddItemStubState extends State<AddItemStub> {
               Text(
                 'AI DETECTED DETAILS',
                 style: GoogleFonts.inter(
-                  fontSize: 13,
+                  fontSize: 11,
+                  height: 15 / 11,
                   letterSpacing: 1.1,
-                  color: AppColors.taupe,
+                  color: palette.inkMuted,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(30)),
-                  boxShadow: [AppDecorations.panelShadow],
+                decoration: BoxDecoration(
+                  color: palette.sheet,
+                  borderRadius: const BorderRadius.all(Radius.circular(24)),
+                  boxShadow: const [AppDecorations.panelShadow],
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Column(
@@ -176,14 +192,22 @@ class _AddItemStubState extends State<AddItemStub> {
               const SizedBox(height: 14),
               TextField(
                 controller: _nameController,
-                style: GoogleFonts.inter(color: AppColors.espresso),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  height: 23 / 16,
+                  color: palette.ink,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Item name',
-                  labelStyle: GoogleFonts.inter(color: AppColors.taupe),
+                  labelStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    height: 18 / 13,
+                    color: palette.inkMuted,
+                  ),
                   filled: true,
-                  fillColor: AppColors.white,
+                  fillColor: palette.sheet,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -193,14 +217,21 @@ class _AddItemStubState extends State<AddItemStub> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _saveItem,
-                  icon: const Icon(Icons.check),
-                  label: const Text('Save to Wardrobe'),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: const Text(
+                    'Save to Wardrobe',
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 18 / 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.tan,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 17),
+                    backgroundColor: palette.action,
+                    foregroundColor: palette.onAction,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(24),
                     ),
                   ),
                 ),
@@ -217,14 +248,18 @@ class _PageTitle extends StatelessWidget {
   const _PageTitle();
 
   @override
-  Widget build(BuildContext context) => Text(
-        'Add New Item',
-        style: GoogleFonts.playfairDisplay(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.espresso,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Text(
+      'Add New Item',
+      style: GoogleFonts.bricolageGrotesque(
+        fontSize: 20,
+        height: 26 / 20,
+        fontWeight: FontWeight.bold,
+        color: palette.ink,
+      ),
+    );
+  }
 }
 
 class _ScannerFrame extends StatelessWidget {
@@ -234,11 +269,13 @@ class _ScannerFrame extends StatelessWidget {
   final VoidCallback onCapture;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Container(
         height: 306,
         decoration: BoxDecoration(
-          color: AppColors.imageSurface,
-          borderRadius: BorderRadius.circular(34),
+          color: palette.surfaceMuted,
+          borderRadius: BorderRadius.circular(32),
         ),
         padding: const EdgeInsets.all(20),
         child: Stack(
@@ -246,12 +283,16 @@ class _ScannerFrame extends StatelessWidget {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: AppColors.scannerSurface,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.white, width: 4),
+                color: palette.surfaceMuted,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: palette.sheet, width: 4),
               ),
-              child: const Center(
-                child: Icon(Icons.checkroom, size: 150, color: AppColors.tan),
+              child: Center(
+                child: Icon(
+                  Icons.checkroom,
+                  size: 150,
+                  color: palette.accentInk,
+                ),
               ),
             ),
             Align(
@@ -260,14 +301,15 @@ class _ScannerFrame extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                 decoration: BoxDecoration(
-                  color: AppColors.espresso.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(22),
+                  color: palette.ink.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   isScanning ? 'Scanning item...' : 'Ready to scan',
                   style: GoogleFonts.inter(
-                    color: AppColors.white,
-                    fontSize: 12,
+                    color: palette.onAction,
+                    fontSize: 11,
+                    height: 15 / 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -279,27 +321,28 @@ class _ScannerFrame extends StatelessWidget {
                 onPressed: onCapture,
                 tooltip: 'Capture item',
                 icon: const Icon(Icons.camera_alt_outlined, size: 28),
-                color: AppColors.espresso,
+                color: palette.ink,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.white,
+                  backgroundColor: palette.sheet,
                   minimumSize: const Size(68, 68),
                 ),
               ),
             ),
-            const Positioned(
+            Positioned(
               left: 16,
               bottom: 18,
-              child: Icon(Icons.flash_off_outlined, color: AppColors.espresso),
+              child: Icon(Icons.flash_off_outlined, size: 22, color: palette.ink),
             ),
-            const Positioned(
+            Positioned(
               right: 16,
               bottom: 18,
               child: Icon(Icons.flip_camera_android_outlined,
-                  color: AppColors.espresso),
+                  size: 22, color: palette.ink),
             ),
           ],
         ),
-      );
+    );
+  }
 }
 
 class _DetailRow extends StatelessWidget {
@@ -316,14 +359,16 @@ class _DetailRow extends StatelessWidget {
   final VoidCallback onEdit;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Padding(
         padding: const EdgeInsets.symmetric(vertical: 13),
         child: Row(
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor: AppColors.accentSurface,
-              child: Icon(icon, color: AppColors.tan, size: 21),
+              backgroundColor: palette.accentTint,
+              child: Icon(icon, color: palette.accentInk, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -331,23 +376,33 @@ class _DetailRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label, style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.taupe,
+                    fontSize: 13,
+                    height: 18 / 13,
+                    color: palette.inkMuted,
                   )),
                   const SizedBox(height: 2),
                   Text(value, style: GoogleFonts.inter(
                     fontSize: 16,
+                    height: 23 / 16,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   )),
                 ],
               ),
             ),
             TextButton(
               onPressed: onEdit,
-              child: Text('Edit', style: GoogleFonts.inter(color: AppColors.tan)),
+              child: Text(
+                'Edit',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  height: 18 / 13,
+                  color: palette.action,
+                ),
+              ),
             ),
           ],
         ),
-      );
+    );
+  }
 }

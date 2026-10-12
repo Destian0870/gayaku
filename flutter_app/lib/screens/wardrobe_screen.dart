@@ -37,21 +37,27 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   Future<void> _confirmDelete(SavedOutfit outfit) async {
+    final palette = AppColors.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cream,
+        backgroundColor: palette.canvas,
         title: Text(
           'Hapus kombinasi?',
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 24,
+            height: 30 / 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.espresso,
+            color: palette.ink,
           ),
         ),
         content: Text(
           '"${outfit.name}" akan dihapus dari daftar.',
-          style: GoogleFonts.inter(fontSize: 13, color: AppColors.taupe),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            height: 23 / 16,
+            color: palette.inkMuted,
+          ),
         ),
         actions: [
           TextButton(
@@ -74,8 +80,9 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -115,6 +122,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   List<Widget> _catalogTab() {
+    final palette = AppColors.of(context);
     final items = _visible;
     return [
       const _SearchRow(),
@@ -125,12 +133,16 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       ),
       const SizedBox(height: 16),
       if (items.isEmpty)
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 40),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
           child: Center(
             child: Text(
               'Nothing in this category yet.',
-              style: TextStyle(color: AppColors.taupe),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                height: 23 / 16,
+                color: palette.inkMuted,
+              ),
             ),
           ),
         )
@@ -148,22 +160,27 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   List<Widget> _outfitTab() {
+    final palette = AppColors.of(context);
     return [
       SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
           onPressed: () => _openBuilder(),
-          icon: const Icon(Icons.add, size: 20),
+          icon: const Icon(Icons.add, size: 18),
           label: Text(
             'Buat Kombinasi',
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 18 / 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.espresso,
-            foregroundColor: AppColors.cream,
+            backgroundColor: palette.ink,
+            foregroundColor: palette.canvas,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(18)),
+              borderRadius: BorderRadius.all(Radius.circular(24)),
             ),
           ),
         ),
@@ -173,12 +190,16 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         valueListenable: savedOutfits,
         builder: (context, outfits, _) {
           if (outfits.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text(
                   'Belum ada kombinasi tersimpan.',
-                  style: TextStyle(color: AppColors.taupe),
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    height: 23 / 16,
+                    color: palette.inkMuted,
+                  ),
                 ),
               ),
             );
@@ -208,6 +229,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Row(
       children: [
         Expanded(
@@ -216,18 +238,20 @@ class _Header extends StatelessWidget {
             children: [
               Text(
                 'Wardrobe',
-                style: GoogleFonts.playfairDisplay(
+                style: GoogleFonts.bricolageGrotesque(
                   fontSize: 32,
+                  height: 38 / 32,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Total $itemCount items',
                 style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppColors.taupe,
+                  fontSize: 11,
+                  height: 15 / 11,
+                  color: palette.inkMuted,
                 ),
               ),
             ],
@@ -236,10 +260,10 @@ class _Header extends StatelessWidget {
         IconButton(
           tooltip: 'Add item',
           onPressed: () => showComingSoon(context, 'Add item'),
-          icon: const Icon(Icons.add),
-          color: AppColors.espresso,
+          icon: const Icon(Icons.add, size: 22),
+          color: palette.ink,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: palette.sheet,
             minimumSize: const Size(48, 48),
           ),
         ),
@@ -262,22 +286,23 @@ class _TabToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
       ),
       child: Row(
         children: [
-          _segment('Katalog', 0),
-          _segment('Kombinasi ($outfitCount)', 1),
+          _segment(palette, 'Katalog', 0),
+          _segment(palette, 'Kombinasi ($outfitCount)', 1),
         ],
       ),
     );
   }
 
-  Widget _segment(String label, int index) {
+  Widget _segment(AppPalette palette, String label, int index) {
     final active = tab == index;
     return Expanded(
       child: GestureDetector(
@@ -286,15 +311,16 @@ class _TabToggle extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            color: active ? AppColors.tan : Colors.transparent,
-            borderRadius: const BorderRadius.all(Radius.circular(20)),
+            color: active ? palette.action : Colors.transparent,
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
           ),
           child: Text(
             label,
             style: GoogleFonts.inter(
               fontSize: 13,
+              height: 18 / 13,
               fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-              color: active ? Colors.white : AppColors.taupe,
+              color: active ? palette.onAction : palette.inkMuted,
             ),
           ),
         ),
@@ -316,6 +342,7 @@ class _SavedOutfitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final items = outfit.items;
     final percent = (outfitScore(items) * 100).round();
     final threshold = (outfit.threshold * 100).round();
@@ -324,11 +351,11 @@ class _SavedOutfitCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        color: palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.espresso.withValues(alpha: 0.04),
+            color: palette.ink.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -344,10 +371,11 @@ class _SavedOutfitCard extends StatelessWidget {
                   outfit.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 17,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 20,
+                    height: 26 / 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
               ),
@@ -355,9 +383,9 @@ class _SavedOutfitCard extends StatelessWidget {
                 tooltip: 'Edit kombinasi',
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                color: AppColors.espresso,
+                color: palette.ink,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.beige,
+                  backgroundColor: palette.surface,
                   minimumSize: const Size(38, 38),
                 ),
               ),
@@ -366,9 +394,9 @@ class _SavedOutfitCard extends StatelessWidget {
                 tooltip: 'Hapus kombinasi',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline, size: 18),
-                color: AppColors.espresso,
+                color: palette.ink,
                 style: IconButton.styleFrom(
-                  backgroundColor: AppColors.beige,
+                  backgroundColor: palette.surface,
                   minimumSize: const Size(38, 38),
                 ),
               ),
@@ -402,15 +430,16 @@ class _SavedOutfitCard extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: meets ? AppColors.espresso : AppColors.beige,
+                  color: meets ? palette.ink : palette.surface,
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 child: Text(
                   '$percent%',
                   style: GoogleFonts.inter(
                     fontSize: 11,
+                    height: 15 / 11,
                     fontWeight: FontWeight.w600,
-                    color: meets ? AppColors.cream : AppColors.espresso,
+                    color: meets ? palette.canvas : palette.ink,
                   ),
                 ),
               ),
@@ -424,7 +453,8 @@ class _SavedOutfitCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: AppColors.taupe,
+                    height: 15 / 11,
+                    color: palette.inkMuted,
                   ),
                 ),
               ),
@@ -441,6 +471,7 @@ class _SearchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Row(
       children: [
         Expanded(
@@ -448,28 +479,30 @@ class _SearchRow extends StatelessWidget {
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(26)),
-              border: Border.all(color: AppColors.beige),
+              color: palette.sheet,
+              borderRadius: const BorderRadius.all(Radius.circular(32)),
+              border: Border.all(color: palette.surface),
             ),
             child: Row(
               children: [
-                const Icon(Icons.search, size: 20, color: AppColors.taupe),
+                Icon(Icons.search, size: 22, color: palette.inkMuted),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
                     textInputAction: TextInputAction.search,
                     style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppColors.espresso,
+                      fontSize: 16,
+                      height: 23 / 16,
+                      color: palette.ink,
                     ),
                     decoration: InputDecoration(
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: 'Search your clothes...',
                       hintStyle: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppColors.taupe,
+                        fontSize: 16,
+                        height: 23 / 16,
+                        color: palette.inkMuted,
                       ),
                     ),
                     onSubmitted: (value) => showComingSoon(
@@ -487,9 +520,9 @@ class _SearchRow extends StatelessWidget {
           tooltip: 'Filter',
           onPressed: () => showComingSoon(context, 'Filter'),
           icon: const Icon(Icons.tune, size: 22),
-          color: AppColors.espresso,
+          color: palette.ink,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: palette.sheet,
             minimumSize: const Size(52, 52),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -509,6 +542,7 @@ class _CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -524,16 +558,17 @@ class _CategoryChips extends StatelessWidget {
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: active ? AppColors.tan : Colors.white,
-                borderRadius: const BorderRadius.all(Radius.circular(22)),
-                border: active ? null : Border.all(color: AppColors.beige),
+                color: active ? palette.action : palette.sheet,
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                border: active ? null : Border.all(color: palette.surface),
               ),
               child: Text(
                 label,
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 13,
+                  height: 18 / 13,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                  color: active ? Colors.white : AppColors.taupe,
+                  color: active ? palette.onAction : palette.inkMuted,
                 ),
               ),
             ),

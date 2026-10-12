@@ -14,6 +14,7 @@ class WardrobeItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -23,11 +24,11 @@ class WardrobeItemCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.all(Radius.circular(22)),
+          color: palette.sheet,
+          borderRadius: const BorderRadius.all(Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.espresso.withValues(alpha: 0.04),
+              color: palette.ink.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -53,10 +54,11 @@ class WardrobeItemCard extends StatelessWidget {
               item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 16,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 20,
+                height: 26 / 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.espresso,
+                color: palette.ink,
               ),
             ),
             const SizedBox(height: 2),
@@ -66,7 +68,11 @@ class WardrobeItemCard extends StatelessWidget {
                   : '${item.category} • ${item.brand}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.taupe),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                height: 15 / 11,
+                color: palette.inkMuted,
+              ),
             ),
           ],
         ),

@@ -13,6 +13,7 @@ class RecentlyAdded extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Column(
       children: [
         Row(
@@ -22,10 +23,11 @@ class RecentlyAdded extends StatelessWidget {
                 'Recently Added',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 20,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 24,
+                  height: 30 / 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
             ),
@@ -40,8 +42,9 @@ class RecentlyAdded extends StatelessWidget {
                 'View all',
                 style: GoogleFonts.inter(
                   fontSize: 13,
+                  height: 18 / 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.tan,
+                  color: palette.action,
                 ),
               ),
             ),
@@ -66,7 +69,7 @@ class RecentlyAdded extends StatelessWidget {
                       Expanded(
                         child: ClipRRect(
                           borderRadius: const BorderRadius.all(
-                            Radius.circular(32),
+                            Radius.circular(16),
                           ),
                           child: SizedBox(
                             width: double.infinity,
@@ -83,16 +86,18 @@ class RecentlyAdded extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 16,
+                          height: 23 / 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.espresso,
+                          color: palette.ink,
                         ),
                       ),
                       Text(
                         item.category,
                         style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.taupe,
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: palette.inkMuted,
                         ),
                       ),
                     ],

@@ -23,11 +23,12 @@ class WardrobeItemDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final matches = outfitFor(item, catalog);
     final alternatives = recommendMatches(item, catalog).length - matches.length;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -57,8 +58,9 @@ class WardrobeItemDetailScreen extends StatelessWidget {
                   child: Text(
                     '+$alternatives pilihan lain dengan skor lebih rendah',
                     style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.taupe,
+                      fontSize: 11,
+                      height: 15 / 11,
+                      color: palette.inkMuted,
                     ),
                   ),
                 ),
@@ -79,15 +81,16 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Row(
       children: [
         IconButton(
           tooltip: 'Kembali',
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.espresso,
+          icon: const Icon(Icons.arrow_back, size: 22),
+          color: palette.ink,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: palette.sheet,
             minimumSize: const Size(44, 44),
           ),
         ),
@@ -97,10 +100,11 @@ class _TopBar extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.playfairDisplay(
+            style: GoogleFonts.bricolageGrotesque(
               fontSize: 20,
+              height: 26 / 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.espresso,
+              color: palette.ink,
             ),
           ),
         ),
@@ -116,17 +120,18 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(26)),
+      decoration: BoxDecoration(
+        color: palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(32)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(18)),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             child: SizedBox(
               height: 220,
               width: double.infinity,
@@ -144,10 +149,11 @@ class _Hero extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 22,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 24,
+                    height: 30 / 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -156,8 +162,9 @@ class _Hero extends StatelessWidget {
                       ? item.category
                       : '${item.category} • ${item.brand}',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.taupe,
+                    fontSize: 11,
+                    height: 15 / 11,
+                    color: palette.inkMuted,
                   ),
                 ),
               ],
@@ -177,6 +184,7 @@ class _AttributeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -189,7 +197,7 @@ class _AttributeRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: item.color,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.beige),
+                border: Border.all(color: palette.surface),
               ),
             ),
             label: item.colorName,
@@ -205,8 +213,8 @@ class _AttributeRow extends StatelessWidget {
                     Icons.circle,
                     size: 7,
                     color: i <= item.formality
-                        ? AppColors.tan
-                        : AppColors.beige,
+                        ? palette.accentInk
+                        : palette.surface,
                   ),
                 ),
             ],
@@ -229,12 +237,13 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: filled ? AppColors.tan : Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        border: filled ? null : Border.all(color: AppColors.beige),
+        color: filled ? palette.action : palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(999)),
+        border: filled ? null : Border.all(color: palette.surface),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -243,9 +252,10 @@ class _Pill extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 12,
+              fontSize: 11,
+              height: 15 / 11,
               fontWeight: FontWeight.w500,
-              color: filled ? Colors.white : AppColors.espresso,
+              color: filled ? palette.onAction : palette.ink,
             ),
           ),
         ],
@@ -262,21 +272,27 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 20,
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 24,
+            height: 30 / 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.espresso,
+            color: palette.ink,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: GoogleFonts.inter(fontSize: 12, color: AppColors.taupe),
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            height: 15 / 11,
+            color: palette.inkMuted,
+          ),
         ),
       ],
     );
@@ -291,15 +307,16 @@ class _MatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final item = match.item;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(22)),
+        color: palette.sheet,
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.espresso.withValues(alpha: 0.04),
+            color: palette.ink.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -308,7 +325,7 @@ class _MatchCard extends StatelessWidget {
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             child: SizedBox(
               width: 72,
               height: 72,
@@ -327,10 +344,11 @@ class _MatchCard extends StatelessWidget {
                   item.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 15,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 20,
+                    height: 26 / 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -340,7 +358,8 @@ class _MatchCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: AppColors.taupe,
+                    height: 15 / 11,
+                    color: palette.inkMuted,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -355,16 +374,17 @@ class _MatchCard extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.beige,
+                          color: palette.surface,
                           borderRadius: const BorderRadius.all(
-                            Radius.circular(10),
+                            Radius.circular(12),
                           ),
                         ),
                         child: Text(
                           reason,
                           style: GoogleFonts.inter(
-                            fontSize: 10,
-                            color: AppColors.espresso,
+                            fontSize: 11,
+                            height: 15 / 11,
+                            color: palette.ink,
                           ),
                         ),
                       ),
@@ -376,10 +396,11 @@ class _MatchCard extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${match.percent}%',
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 16,
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 11,
+              height: 15 / 11,
               fontWeight: FontWeight.bold,
-              color: AppColors.tan,
+              color: palette.action,
             ),
           ),
         ],
@@ -415,21 +436,26 @@ class _CombineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
         onPressed: () => _save(context),
-        icon: const Icon(Icons.bookmark_add_outlined, size: 20),
+        icon: const Icon(Icons.bookmark_add_outlined, size: 18),
         label: Text(
           'Simpan Kombinasi',
-          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            height: 18 / 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.espresso,
-          foregroundColor: AppColors.cream,
+          backgroundColor: palette.ink,
+          foregroundColor: palette.canvas,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(18)),
+            borderRadius: BorderRadius.all(Radius.circular(24)),
           ),
         ),
       ),

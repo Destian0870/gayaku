@@ -44,8 +44,9 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Scaffold(
-      backgroundColor: AppColors.warmBackground,
+      backgroundColor: palette.sheet,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -57,20 +58,21 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       tooltip: 'Back',
-                      icon: const Icon(Icons.arrow_back),
-                      color: AppColors.espresso,
+                      icon: const Icon(Icons.arrow_back, size: 22),
+                      color: palette.ink,
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.white,
+                        backgroundColor: palette.sheet,
                       ),
                     ),
                     Expanded(
                       child: Center(
                         child: Text(
                           'Outfit Detail',
-                          style: GoogleFonts.playfairDisplay(
+                          style: GoogleFonts.bricolageGrotesque(
                             fontSize: 20,
+                            height: 26 / 20,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.espresso,
+                            color: palette.ink,
                           ),
                         ),
                       ),
@@ -82,10 +84,11 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
                           : 'Save favorite',
                       icon: Icon(
                         _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        size: 22,
                       ),
-                      color: AppColors.tan,
+                      color: palette.accentInk,
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.white,
+                        backgroundColor: palette.sheet,
                       ),
                     ),
                   ],
@@ -101,10 +104,11 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
               sliver: SliverToBoxAdapter(
                 child: Text(
                   look.title,
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 26,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 24,
+                    height: 30 / 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
               ),
@@ -117,17 +121,19 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
                     Text(
                       look.subtitle,
                       style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppColors.taupe,
+                        fontSize: 11,
+                        height: 15 / 11,
+                        color: palette.inkMuted,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       look.styleTag,
                       style: GoogleFonts.inter(
-                        fontSize: 12,
+                        fontSize: 11,
+                        height: 15 / 11,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.tan,
+                        color: palette.action,
                       ),
                     ),
                   ],
@@ -139,10 +145,11 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
               sliver: SliverToBoxAdapter(
                 child: Text(
                   'Items in this Look',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 19,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 24,
+                    height: 30 / 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
               ),
@@ -171,12 +178,22 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _swapItem,
-                        icon: const Icon(Icons.sync),
-                        label: const Text('Swap Item'),
+                        icon: const Icon(Icons.sync, size: 18),
+                        label: Text(
+                          'Swap Item',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.espresso,
-                          side: const BorderSide(color: AppColors.tan),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          foregroundColor: palette.ink,
+                          side: BorderSide(color: palette.accentInk),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(24)),
+                          ),
                         ),
                       ),
                     ),
@@ -184,14 +201,27 @@ class _OutfitDetailScreenState extends State<OutfitDetailScreen> {
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: _toggleFavorite,
-                        icon: Icon(_isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border),
-                        label: Text(_isFavorite ? 'Saved Look' : 'Save Look'),
+                        icon: Icon(
+                          _isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          size: 18,
+                        ),
+                        label: Text(
+                          _isFavorite ? 'Saved Look' : 'Save Look',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.tan,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: palette.action,
+                          foregroundColor: palette.onAction,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(24)),
+                          ),
                         ),
                       ),
                     ),
@@ -212,8 +242,10 @@ class _HeroLook extends StatelessWidget {
   final Look look;
 
   @override
-  Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return ClipRRect(
+        borderRadius: const BorderRadius.all(Radius.circular(32)),
         child: SizedBox(
           height: 320,
           child: Stack(
@@ -222,7 +254,7 @@ class _HeroLook extends StatelessWidget {
               PlaceholderImage(
                 imagePath: look.imagePath,
                 icon: Icons.checkroom,
-                color: AppColors.imageSurface,
+                color: palette.surfaceMuted,
               ),
               Positioned(
                 left: 14,
@@ -233,14 +265,17 @@ class _HeroLook extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.espresso.withValues(alpha: 0.78),
-                    borderRadius: BorderRadius.circular(18),
+                    color: palette.ink.withValues(alpha: 0.78),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(999),
+                    ),
                   ),
                   child: Text(
                     look.styleTag,
                     style: GoogleFonts.inter(
-                      color: AppColors.white,
+                      color: palette.onAction,
                       fontSize: 11,
+                      height: 15 / 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -249,7 +284,8 @@ class _HeroLook extends StatelessWidget {
             ],
           ),
         ),
-      );
+    );
+  }
 }
 
 class _LookItems extends StatelessWidget {
@@ -264,7 +300,9 @@ class _LookItems extends StatelessWidget {
   final ValueChanged<int> onSelected;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Row(
         children: [
           for (var index = 0; index < items.length; index++)
             Expanded(
@@ -278,19 +316,19 @@ class _LookItems extends StatelessWidget {
                         duration: const Duration(milliseconds: 180),
                         height: 62,
                         decoration: BoxDecoration(
-                          color: AppColors.imageSurface,
-                          borderRadius: BorderRadius.circular(18),
+                          color: palette.surfaceMuted,
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: selectedIndex == index
-                                ? AppColors.tan
-                                : AppColors.white,
+                                ? palette.accentInk
+                                : palette.sheet,
                             width: selectedIndex == index ? 2 : 1,
                           ),
                         ),
                         child: PlaceholderImage(
                           imagePath: items[index].imagePath,
                           icon: _iconFor(items[index].icon),
-                          color: AppColors.imageSurface,
+                          color: palette.surfaceMuted,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -299,10 +337,11 @@ class _LookItems extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
-                          fontSize: 10,
+                          fontSize: 11,
+                          height: 15 / 11,
                           color: selectedIndex == index
-                              ? AppColors.espresso
-                              : AppColors.taupe,
+                              ? palette.ink
+                              : palette.inkMuted,
                           fontWeight: selectedIndex == index
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -314,7 +353,8 @@ class _LookItems extends StatelessWidget {
               ),
             ),
         ],
-      );
+    );
+  }
 
   IconData _iconFor(String icon) => switch (icon) {
         'top' => Icons.checkroom,
@@ -330,10 +370,12 @@ class _ColorHarmony extends StatelessWidget {
   final int score;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: palette.sheet,
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [AppDecorations.panelShadow],
         ),
@@ -345,36 +387,45 @@ class _ColorHarmony extends StatelessWidget {
                 Text(
                   'Color Harmony',
                   style: GoogleFonts.inter(
+                    fontSize: 13,
+                    height: 18 / 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '$score% Match',
                   style: GoogleFonts.inter(
+                    fontSize: 11,
+                    height: 15 / 11,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.tan,
+                    color: palette.action,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               child: LinearProgressIndicator(
                 value: score / 100,
                 minHeight: 8,
-                backgroundColor: AppColors.beige,
-                valueColor: const AlwaysStoppedAnimation(AppColors.tan),
+                backgroundColor: palette.surface,
+                valueColor: AlwaysStoppedAnimation(palette.action),
               ),
             ),
             const SizedBox(height: 10),
             Text(
               'The colors create a balanced neutral base with a warm accent.',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.taupe),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                height: 15 / 11,
+                color: palette.inkMuted,
+              ),
             ),
           ],
         ),
-      );
+    );
+  }
 }

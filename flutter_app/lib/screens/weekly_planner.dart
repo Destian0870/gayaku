@@ -65,29 +65,50 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
   }
 
   Future<void> _confirmClearOutfit(int dayIndex) async {
+    final palette = AppColors.of(context);
     final shouldClear = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.cream,
+        backgroundColor: palette.canvas,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(24)),
+        ),
         title: Text(
           'Clear this day?',
-          style: GoogleFonts.playfairDisplay(
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 24,
+            height: 30 / 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.espresso,
+            color: palette.ink,
           ),
         ),
-        content: const Text(
+        content: Text(
           'This will remove the outfit planned for this day.',
+          style: GoogleFonts.inter(fontSize: 16, height: 23 / 16),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                height: 18 / 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.tan),
+            style: FilledButton.styleFrom(backgroundColor: palette.action),
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Clear'),
+            child: Text(
+              'Clear',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                height: 18 / 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -98,10 +119,14 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
   }
 
   Future<void> _showSettings() async {
+    final palette = AppColors.of(context);
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
       builder: (_) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
@@ -111,15 +136,16 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
             children: [
               Text(
                 'Planner settings',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 24,
+                  height: 30 / 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                activeThumbColor: AppColors.tan,
+                activeThumbColor: palette.action,
                 title: const Text('Show days without an outfit'),
                 value: _showEmptyDays,
                 onChanged: (value) {
@@ -135,8 +161,15 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                         _changeWeek(-1);
                         setSheetState(() {});
                       },
-                      icon: const Icon(Icons.chevron_left),
-                      label: const Text('Previous week'),
+                      icon: const Icon(Icons.chevron_left, size: 18),
+                      label: Text(
+                        'Previous week',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 18 / 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -146,8 +179,15 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                         _changeWeek(1);
                         setSheetState(() {});
                       },
-                      icon: const Icon(Icons.chevron_right),
-                      label: const Text('Next week'),
+                      icon: const Icon(Icons.chevron_right, size: 18),
+                      label: Text(
+                        'Next week',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 18 / 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -161,10 +201,11 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final dates = _weekDates;
     final month = _monthNames[dates[0].month - 1];
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
       body: SafeArea(
         child: Column(
           children: [
@@ -182,19 +223,21 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                             Text(
                               '$month ${dates[0].year}',
                               style: GoogleFonts.inter(
-                                fontSize: 12,
+                                fontSize: 11,
+                                height: 15 / 11,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 1.1,
-                                color: AppColors.taupe,
+                                color: palette.inkMuted,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Weekly Planner',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 23,
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 24,
+                                height: 30 / 24,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.espresso,
+                                color: palette.ink,
                               ),
                             ),
                           ],
@@ -204,11 +247,11 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                         tooltip: 'Planner settings',
                         onPressed: _showSettings,
                         style: IconButton.styleFrom(
-                          backgroundColor: AppColors.beige,
-                          foregroundColor: AppColors.espresso,
+                          backgroundColor: palette.surface,
+                          foregroundColor: palette.ink,
                           fixedSize: const Size(46, 46),
                         ),
-                        icon: const Icon(Icons.tune_rounded),
+                        icon: const Icon(Icons.tune_rounded, size: 22),
                       ),
                     ],
                   ),
@@ -238,6 +281,7 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
   }
 
   Widget _buildDayRow(int dayIndex, DateTime date) {
+    final palette = AppColors.of(context);
     final outfit = _outfits[dayIndex];
     final isSelected = dayIndex == _selectedDay;
     return Row(
@@ -252,8 +296,9 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                 _dayNames[dayIndex],
                 style: GoogleFonts.inter(
                   fontSize: 11,
+                  height: 15 / 11,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? AppColors.tan : AppColors.taupe,
+                  color: isSelected ? palette.action : palette.inkMuted,
                 ),
               ),
               const SizedBox(height: 3),
@@ -262,17 +307,18 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                 height: 30,
                 alignment: Alignment.center,
                 decoration: isSelected
-                    ? const BoxDecoration(
-                        color: AppColors.beige,
+                    ? BoxDecoration(
+                        color: palette.surface,
                         shape: BoxShape.circle,
                       )
                     : null,
                 child: Text(
                   '${date.day}',
-                  style: GoogleFonts.playfairDisplay(
+                  style: GoogleFonts.bricolageGrotesque(
                     fontSize: 16,
+                    height: 23 / 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
               ),
@@ -281,8 +327,8 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                   width: 1,
                   height: outfit != null && isSelected ? 300 : 48,
                   color: isSelected
-                      ? AppColors.tan.withValues(alpha: 0.55)
-                      : AppColors.beige,
+                      ? palette.accent.withValues(alpha: 0.55)
+                      : palette.surface,
                 ),
             ],
           ),
@@ -337,14 +383,20 @@ class _PlanOutfitDialogState extends State<_PlanOutfitDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final current = widget.current;
     return AlertDialog(
-      backgroundColor: AppColors.cream,
+      backgroundColor: palette.canvas,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
       title: Text(
         current == null ? 'Plan outfit' : 'Edit outfit',
-        style: GoogleFonts.playfairDisplay(
+        style: GoogleFonts.bricolageGrotesque(
+          fontSize: 24,
+          height: 30 / 24,
           fontWeight: FontWeight.bold,
-          color: AppColors.espresso,
+          color: palette.ink,
         ),
       ),
       content: SingleChildScrollView(
@@ -370,10 +422,17 @@ class _PlanOutfitDialogState extends State<_PlanOutfitDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 18 / 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.tan),
+          style: FilledButton.styleFrom(backgroundColor: palette.action),
           onPressed: () {
             final title = _titleController.text.trim();
             if (title.isEmpty) return;
@@ -387,7 +446,14 @@ class _PlanOutfitDialogState extends State<_PlanOutfitDialog> {
               ),
             );
           },
-          child: const Text('Save'),
+          child: Text(
+            'Save',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 18 / 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ],
     );
@@ -401,11 +467,12 @@ class _WeekSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
-        color: AppColors.beige,
-        borderRadius: BorderRadius.circular(30),
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,8 +483,9 @@ class _WeekSummary extends StatelessWidget {
                 'Week Planned',
                 style: GoogleFonts.inter(
                   fontSize: 13,
+                  height: 18 / 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.espresso,
+                  color: palette.ink,
                 ),
               ),
               const Spacer(),
@@ -427,15 +495,16 @@ class _WeekSummary extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
-                  borderRadius: BorderRadius.circular(10),
+                  color: palette.canvas,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '$plannedCount/7 Days',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 11,
+                    height: 15 / 11,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.espresso,
+                    color: palette.ink,
                   ),
                 ),
               ),
@@ -443,12 +512,12 @@ class _WeekSummary extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
             child: LinearProgressIndicator(
               value: plannedCount / 7,
               minHeight: 8,
-              backgroundColor: AppColors.cream,
-              valueColor: const AlwaysStoppedAnimation(AppColors.tan),
+              backgroundColor: palette.canvas,
+              valueColor: AlwaysStoppedAnimation(palette.action),
             ),
           ),
           const SizedBox(height: 10),
@@ -457,9 +526,9 @@ class _WeekSummary extends StatelessWidget {
                 ? 'Your outfits are ready for the whole week.'
                 : "You're on track! Plan ${7 - plannedCount} more outfits to complete your week.",
             style: GoogleFonts.inter(
-              fontSize: 12,
-              height: 1.4,
-              color: AppColors.taupe,
+              fontSize: 11,
+              height: 15 / 11,
+              color: palette.inkMuted,
             ),
           ),
         ],
@@ -481,12 +550,13 @@ class _CompactOutfit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Material(
-      color: AppColors.beige,
-      borderRadius: BorderRadius.circular(25),
+      color: palette.surface,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(11),
           child: Row(
@@ -495,10 +565,10 @@ class _CompactOutfit extends StatelessWidget {
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
-                  color: AppColors.cream,
-                  borderRadius: BorderRadius.circular(12),
+                  color: palette.canvas,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(outfit.icon, size: 30, color: AppColors.tan),
+                child: Icon(outfit.icon, size: 28, color: palette.accentInk),
               ),
               const SizedBox(width: 11),
               Expanded(
@@ -510,9 +580,10 @@ class _CompactOutfit extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 16,
+                        height: 23 / 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.espresso,
+                        color: palette.ink,
                         decoration: outfit.complete
                             ? TextDecoration.lineThrough
                             : null,
@@ -524,8 +595,9 @@ class _CompactOutfit extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.taupe,
+                        fontSize: 13,
+                        height: 18 / 13,
+                        color: palette.inkMuted,
                       ),
                     ),
                   ],
@@ -540,7 +612,7 @@ class _CompactOutfit extends StatelessWidget {
                   outfit.complete
                       ? Icons.check_circle
                       : Icons.radio_button_unchecked,
-                  color: outfit.complete ? AppColors.tan : AppColors.taupe,
+                  color: outfit.complete ? palette.accentInk : palette.inkMuted,
                   size: 22,
                 ),
               ),
@@ -589,19 +661,20 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     final outfit = widget.outfit;
     return Column(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: const BorderRadius.all(Radius.circular(32)),
           child: SizedBox(
             height: 330,
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const DecoratedBox(
+                DecoratedBox(
                   decoration: BoxDecoration(
-                    color: AppColors.beige,
+                    color: palette.surface,
                   ),
                 ),
                 Positioned(
@@ -623,16 +696,17 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                           Icon(
                             category.icon,
                             size: 132,
-                            color: AppColors.espresso.withValues(alpha: 0.55),
+                            color: palette.ink.withValues(alpha: 0.55),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             '${category.label.toUpperCase()}  ${index + 1}/${_categories.length}',
                             style: GoogleFonts.inter(
                               fontSize: 11,
+                              height: 15 / 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1,
-                              color: AppColors.espresso,
+                              color: palette.ink,
                             ),
                           ),
                         ],
@@ -652,12 +726,12 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                           () => _showOutfitActions = !_showOutfitActions,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: AppColors.cream.withValues(
+                          backgroundColor: palette.canvas.withValues(
                             alpha: 0.9,
                           ),
-                          foregroundColor: AppColors.espresso,
+                          foregroundColor: palette.ink,
                         ),
-                        icon: const Icon(Icons.more_vert),
+                        icon: const Icon(Icons.more_vert, size: 22),
                       ),
                       if (_showOutfitActions) ...[
                         const SizedBox(height: 8),
@@ -668,12 +742,12 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                             widget.onEdit();
                           },
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.cream.withValues(
+                            backgroundColor: palette.canvas.withValues(
                               alpha: 0.9,
                             ),
-                            foregroundColor: AppColors.espresso,
+                            foregroundColor: palette.ink,
                           ),
-                          icon: const Icon(Icons.edit_outlined),
+                          icon: const Icon(Icons.edit_outlined, size: 22),
                         ),
                         const SizedBox(height: 8),
                         IconButton.filledTonal(
@@ -683,12 +757,15 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                             widget.onClear();
                           },
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.cream.withValues(
+                            backgroundColor: palette.canvas.withValues(
                               alpha: 0.9,
                             ),
-                            foregroundColor: AppColors.espresso,
+                            foregroundColor: palette.ink,
                           ),
-                          icon: const Icon(Icons.delete_outline_rounded),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 22,
+                          ),
                         ),
                       ],
                     ],
@@ -700,11 +777,11 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                   bottom: 0,
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(18, 34, 70, 18),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, AppColors.espresso],
+                        colors: [Colors.transparent, palette.ink],
                       ),
                     ),
                     child: Column(
@@ -714,8 +791,9 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                           "TODAY'S LOOK",
                           style: GoogleFonts.inter(
                             fontSize: 11,
+                            height: 15 / 11,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: palette.onAction,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -723,11 +801,11 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                           outfit.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 22,
-                            height: 1.1,
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 24,
+                            height: 30 / 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: palette.onAction,
                           ),
                         ),
                         if (outfit.description.isNotEmpty) ...[
@@ -737,8 +815,9 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: Colors.white,
+                              fontSize: 11,
+                              height: 15 / 11,
+                              color: palette.onAction,
                             ),
                           ),
                         ],
@@ -766,13 +845,13 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                   },
                   style: IconButton.styleFrom(
                     backgroundColor: _selectedCategory == index
-                        ? AppColors.tan
-                        : AppColors.beige,
+                        ? palette.action
+                        : palette.surface,
                     foregroundColor: _selectedCategory == index
-                        ? AppColors.cream
-                        : AppColors.taupe,
+                        ? palette.canvas
+                        : palette.inkMuted,
                   ),
-                  icon: Icon(_categories[index].icon),
+                  icon: Icon(_categories[index].icon, size: 22),
                 ),
               ),
             IconButton(
@@ -782,7 +861,8 @@ class _FeaturedOutfitState extends State<_FeaturedOutfit> {
                 outfit.complete
                     ? Icons.check_circle
                     : Icons.check_circle_outline,
-                color: AppColors.tan,
+                size: 22,
+                color: palette.accentInk,
               ),
             ),
           ],
@@ -807,12 +887,13 @@ class _EmptyDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
     return Material(
-      color: AppColors.beige,
-      borderRadius: BorderRadius.circular(25),
+      color: palette.surface,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           constraints: const BoxConstraints(minHeight: 74),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -821,19 +902,20 @@ class _EmptyDayCard extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
-                  color: AppColors.cream,
+                decoration: BoxDecoration(
+                  color: palette.canvas,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.add, color: AppColors.tan),
+                child: Icon(Icons.add, size: 22, color: palette.accentInk),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Plan outfit for ${dayName.toLowerCase().substring(0, 1)}${dayName.toLowerCase().substring(1)}',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.taupe,
+                    fontSize: 16,
+                    height: 23 / 16,
+                    color: palette.inkMuted,
                   ),
                 ),
               ),
