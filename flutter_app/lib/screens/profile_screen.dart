@@ -98,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                         'Premium Member',
                         style: TextStyle(
                           fontSize: 14,
-                          color: primaryTextColor.withOpacity(0.6),
+                          color: primaryTextColor.withValues(alpha: 0.6),
                         ),
                       ),
                     ],

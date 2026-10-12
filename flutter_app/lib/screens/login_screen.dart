@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hintText: 'Email',
                           prefixIcon: const Icon(Icons.email_outlined, size: 20),
                           filled: true,
-                          fillColor: AppColors.cream.withOpacity(0.5),
+                          fillColor: AppColors.cream.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           hintText: 'Password',
                           prefixIcon: const Icon(Icons.lock_outline, size: 20),
                           filled: true,
-                          fillColor: AppColors.cream.withOpacity(0.5),
+                          fillColor: AppColors.cream.withValues(alpha: 0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: color, size: 28),
