@@ -9,6 +9,7 @@ import '../widgets/quick_actions.dart';
 import '../widgets/recently_added.dart';
 import '../widgets/todays_look_card.dart';
 import 'add_item_stub.dart';
+import 'favorites_screen.dart';
 import 'wardrobe_screen.dart';
 import 'weekly_planner.dart';
 
@@ -72,7 +73,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 16),
                     const OccasionSearchBar(),
                     const SizedBox(height: 20),
-                    const QuickActions(),
+                    QuickActions(
+                      onFavoriteTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const FavoritesScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 20),
                     const RecentlyAdded(),
                   ],
