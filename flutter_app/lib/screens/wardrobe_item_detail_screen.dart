@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
@@ -24,6 +23,7 @@ class WardrobeItemDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final matches = outfitFor(item, catalog);
     final alternatives = recommendMatches(item, catalog).length - matches.length;
 
@@ -47,21 +47,17 @@ class WardrobeItemDetailScreen extends StatelessWidget {
                     ? 'Belum ada item lain di lemarimu.'
                     : 'Diurutkan dari harmoni warna, formalitas, dan acara.',
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               for (final match in matches) ...[
                 _MatchCard(match: match),
                 const SizedBox(height: 12),
               ],
               if (alternatives > 0)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '+$alternatives pilihan lain dengan skor lebih rendah',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      height: 15 / 11,
-                      color: palette.inkMuted,
-                    ),
+                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
                   ),
                 ),
               const SizedBox(height: 20),
@@ -82,6 +78,7 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       children: [
         IconButton(
@@ -100,12 +97,7 @@ class _TopBar extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 20,
-              height: 26 / 20,
-              fontWeight: FontWeight.bold,
-              color: palette.ink,
-            ),
+            style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
           ),
         ),
       ],
@@ -121,17 +113,19 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: palette.sheet,
-        borderRadius: const BorderRadius.all(Radius.circular(32)),
+        color: palette.surface,
+        borderRadius: AppRadius.hero,
+        boxShadow: const [AppDecorations.cardShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(16)),
+            borderRadius: AppRadius.panel,
             child: SizedBox(
               height: 220,
               width: double.infinity,
@@ -143,29 +137,20 @@ class _Hero extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   item.name,
-                  style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 24,
-                    height: 30 / 24,
-                    fontWeight: FontWeight.bold,
-                    color: palette.ink,
-                  ),
+                  style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   item.brand.isEmpty
                       ? item.category
                       : '${item.category} • ${item.brand}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    height: 15 / 11,
-                    color: palette.inkMuted,
-                  ),
+                  style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
                 ),
               ],
             ),
@@ -186,8 +171,8 @@ class _AttributeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       children: [
         if (item.colorName.isNotEmpty)
           _Pill(
@@ -197,7 +182,7 @@ class _AttributeRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: item.color,
                 shape: BoxShape.circle,
-                border: Border.all(color: palette.surface),
+                border: Border.all(color: palette.inkMuted),
               ),
             ),
             label: item.colorName,
@@ -208,56 +193,46 @@ class _AttributeRow extends StatelessWidget {
             children: [
               for (var i = 1; i <= 5; i++)
                 Padding(
-                  padding: const EdgeInsets.only(right: 2),
+                  padding: const EdgeInsets.only(right: 4),
                   child: Icon(
                     Icons.circle,
-                    size: 7,
+                    size: 8,
                     color: i <= item.formality
-                        ? palette.accentInk
-                        : palette.surface,
+                        ? palette.ink
+                        : palette.surfaceMuted,
                   ),
                 ),
             ],
           ),
           label: 'Formalitas ${item.formality}/5',
         ),
-        for (final occasion in item.occasions)
-          _Pill(label: occasion, filled: true),
+        for (final occasion in item.occasions) _Pill(label: occasion),
       ],
     );
   }
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.label, this.leading, this.filled = false});
+  const _Pill({required this.label, this.leading});
 
   final String label;
   final Widget? leading;
-  final bool filled;
 
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: filled ? palette.action : palette.sheet,
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
-        border: filled ? null : Border.all(color: palette.surface),
+        color: palette.surfaceMuted,
+        borderRadius: AppRadius.pill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (leading != null) ...[leading!, const SizedBox(width: 8)],
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              height: 15 / 11,
-              fontWeight: FontWeight.w500,
-              color: filled ? palette.onAction : palette.ink,
-            ),
-          ),
+          Text(label, style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted)),
         ],
       ),
     );
@@ -273,27 +248,13 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: GoogleFonts.bricolageGrotesque(
-            fontSize: 24,
-            height: 30 / 24,
-            fontWeight: FontWeight.bold,
-            color: palette.ink,
-          ),
-        ),
+        Text(title, style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink)),
         const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            height: 15 / 11,
-            color: palette.inkMuted,
-          ),
-        ),
+        Text(subtitle, style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted)),
       ],
     );
   }
@@ -308,24 +269,18 @@ class _MatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final item = match.item;
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: palette.sheet,
-        borderRadius: const BorderRadius.all(Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: palette.ink.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: palette.surface,
+        borderRadius: AppRadius.panel,
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(16)),
+            borderRadius: AppRadius.field,
             child: SizedBox(
               width: 72,
               height: 72,
@@ -344,48 +299,33 @@ class _MatchCard extends StatelessWidget {
                   item.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 20,
-                    height: 26 / 20,
-                    fontWeight: FontWeight.bold,
-                    color: palette.ink,
-                  ),
+                  style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   '${item.category} • ${item.colorName}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    height: 15 / 11,
-                    color: palette.inkMuted,
-                  ),
+                  style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Wrap(
-                  spacing: 6,
+                  spacing: 8,
                   runSpacing: 4,
                   children: [
                     for (final reason in match.reasons)
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 3,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: palette.surface,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(12),
-                          ),
+                          color: palette.accentTint,
+                          borderRadius: AppRadius.chip,
                         ),
                         child: Text(
                           reason,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            height: 15 / 11,
-                            color: palette.ink,
-                          ),
+                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.ink),
                         ),
                       ),
                   ],
@@ -394,13 +334,15 @@ class _MatchCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '${match.percent}%',
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 11,
-              height: 15 / 11,
-              fontWeight: FontWeight.bold,
-              color: palette.action,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: palette.accentTint,
+              borderRadius: AppRadius.chip,
+            ),
+            child: Text(
+              '${match.percent}%',
+              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
             ),
           ),
         ],
@@ -429,34 +371,24 @@ class _CombineButton extends StatelessWidget {
         threshold: 0.80,
       ),
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kombinasi tersimpan di tab Kombinasi')),
-    );
+    showNote(context, 'Kombinasi tersimpan di tab Kombinasi');
   }
 
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
         onPressed: () => _save(context),
         icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-        label: Text(
-          'Simpan Kombinasi',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            height: 18 / 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        label: Text('Simpan Kombinasi', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
         style: FilledButton.styleFrom(
-          backgroundColor: palette.ink,
-          foregroundColor: palette.canvas,
+          backgroundColor: palette.action,
+          foregroundColor: palette.onAction,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(24)),
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.panel),
         ),
       ),
     );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
@@ -66,7 +65,6 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   Future<void> _pick(String slot) async {
-    final palette = AppColors.of(context);
     final options = widget.catalog.where((i) => i.category == slot).toList();
     if (options.isEmpty) {
       showNote(context, 'Belum ada item $slot');
@@ -74,10 +72,8 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     }
     final chosen = await showModalBottomSheet<WardrobeItem>(
       context: context,
-      backgroundColor: palette.canvas,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: AppColors.of(context).sheet,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
       builder: (context) => _PickerSheet(slot: slot, options: options),
     );
     if (chosen != null) _set(slot, chosen);
@@ -109,6 +105,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final swaps = improveOutfit(
       _picked,
       widget.catalog,
@@ -139,12 +136,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Susun Kombinasi',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 24,
-                        height: 30 / 24,
-                        fontWeight: FontWeight.bold,
-                        color: palette.ink,
-                      ),
+                      style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
                     ),
                     const SizedBox(height: 12),
                     for (final slot in _slots) ...[
@@ -155,10 +147,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                         onPick: () => _pick(slot),
                         onClear: () => _remove(slot),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                     ],
                     if (swaps.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       _ImproveSection(
                         swaps: swaps,
                         threshold: _threshold,
@@ -180,18 +172,14 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     widget.existing == null
                         ? 'Simpan Kombinasi'
                         : 'Simpan Perubahan',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 18 / 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: palette.ink,
-                    foregroundColor: palette.canvas,
+                    backgroundColor: palette.action,
+                    foregroundColor: palette.onAction,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                      borderRadius: AppRadius.panel,
                     ),
                   ),
                 ),
@@ -212,6 +200,7 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       children: [
         IconButton(
@@ -228,12 +217,7 @@ class _TopBar extends StatelessWidget {
         Expanded(
           child: Text(
             editing ? 'Edit Kombinasi' : 'Kombinasi Baru',
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 20,
-              height: 26 / 20,
-              fontWeight: FontWeight.bold,
-              color: palette.ink,
-            ),
+            style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
           ),
         ),
       ],
@@ -249,35 +233,27 @@ class _NameField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: palette.sheet,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: palette.surface),
+        borderRadius: AppRadius.field,
       ),
       child: Row(
         children: [
           Icon(Icons.edit_outlined, size: 18, color: palette.inkMuted),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: controller,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                height: 23 / 16,
-                color: palette.ink,
-              ),
+              style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Nama kombinasi, mis. Kantor Senin',
-                hintStyle: GoogleFonts.inter(
-                  fontSize: 16,
-                  height: 23 / 16,
-                  color: palette.inkMuted,
-                ),
+                hintStyle: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
               ),
             ),
           ),
@@ -304,6 +280,7 @@ class _ScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final percent = (score * 100).round();
     final meets = score >= threshold;
     final weak = weakest;
@@ -311,15 +288,8 @@ class _ScoreCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: palette.sheet,
-        borderRadius: const BorderRadius.all(Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: palette.ink.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: palette.surface,
+        borderRadius: AppRadius.panel,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,68 +299,48 @@ class _ScoreCard extends StatelessWidget {
             children: [
               Text(
                 '$percent%',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 32,
-                  height: 38 / 32,
-                  fontWeight: FontWeight.bold,
-                  color: meets ? palette.ink : palette.action,
-                ),
+                style: textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     meets
                         ? 'Memenuhi batas'
                         : 'Di bawah batas ${(threshold * 100).round()}%',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      height: 15 / 11,
-                      color: palette.inkMuted,
-                    ),
+                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            borderRadius: AppRadius.chip,
             child: LinearProgressIndicator(
               value: score,
               minHeight: 8,
-              backgroundColor: palette.surface,
-              valueColor: AlwaysStoppedAnimation(
-                meets ? palette.ink : palette.action,
-              ),
+              backgroundColor: palette.accentTint,
+              valueColor: AlwaysStoppedAnimation(palette.action),
             ),
           ),
           if (weak != null && weak.score < 0.6) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               'Pasangan terlemah: ${weak.a.name} + ${weak.b.name} '
               '(${(weak.score * 100).round()}%)',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                height: 15 / 11,
-                color: palette.inkMuted,
-              ),
+              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
             ),
           ],
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
             children: [
               Text(
                 'Batas minimum',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  height: 18 / 13,
-                  fontWeight: FontWeight.w600,
-                  color: palette.ink,
-                ),
+                style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
               ),
               Expanded(
                 child: Slider(
@@ -399,18 +349,14 @@ class _ScoreCard extends StatelessWidget {
                   max: 0.95,
                   divisions: 9,
                   activeColor: palette.action,
-                  inactiveColor: palette.surface,
+                  inactiveColor: palette.accentTint,
                   label: '${(threshold * 100).round()}%',
                   onChanged: onThreshold,
                 ),
               ),
               Text(
                 '${(threshold * 100).round()}%',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  height: 15 / 11,
-                  color: palette.inkMuted,
-                ),
+                style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
               ),
             ],
           ),
@@ -438,33 +384,27 @@ class _SlotRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     final chosen = item;
     return GestureDetector(
       onTap: onPick,
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: palette.sheet,
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
-          border: Border.all(
-            color: chosen == null ? palette.surface : Colors.transparent,
-          ),
+          borderRadius: AppRadius.field,
         ),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              borderRadius: AppRadius.chip,
               child: SizedBox(
                 width: 52,
                 height: 52,
                 child: chosen == null
                     ? Container(
-                        color: palette.surface,
-                        child: Icon(
-                          Icons.add,
-                          size: 22,
-                          color: palette.accentInk,
-                        ),
+                        color: palette.surfaceMuted,
+                        child: Icon(Icons.add, size: 18, color: palette.inkMuted),
                       )
                     : PlaceholderImage(
                         imagePath: chosen.imagePath,
@@ -479,24 +419,15 @@ class _SlotRow extends StatelessWidget {
                 children: [
                   Text(
                     slot + (optional ? ' · opsional' : ''),
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 18 / 13,
-                      color: palette.inkMuted,
-                    ),
+                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     chosen?.name ?? 'Pilih item',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 16,
-                      height: 23 / 16,
-                      fontWeight: FontWeight.bold,
-                      color: chosen == null
-                          ? palette.inkMuted
-                          : palette.ink,
+                    style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, 
+                      color: chosen == null ? palette.inkMuted : palette.ink,
                     ),
                   ),
                 ],
@@ -531,43 +462,35 @@ class _ImproveSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Rekomendasi Peningkatan',
-          style: GoogleFonts.bricolageGrotesque(
-            fontSize: 24,
-            height: 30 / 24,
-            fontWeight: FontWeight.bold,
-            color: palette.ink,
-          ),
+          style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
         ),
         const SizedBox(height: 4),
         Text(
           'Skor masih di bawah batas ${(threshold * 100).round()}%. '
           'Ganti salah satu item:',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            height: 15 / 11,
-            color: palette.inkMuted,
-          ),
+          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
         ),
         const SizedBox(height: 12),
         for (final swap in swaps) ...[
           GestureDetector(
             onTap: () => onApply(swap),
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: palette.sheet,
-                borderRadius: const BorderRadius.all(Radius.circular(16)),
-                border: Border.all(color: palette.accentInk),
+                borderRadius: AppRadius.field,
+                border: Border.all(color: palette.inkMuted),
               ),
               child: Row(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    borderRadius: AppRadius.chip,
                     child: SizedBox(
                       width: 52,
                       height: 52,
@@ -586,29 +509,22 @@ class _ImproveSection extends StatelessWidget {
                           'Ganti ${swap.from.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            height: 18 / 13,
+                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
                             color: palette.inkMuted,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
                           swap.to.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 16,
-                            height: 23 / 16,
-                            fontWeight: FontWeight.bold,
+                          style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, 
                             color: palette.ink,
                           ),
                         ),
                         Text(
                           '${swap.to.category} • ${swap.to.colorName}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            height: 15 / 11,
+                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
                             color: palette.inkMuted,
                           ),
                         ),
@@ -621,18 +537,11 @@ class _ImproveSection extends StatelessWidget {
                     children: [
                       Text(
                         '${swap.gainPercent}%',
-                        style: GoogleFonts.bricolageGrotesque(
-                          fontSize: 11,
-                          height: 15 / 11,
-                          fontWeight: FontWeight.bold,
-                          color: palette.action,
-                        ),
+                        style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
                       ),
                       Text(
                         'Terapkan',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          height: 18 / 13,
+                        style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
                           color: palette.inkMuted,
                         ),
                       ),
@@ -642,7 +551,7 @@ class _ImproveSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
         ],
       ],
     );
@@ -659,21 +568,33 @@ class _PickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-            child: Text(
-              'Pilih $slot',
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 24,
-                height: 30 / 24,
-                fontWeight: FontWeight.bold,
-                color: palette.ink,
-              ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: palette.accentTint,
+                      borderRadius: AppRadius.pill,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Pilih $slot',
+                  style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                ),
+              ],
             ),
           ),
           Flexible(
@@ -685,7 +606,7 @@ class _PickerSheet extends StatelessWidget {
                 return ListTile(
                   onTap: () => Navigator.of(context).pop(item),
                   leading: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    borderRadius: AppRadius.chip,
                     child: SizedBox(
                       width: 44,
                       height: 44,
@@ -697,20 +618,11 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   title: Text(
                     item.name,
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 16,
-                      height: 23 / 16,
-                      fontWeight: FontWeight.bold,
-                      color: palette.ink,
-                    ),
+                    style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
                   ),
                   subtitle: Text(
                     '${item.colorName} • Formalitas ${item.formality}/5',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 18 / 13,
-                      color: palette.inkMuted,
-                    ),
+                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
                   ),
                 );
               },
