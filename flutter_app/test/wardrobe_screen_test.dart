@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/screens/wardrobe_screen.dart';
+import 'package:flutter_app/state/outfit_store.dart';
 
 void main() {
   testWidgets('WardrobeScreen shows catalog and filters by chip', (
@@ -73,4 +74,40 @@ void main() {
     expect(find.text('Classic Sneakers'), findsNothing);
   });
 
+  testWidgets('WardrobeScreen favourite button marks a combination', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    savedOutfits.value = [
+      SavedOutfit(
+        id: 'test-1',
+        name: 'Kombinasi Uji',
+        itemNames: const ['Silk Blouse', 'Straight Leg Jeans'],
+        threshold: 0.80,
+      ),
+    ];
+    addTearDown(() => savedOutfits.value = []);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: WardrobeScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Kombinasi (1)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kombinasi Uji'), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    expect(find.byTooltip('Tandai favorit'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.favorite_border));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+    expect(find.byTooltip('Hapus dari favorit'), findsOneWidget);
+    expect(savedOutfits.value.single.favorite, isTrue);
+  });
 }

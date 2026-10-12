@@ -97,6 +97,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
         name: name.isEmpty ? 'Kombinasi Baru' : name,
         itemNames: _picked.map((i) => i.name).toList(),
         threshold: _threshold,
+        favorite: widget.existing?.favorite ?? false,
       ),
     );
     Navigator.of(context).pop();

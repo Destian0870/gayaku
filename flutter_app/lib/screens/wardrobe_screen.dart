@@ -246,11 +246,12 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           }
           return Column(
             children: [
-              for (final outfit in outfits) ...[
+              for (final outfit in _favoritesFirst(outfits)) ...[
                 _SavedOutfitCard(
                   outfit: outfit,
                   onEdit: () => _openBuilder(existing: outfit),
                   onDelete: () => _confirmDelete(outfit),
+                  onToggleFavorite: () => toggleOutfitFavorite(outfit.id),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -260,6 +261,12 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       ),
     ];
   }
+
+  /// Favourites first, otherwise the store's newest-first order.
+  List<SavedOutfit> _favoritesFirst(List<SavedOutfit> outfits) => [
+    ...outfits.where((o) => o.favorite),
+    ...outfits.where((o) => !o.favorite),
+  ];
 }
 
 class _Header extends StatelessWidget {
@@ -368,11 +375,13 @@ class _SavedOutfitCard extends StatelessWidget {
     required this.outfit,
     required this.onEdit,
     required this.onDelete,
+    required this.onToggleFavorite,
   });
 
   final SavedOutfit outfit;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -397,11 +406,29 @@ class _SavedOutfitCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   outfit.name,
-                  maxLines: 1,
+                  // Two lines: the three action buttons now share this row,
+                  // so a user-named combination would otherwise ellipsize.
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
                 ),
               ),
+              IconButton(
+                tooltip: outfit.favorite
+                    ? 'Hapus dari favorit'
+                    : 'Tandai favorit',
+                onPressed: onToggleFavorite,
+                icon: Icon(
+                  outfit.favorite ? Icons.favorite : Icons.favorite_border,
+                  size: 18,
+                ),
+                color: outfit.favorite ? palette.action : palette.ink,
+                style: IconButton.styleFrom(
+                  backgroundColor: palette.sheet,
+                  minimumSize: const Size(40, 40),
+                ),
+              ),
+              const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Edit kombinasi',
                 onPressed: onEdit,

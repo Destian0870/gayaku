@@ -12,6 +12,7 @@ class SavedOutfit {
     required this.name,
     required this.itemNames,
     required this.threshold,
+    this.favorite = false,
   });
 
   final String id;
@@ -23,6 +24,9 @@ class SavedOutfit {
 
   /// Minimum match percent the user wants, 0..1.
   double threshold;
+
+  /// Favourites sort first in the wardrobe's Kombinasi tab.
+  bool favorite;
 
   List<WardrobeItem> get items => [
     for (final name in itemNames)
@@ -51,4 +55,13 @@ void deleteOutfit(String id) {
   savedOutfits.value = savedOutfits.value
       .where((o) => o.id != id)
       .toList();
+}
+
+/// Flips the favourite flag of one combination and re-notifies listeners.
+void toggleOutfitFavorite(String id) {
+  final next = [...savedOutfits.value];
+  final at = next.indexWhere((o) => o.id == id);
+  if (at == -1) return;
+  next[at].favorite = !next[at].favorite;
+  savedOutfits.value = next;
 }
