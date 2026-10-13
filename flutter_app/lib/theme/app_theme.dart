@@ -175,3 +175,36 @@ abstract final class AppTheme {
     );
   }
 }
+
+abstract final class AppRadius {
+  /// Chips, small controls, inline inputs.
+  static const chip = BorderRadius.all(Radius.circular(12));
+
+  /// List rows, inner cards, text fields.
+  static const field = BorderRadius.all(Radius.circular(16));
+
+  /// Panels, sheets, dialogs, medium cards.
+  static const panel = BorderRadius.all(Radius.circular(24));
+
+  /// Hero cards, search bar, bottom nav.
+  static const hero = BorderRadius.all(Radius.circular(32));
+
+  /// Style tags, avatars.
+  static const pill = BorderRadius.all(Radius.circular(999));
+
+  /// Bottom sheets and dialogs: rounded top corners only.
+  static const sheet = BorderRadius.vertical(top: Radius.circular(24));
+}
+
+/// The three `design.md` motion durations, and nothing else. No animation may
+/// run longer than [hero].
+abstract final class AppMotion {
+  /// State changes: a chip, a toggle.
+  static const state = Duration(milliseconds: 150);
+
+  /// Routes and sheets.
+  static const route = Duration(milliseconds: 250);
+
+  /// Entrance of a hero element.
+  static const hero = Duration(milliseconds: 350);
+}
