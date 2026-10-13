@@ -55,6 +55,7 @@ class HomeScreen extends StatelessWidget {
                           builder: (_) => const FavoritesScreen(),
                         ),
                       ),
+                      onPlannerTap: () => openNavDestination(context, 3),
                     ),
                     const SizedBox(height: 20),
                     const RecentlyAdded(),
