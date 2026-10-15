@@ -10,7 +10,7 @@ class SavedOutfit {
   SavedOutfit({
     required this.id,
     required this.name,
-    required this.itemNames,
+    required this.itemIds,
     required this.threshold,
     this.favorite = false,
   });
@@ -18,9 +18,10 @@ class SavedOutfit {
   final String id;
   String name;
 
-  /// Item names, in slot order. Stored as names so the store stays
-  /// serialisable without a mapping layer.
-  List<String> itemNames;
+  /// [WardrobeItem.id]s, in slot order. Ids — not names — so renaming a
+  /// garment keeps every combination that contains it intact
+  /// (docs/adr/0004-sqlite-ids.md).
+  List<String> itemIds;
 
   /// Minimum match percent the user wants, 0..1.
   double threshold;
@@ -28,9 +29,10 @@ class SavedOutfit {
   /// Favourites sort first in the wardrobe's Kombinasi tab.
   bool favorite;
 
-  List<WardrobeItem> get items => [
-    for (final name in itemNames)
-      ...wardrobeItems.where((i) => i.name == name),
+  /// Resolves [itemIds] against [catalog], dropping ids that no longer exist.
+  List<WardrobeItem> itemsOf(List<WardrobeItem> catalog) => [
+    for (final id in itemIds)
+      ...catalog.where((i) => i.id == id),
   ];
 }
 

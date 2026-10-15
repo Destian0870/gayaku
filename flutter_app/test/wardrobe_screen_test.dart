@@ -1,10 +1,38 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:flutter_app/screens/wardrobe_screen.dart';
 import 'package:flutter_app/state/outfit_store.dart';
+import 'package:flutter_app/state/wardrobe_store.dart';
 
 void main() {
+  // The screen reads the real SQLite store, so every test opens one on a temp
+  // file through the ffi factory — never a device database.
+  late Directory tempDir;
+
+  setUpAll(sqfliteFfiInit);
+
+  setUp(() async {
+    tempDir = await Directory.systemTemp.createTemp('gayaku_wardrobe_screen');
+    await initWardrobeStore(
+      factory: databaseFactoryFfi,
+      path: '${tempDir.path}/wardrobe.db',
+    );
+  });
+
+  tearDown(() async {
+    // Reopening on `:memory:` closes the temp file so Windows can delete it.
+    await initWardrobeStore(
+      factory: databaseFactoryFfi,
+      path: inMemoryDatabasePath,
+    );
+    wardrobeItems.value = const [];
+    if (await tempDir.exists()) await tempDir.delete(recursive: true);
+  });
+
   testWidgets('WardrobeScreen shows catalog and filters by chip', (
     WidgetTester tester,
   ) async {
@@ -85,7 +113,7 @@ void main() {
       SavedOutfit(
         id: 'test-1',
         name: 'Kombinasi Uji',
-        itemNames: const ['Silk Blouse', 'Straight Leg Jeans'],
+        itemIds: const ['seed-silk-blouse', 'seed-straight-leg-jeans'],
         threshold: 0.80,
       ),
     ];

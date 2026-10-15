@@ -14,7 +14,7 @@ class WardrobeItemDetailScreen extends StatelessWidget {
   const WardrobeItemDetailScreen({
     super.key,
     required this.item,
-    this.catalog = wardrobeItems,
+    this.catalog = seedWardrobeItems,
   });
 
   final WardrobeItem item;
@@ -367,7 +367,7 @@ class _CombineButton extends StatelessWidget {
       SavedOutfit(
         id: newOutfitId(),
         name: 'Setelan ${item.name}',
-        itemNames: [item.name, ...matches.map((m) => m.item.name)],
+        itemIds: [item.id, ...matches.map((m) => m.item.id)],
         threshold: 0.80,
       ),
     );
