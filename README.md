@@ -225,10 +225,10 @@ Pengujian dilakukan untuk memastikan fungsi utama aplikasi berjalan sesuai kebut
 |---|---|---|---|---|
 | TC-01 | Account & Profile | Pengguna membuka halaman profil | Informasi profil pengguna ditampilkan | Belum diuji |
 | TC-02 | Account & Profile | Pengguna login dengan data yang valid | Pengguna berhasil masuk ke aplikasi | Belum diuji |
-| TC-03 | Smart Scanner | Pengguna memilih gambar pakaian | Gambar pakaian berhasil diproses | Belum diuji |
-| TC-04 | Smart Scanner | Sistem memproses gambar pakaian | Informasi pakaian dapat dihasilkan | Belum diuji |
-| TC-05 | Digital Wardrobe | Pengguna menambahkan pakaian | Pakaian tersimpan di Digital Wardrobe | Belum diuji |
-| TC-06 | Digital Wardrobe | Pengguna membuka Digital Wardrobe | Daftar pakaian ditampilkan | Belum diuji |
+| TC-03 | Smart Scanner | Pengguna memilih gambar pakaian | Gambar pakaian berhasil diproses | Teruji di emulator (kamera/galeri terbuka, foto terpilih) |
+| TC-04 | Smart Scanner | Sistem memproses gambar pakaian | Informasi pakaian dapat dihasilkan | Teruji di emulator (Bottoms, warna, nama, keyakinan 91%) |
+| TC-05 | Digital Wardrobe | Pengguna menambahkan pakaian | Pakaian tersimpan di Digital Wardrobe | Teruji di emulator (10 item setelah menyimpan hasil pindai) |
+| TC-06 | Digital Wardrobe | Pengguna membuka Digital Wardrobe | Daftar pakaian ditampilkan | Teruji di emulator, termasuk setelah aplikasi ditutup lalu dibuka lagi |
 | TC-07 | OOTD Recommendation | Pengguna memilih jenis acara | Rekomendasi outfit ditampilkan | Belum diuji |
 | TC-08 | OOTD Recommendation | Pengguna melihat rekomendasi outfit | Informasi outfit ditampilkan dengan benar | Belum diuji |
 | TC-09 | Collection & Planner | Pengguna menyimpan outfit | Outfit tersimpan dalam koleksi | Belum diuji |
@@ -245,10 +245,10 @@ Mengevaluasi proses pada Smart Scanner.
 
 | ID | Aspek | Hasil yang Diharapkan | Status |
 |---|---|---|---|
-| CV-01 | Background Removal | Background pakaian dapat dipisahkan dengan baik | Belum diuji |
-| CV-02 | Clothing Classification | Jenis pakaian dikenali sesuai kategori | Belum diuji |
-| CV-03 | Color Extraction | Warna dominan pakaian dapat diperoleh | Belum diuji |
-| CV-04 | Manual Correction | Pengguna dapat memperbaiki hasil deteksi | Belum diuji |
+| CV-01 | Background Removal | Background pakaian dapat dipisahkan dengan baik | Teruji di emulator (foto celana denim, latar hilang seluruhnya) |
+| CV-02 | Clothing Classification | Jenis pakaian dikenali sesuai kategori | Teruji di emulator (Pants, keyakinan 91%; akurasi uji model 91,9%) |
+| CV-03 | Color Extraction | Warna dominan pakaian dapat diperoleh | Teruji (unit test) dan tampil di emulator (Beige) |
+| CV-04 | Manual Correction | Pengguna dapat memperbaiki hasil deteksi | Teruji (widget test): Category, Warna, dan Nama dapat diubah sebelum disimpan |
 
 ### Recommendation Testing
 
