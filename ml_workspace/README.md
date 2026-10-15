@@ -123,6 +123,14 @@ cannot be stratified honestly.
 * Categories are exactly the five from `CONTEXT.md`: Tops, Bottoms, Outerwear, Shoes,
   Accessories. Names are the Indonesian display names the scanner shows ("Kaos", "Kemeja",
   "Jeans", "Jaket", "Rok", "Sepatu", "Tas", "Topi", …).
+* One-piece garments and named sets have no honest slot among those five, so they resolve to
+  the nearest one: `Dresses`/`Dress`, `Sarees`, `Jumpsuit`, `Nightdress`, `Rompers`,
+  `Lehenga Choli`, `Kurta Sets`, `Night suits` and `Tracksuits` all map to **Tops**. A dress
+  landing on "Tops" is a modelling compromise, not an oversight — giving one-piece garments
+  their own Category is a product decision (it would change `CONTEXT.md`, the five Categories
+  and every filter that reads them), and until someone makes it, its `garmentLabelCategory`
+  entry stays `Tops` by design. The bootstrap training report flags the visible case
+  (`Dress`) on the shipped 10-class model.
 
 ## Licence and data notes
 
