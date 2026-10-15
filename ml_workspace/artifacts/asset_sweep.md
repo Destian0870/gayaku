@@ -61,3 +61,24 @@ This sweep classifies the photo directly, while the app classifies the **Cutout*
 For a photo whose garment fills the frame the two agree; for a cluttered photo the
 matting step changes what the classifier sees. The on-device scan therefore stays
 the authoritative check, and this table is the broad, repeatable one.
+
+## On-device, Pixel 9 emulator, shipped debug build
+
+Photos pushed to the emulator gallery and scanned through the real screen
+(camera/gallery → matting → classify the Cutout → K-Means colour → review):
+
+| Foto | Category | Warna | Nama | Terdeteksi | Keyakinan |
+|---|---|---|---|---|---|
+| `silk_blouse.png` — shirt on a hanger, plain background | Tops | Cokelat | Kemeja | Shirt | 100% |
+| `classic_sneakers.jpg` — pair of trainers | Shoes | Krem | Sepatu | Shoes | 100% |
+| `straight_leg_jeans.jpg` — jeans on white | Bottoms | Beige | Celana Panjang | Pants | 91% |
+| `pleated_midi_skirt.jpg` — skirt **worn by a model** | Tops | Beige | Gaun | Dress | 52% |
+
+The first three are the intended capture condition — one garment, plain
+background — and they land in three different Categories, so the scanner is not a
+`Pants` detector; the Cutouts are clean enough that the shirt's sleeves and the
+sneakers' laces survive. The fourth is out of contract: a worn garment breaks the
+matting step (it cut a vertical strip of the model instead of the skirt), which
+feeds the classifier a shape it reads as a dress. 52% confidence is the visible
+warning, and the `Dress → Tops` Category mapping is recorded in
+`ml_workspace/README.md`.
