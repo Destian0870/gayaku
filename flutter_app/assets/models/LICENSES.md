@@ -24,18 +24,28 @@ the same conversion: https://github.com/PINTO0309/PINTO_model_zoo (061_U-2-Net).
 
 ## `garment_classifier.tflite` — garment classifier
 
-Not in the repository yet; the path is reserved for the export from
-`ml_workspace/kaggle/fashion_classifier.ipynb` (or from the local CC0 bootstrap run).
-Contract: input `image` NHWC `[1, 224, 224, 3]` float32 RGB in `[0, 1]` with ImageNet
-normalisation baked into the graph; output `scores` `[1, N]` softmax whose class order is
-`ml_workspace/artifacts/classes.json` / `flutter_app/lib/logic/garment_labels.dart`.
+**Shipped today** is the CC0 bootstrap export; the Kaggle-trained catalogue model takes the
+same slot later (`docs/adr/0003`).
+
+| | |
+|---|---|
+| Model | torchvision MobileNetV3-small fine-tuned to 10 classes at 224×224 |
+| Licence | weights trained by us; torchvision's ImageNet initialisation is BSD-3-Clause |
+| Training data | `alexeygrigorev/clothing-dataset-small` (CC0 — that is the uploader's claim over its labels; the photographs are third-party and are not redistributed here) |
+| Class list | `ml_workspace/bootstrap/artifacts/classes.json` — T-Shirt, Shirt, Longsleeve, Outwear, Dress, Skirt, Pants, Shorts, Shoes, Hat; the order `flutter_app/lib/logic/garment_labels.dart` mirrors |
+| sha256 | `4dea19d6b3dbe30bd5a8dc9686803afdd657e9dedbf234d0fd61e5a6be313457` |
+| Size | 6,129,368 bytes (6.1 MB) |
+| Input | `image` — `[1, 224, 224, 3]` float32, NHWC RGB in `[0, 1]`, ImageNet normalisation baked into the graph |
+| Output | `Identity` — `[1, 10]` float32 softmax |
+
+**Final model**, exported by `ml_workspace/kaggle/fashion_classifier.ipynb` with class list
+`ml_workspace/artifacts/classes.json`:
 
 - **Weights trained by us** (torchvision MobileNetV3-small, ImageNet-initialised; the
   torchvision weights are BSD-3-Clause).
 - **Training data is the Kaggle Fashion Product Images catalogue whose MIT tag covers
   labels, not the photographs — coursework artifacts, not for redistribution.**
-- Optional local bootstrap run trains the same architecture on
-  `alexeygrigorev/clothing-dataset` (CC0, label vocabulary recorded in
-  `ml_workspace/labels.json` with `dataset: alexeygrigorev/clothing-dataset`); that
-  dataset's CC0 claim is likewise over its labels, and it is a coursework artifact too.
-- When the classifier lands here, add its sha256 and size to this file.
+- Landing it means replacing this asset and regenerating
+  `flutter_app/lib/logic/garment_labels.dart` in the same commit — `gen_dart_labels.py`
+  refuses a class list whose length does not match the shipped asset's output width — and
+  adding the new sha256 and size here.

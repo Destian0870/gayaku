@@ -11,7 +11,7 @@ resulting `.tflite` files and runs them on device; nothing here runs at runtime
 | Path | Committed? | What it is |
 |---|---|---|
 | `labels.json` | yes | semantic source of truth: one entry per catalogue `articleType` (143 of them) plus the CC0 bootstrap vocabulary, each with `category`, Indonesian `name`, `keep` and the `dataset` it belongs to |
-| `artifacts/classes.json` | yes | the classifier's class list. **`labels[i]` is the label score `i` means** — this file *is* the model's output order |
+| `artifacts/classes.json` | yes | the catalogue classifier's class list. **`labels[i]` is the label score `i` means** — this file *is* the model's output order. The CC0 bootstrap export carries its own list at `bootstrap/artifacts/classes.json` (see "Where the models stand") |
 | `scripts/prepare_data.py` | yes | Kaggle download, label cleanup, stratified 80/10/10 split, writes `artifacts/classes.json` |
 | `scripts/gen_dart_labels.py` | yes | emits `flutter_app/lib/logic/garment_labels.dart` from `classes.json` + `labels.json` |
 | `scripts/fetch_matting_model.py` | yes | fetches + verifies `flutter_app/assets/models/u2netp_320.tflite` |
@@ -22,10 +22,12 @@ resulting `.tflite` files and runs them on device; nothing here runs at runtime
 
 ## Contracts
 
-**Classifier** — input `image` `[1,224,224,3]` float32 NHWC RGB in `[0,1]`; ImageNet
-normalisation is baked into the exported graph by a wrapper module, so callers feed raw
-`[0,1]` pixels. Output `scores` `[1,N]` float32 softmax, class order = `garmentCategories`
-in the generated Dart file = `labels` in `artifacts/classes.json`.
+**Classifier** — input `[1,224,224,3]` float32 NHWC RGB in `[0,1]`; ImageNet normalisation
+is baked into the exported graph by a wrapper module, so callers feed raw `[0,1]` pixels.
+Output `[1,N]` float32 softmax, class order = `garmentCategories` in the generated Dart file
+= `labels` in the class list. Tensor *names* are the converter's business (the ONNX export
+says `image`/`scores`, the bootstrap TFLite says `image`/`Identity`), because the app
+addresses tensors by index — shape, dtype and that class order are what bind.
 
 **Matting** (`u2netp_320.tflite`, in `flutter_app/assets/models/`) — input
 `serving_default_input.1:0` `[1,320,320,3]` float32 NHWC RGB in `[0,1]`; seven outputs, all
@@ -44,6 +46,26 @@ Never hand-edit `flutter_app/lib/logic/garment_labels.dart`: regenerate it from 
 list, and if a class has no entry in `labels.json` the generator **exits non-zero** instead
 of shipping a nameless class. So a new class always arrives with a Category and an
 Indonesian name, or not at all.
+
+The generator also reads the shipped `flutter_app/assets/models/garment_classifier.tflite`
+and **exits non-zero when the model scores a different number of classes than the list has
+labels** (`--model` points it elsewhere; a missing file only prints a note). That is what
+stops a list and the weights it describes from drifting apart: you cannot regenerate the Dart
+file for a model you have not actually swapped in, and you cannot swap weights without
+regenerating the file in the same commit.
+
+## Where the models stand
+
+| Slot | Asset | Class list | State |
+|---|---|---|---|
+| Matting | `flutter_app/assets/models/u2netp_320.tflite` | — | shipped |
+| Classifier | `flutter_app/assets/models/garment_classifier.tflite` | `bootstrap/artifacts/classes.json` (10 CC0 classes) | shipped: the `alexeygrigorev/clothing-dataset-small` bootstrap export, which makes the scanner verifiable end to end today |
+| Classifier, final | same path, new weights | `artifacts/classes.json` (80 catalogue classes) | pending the Kaggle run; `docs/adr/0003` makes that the final model |
+
+Landing the Kaggle model means replacing the asset **and** regenerating the Dart file in the
+same commit. Until that swap, the default class list (80) and the shipped asset (10)
+deliberately disagree, and the generator refuses that pair with the drift message above
+instead of quietly writing a Dart file that mislabels every prediction.
 
 ## Commands
 
@@ -72,6 +94,8 @@ python ml_workspace/scripts/prepare_data.py --labels-only --dataset alexeygrigor
 # 5. regenerate the Dart label file after every export (idempotent; --check for CI/pre-commit)
 python ml_workspace/scripts/gen_dart_labels.py
 python ml_workspace/scripts/gen_dart_labels.py --check
+# ... for the CC0 bootstrap model that is shipped today (see "Where the models stand")
+python ml_workspace/scripts/gen_dart_labels.py --classes ml_workspace/bootstrap/artifacts/classes.json
 
 # 6. read any exported model's IO contract before wiring it up
 python ml_workspace/scripts/tflite_io.py flutter_app/assets/models/garment_classifier.tflite
