@@ -139,6 +139,17 @@ class ScanPipeline {
         '${mattingInputSize}x$mattingInputSize RGB (bentuk: $shape).',
       );
     }
+    for (final (name, type) in [
+      ('matting input', matting.getInputTensor(0).type),
+      ('matting output', matting.getOutputTensor(0).type),
+      ('classifier input', classifier.getInputTensor(0).type),
+      ('classifier output', classifier.getOutputTensor(0).type),
+    ]) {
+      if (type != TensorType.float32 && type != TensorType.float16) {
+        // Quantised IO would silently produce garbage through the byte path.
+        throw ScanFailure('$name bertipe $type, bukan float.');
+      }
+    }
   }
 
   /// Runs the whole pipeline over [photoBytes] (JPEG or PNG).
@@ -203,16 +214,18 @@ class ScanPipeline {
       width: mattingInputSize,
       height: mattingInputSize,
     );
+    final inputTensor = matting.getInputTensor(0);
     final outputTensor = matting.getOutputTensor(0);
-    final output = bufferFor(outputTensor);
-    matting.run(
-      packFloats(
+    final sink = Uint8List(outputTensor.numBytes());
+    runModel(
+      matting,
+      floatsToInputBytes(
         rgbaToNhwcFloats(small.rgba, mattingInputSize),
-        matting.getInputTensor(0).type,
+        inputTensor.type,
       ),
-      output,
+      sink,
     );
-    return unpackFloats(output, outputTensor.type);
+    return outputFloats(sink, outputTensor.type);
   }
 
   /// Classifies the Cutout: the model sees a background-free garment, which is
@@ -234,13 +247,19 @@ class ScanPipeline {
       input[i * 3 + 1] = square.rgba[i * 4 + 1] / 255;
       input[i * 3 + 2] = square.rgba[i * 4 + 2] / 255;
     }
-    final output = bufferFor(outputTensor);
-    classifier.run(
-      packFloats(input, classifier.getInputTensor(0).type),
-      output,
+    final sink = Uint8List(outputTensor.numBytes());
+    runModel(
+      classifier,
+      floatsToInputBytes(input, classifier.getInputTensor(0).type),
+      sink,
     );
 
-    final scores = unpackFloats(output, outputTensor.type);
+    final scores = outputFloats(sink, outputTensor.type);
+    if (scores.length < classes) {
+      throw ScanFailure(
+        'Model mengembalikan ${scores.length} nilai untuk $classes kelas.',
+      );
+    }
     var best = 0;
     for (var i = 1; i < classes; i++) {
       if (scores[i] > scores[best]) best = i;
@@ -437,37 +456,50 @@ Uint8List garmentPixels(
 // allocated from the tensor itself rather than assumed.
 // ---------------------------------------------------------------------------
 
-/// Zero-filled buffer matching [tensor]'s dtype, for use as the output argument.
-Object bufferFor(Tensor tensor) {
-  final elements = tensor.numElements();
-  return switch (tensor.type) {
-    TensorType.float32 => Float32List(elements),
-    TensorType.float16 => Uint16List(elements),
-    TensorType.int8 => Int8List(elements),
-    TensorType.uint8 => Uint8List(elements),
-    TensorType.int32 => Int32List(elements),
-    _ => throw ScanFailure('Tipe tensor ${tensor.type} belum didukung.'),
-  };
+/// Runs [interpreter] on raw [input] bytes and copies its first output into
+/// [outputSink], which must be `tensor.numBytes()` long.
+///
+/// `Interpreter.run` is deliberately not used: it infers the input shape from
+/// the object you hand it, so a flat typed list reads as shape `[n]`, and the
+/// binding then tries to *resize* the model's fixed input tensor and fails.
+/// Handing over bytes skips shape inference entirely.
+void runModel(Interpreter interpreter, Uint8List input, Uint8List outputSink) {
+  final expected = interpreter.getInputTensor(0).numBytes();
+  if (input.length != expected) {
+    throw ScanFailure(
+      'Input model butuh $expected byte, dikirim ${input.length} byte.',
+    );
+  }
+  interpreter.getInputTensor(0).setTo(input);
+  interpreter.invoke();
+  interpreter.getOutputTensor(0).copyTo(outputSink);
 }
 
-/// Converts float input to the tensor's dtype (float16 models need half bits).
-Object packFloats(Float32List values, TensorType type) {
-  if (type == TensorType.float32) return values;
+/// Float input as raw bytes in the tensor's dtype.
+Uint8List floatsToInputBytes(Float32List values, TensorType type) {
+  if (type == TensorType.float32) return float32Bytes(values);
   if (type == TensorType.float16) {
     final half = Uint16List(values.length);
     for (var i = 0; i < values.length; i++) {
       half[i] = floatToHalf(values[i]);
     }
-    return half;
+    return half.buffer.asUint8List(half.offsetInBytes, half.lengthInBytes);
   }
   throw ScanFailure('Input model bertipe $type, bukan float.');
 }
 
-/// Reads a float or float16 output tensor back into floats.
-Float32List unpackFloats(Object buffer, TensorType type) {
-  if (type == TensorType.float32) return buffer as Float32List;
+/// Raw bytes of a float buffer, without copying.
+Uint8List float32Bytes(Float32List values) =>
+    values.buffer.asUint8List(values.offsetInBytes, values.lengthInBytes);
+
+/// Raw float bytes read back as floats, per the tensor's dtype.
+Float32List outputFloats(Uint8List bytes, TensorType type) {
+  if (type == TensorType.float32) return bytesToFloat32(bytes);
   if (type == TensorType.float16) {
-    final half = buffer as Uint16List;
+    final half = bytes.buffer.asUint16List(
+      bytes.offsetInBytes,
+      bytes.lengthInBytes ~/ 2,
+    );
     final out = Float32List(half.length);
     for (var i = 0; i < half.length; i++) {
       out[i] = halfToFloat(half[i]);
@@ -476,6 +508,12 @@ Float32List unpackFloats(Object buffer, TensorType type) {
   }
   throw ScanFailure('Output model bertipe $type, bukan float.');
 }
+
+/// Raw float32 bytes as a view — no copy, so [bytes] must outlive the view.
+Float32List bytesToFloat32(Uint8List bytes) => bytes.buffer.asFloat32List(
+  bytes.offsetInBytes,
+  bytes.lengthInBytes ~/ 4,
+);
 
 /// Float32 bits to IEEE-754 half precision.
 int floatToHalf(double value) {

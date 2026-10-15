@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 import 'package:flutter_app/logic/scan_pipeline.dart';
 
@@ -150,6 +151,53 @@ void main() {
       for (final value in [0.0, 0.25, 0.5, 1.0, 0.1, 123.5, 0.03125]) {
         expect(halfToFloat(floatToHalf(value)), closeTo(value, 1e-2));
       }
+    });
+  });
+
+  // The models are driven through raw bytes because `Interpreter.run` infers the
+  // input shape from the object handed to it; these cover that plumbing.
+  group('byte plumbing', () {
+    test('float32Bytes shares memory with the float buffer', () {
+      final values = Float32List.fromList([0, 0.5, 1, -2.5]);
+      final bytes = float32Bytes(values);
+      expect(bytes.length, 16);
+      final back = bytesToFloat32(bytes);
+      expect(back, values);
+      // Writing 1.0f through the byte view must show up in both float lists —
+      // that is what makes this a view rather than a copy.
+      bytes.setAll(0, [0x00, 0x00, 0x80, 0x3F]);
+      expect(values[0], 1.0);
+      expect(back[0], 1.0);
+    });
+
+    test('floatsToInputBytes writes half bits for a float16 input tensor', () {
+      final bytes = floatsToInputBytes(
+        Float32List.fromList([1.0, 0.5]),
+        TensorType.float16,
+      );
+      expect(bytes.length, 4);
+      expect(bytes.buffer.asUint16List(0, 2), [0x3C00, 0x3800]);
+    });
+
+    test('outputFloats reads half bits back', () {
+      final half = Uint16List.fromList([0x3C00, 0x3800]);
+      final floats = outputFloats(
+        half.buffer.asUint8List(0, 4),
+        TensorType.float16,
+      );
+      expect(floats[0], 1.0);
+      expect(floats[1], 0.5);
+    });
+
+    test('a quantised tensor dtype is refused instead of misread', () {
+      expect(
+        () => floatsToInputBytes(Float32List(1), TensorType.int8),
+        throwsA(isA<ScanFailure>()),
+      );
+      expect(
+        () => outputFloats(Uint8List(4), TensorType.uint8),
+        throwsA(isA<ScanFailure>()),
+      );
     });
   });
 }
