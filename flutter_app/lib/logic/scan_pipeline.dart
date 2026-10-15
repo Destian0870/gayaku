@@ -129,15 +129,11 @@ class ScanPipeline {
         'ml_workspace/scripts/gen_dart_labels.py.',
       );
     }
-    final shape = matting.getInputTensor(0).shape;
-    if (shape.length != 4 ||
-        shape[1] != mattingInputSize ||
-        shape[2] != mattingInputSize ||
-        shape[3] != 3) {
-      throw ScanFailure(
-        'Model matting tidak menerima '
-        '${mattingInputSize}x$mattingInputSize RGB (bentuk: $shape).',
-      );
+    for (final (name, tensor, size) in [
+      ('matting', matting.getInputTensor(0), mattingInputSize),
+      ('classifier', classifier.getInputTensor(0), classifierInputSize),
+    ]) {
+      requireSquareRgbInput(tensor, size, name);
     }
     for (final (name, type) in [
       ('matting input', matting.getInputTensor(0).type),
@@ -165,7 +161,13 @@ class ScanPipeline {
 
     final crop = cropRgba(photo.rgba, photo.width, photo.height, box);
     final cutoutPng = await _encodePng(
-      premultipliedCutout(crop.rgba, crop.width, crop.height, mask, mattingInputSize),
+      premultipliedCutout(
+        crop.rgba,
+        crop.width,
+        crop.height,
+        mask,
+        mattingInputSize,
+      ),
       crop.width,
       crop.height,
     );
@@ -220,7 +222,7 @@ class ScanPipeline {
     runModel(
       matting,
       floatsToInputBytes(
-        rgbaToNhwcFloats(small.rgba, mattingInputSize),
+        rgbaToInputFloats(small.rgba, mattingInputSize, inputTensor.shape),
         inputTensor.type,
       ),
       sink,
@@ -239,27 +241,20 @@ class ScanPipeline {
       height: classifierInputSize,
     );
     final outputTensor = classifier.getOutputTensor(0);
+    final inputTensor = classifier.getInputTensor(0);
     final classes = garmentCategories.length;
-    final pixels = classifierInputSize * classifierInputSize;
-    final input = Float32List(pixels * 3);
-    for (var i = 0; i < pixels; i++) {
-      input[i * 3] = square.rgba[i * 4] / 255;
-      input[i * 3 + 1] = square.rgba[i * 4 + 1] / 255;
-      input[i * 3 + 2] = square.rgba[i * 4 + 2] / 255;
-    }
-    final sink = Uint8List(outputTensor.numBytes());
-    runModel(
-      classifier,
-      floatsToInputBytes(input, classifier.getInputTensor(0).type),
-      sink,
+    final input = rgbaToInputFloats(
+      square.rgba,
+      classifierInputSize,
+      inputTensor.shape,
     );
+    final sink = Uint8List(outputTensor.numBytes());
+    runModel(classifier, floatsToInputBytes(input, inputTensor.type), sink);
 
-    final scores = outputFloats(sink, outputTensor.type);
-    if (scores.length < classes) {
-      throw ScanFailure(
-        'Model mengembalikan ${scores.length} nilai untuk $classes kelas.',
-      );
-    }
+    final scores = probabilitiesFrom(
+      outputFloats(sink, outputTensor.type),
+      classes,
+    );
     var best = 0;
     for (var i = 1; i < classes; i++) {
       if (scores[i] > scores[best]) best = i;
@@ -328,9 +323,7 @@ class ScanPipeline {
 // Pure helpers — unit-tested directly, no models needed.
 // ---------------------------------------------------------------------------
 
-/// RGBA bytes to interleaved NHWC floats in `[0,1]` — the matting model's input
-/// layout (verified from the shipped `u2netp_320.tflite` flatbuffer, which takes
-/// `[1,320,320,3]`).
+/// RGBA bytes to interleaved NHWC floats in `[0,1]`.
 Float32List rgbaToNhwcFloats(Uint8List rgba, int size) {
   final pixels = size * size;
   final out = Float32List(pixels * 3);
@@ -340,6 +333,48 @@ Float32List rgbaToNhwcFloats(Uint8List rgba, int size) {
     out[i * 3 + 2] = rgba[i * 4 + 2] / 255;
   }
   return out;
+}
+
+/// RGBA bytes to planar NCHW floats in `[0,1]` — the layout some exporters
+/// (LiteRT's PyTorch-tracing path among them) produce.
+Float32List rgbaToNchwFloats(Uint8List rgba, int size) {
+  final plane = size * size;
+  final out = Float32List(plane * 3);
+  for (var i = 0; i < plane; i++) {
+    out[i] = rgba[i * 4] / 255;
+    out[plane + i] = rgba[i * 4 + 1] / 255;
+    out[plane * 2 + i] = rgba[i * 4 + 2] / 255;
+  }
+  return out;
+}
+
+/// RGBA to floats in whichever square-RGB layout [shape] declares, so a model
+/// exported as NHWC or NCHW both work without touching this file.
+Float32List rgbaToInputFloats(Uint8List rgba, int size, List<int> shape) {
+  if (shape.length == 4 && shape[3] == 3) return rgbaToNhwcFloats(rgba, size);
+  if (shape.length == 4 && shape[1] == 3) return rgbaToNchwFloats(rgba, size);
+  throw ScanFailure('Bentuk input $shape bukan NHWC atau NCHW RGB.');
+}
+
+/// Rejects a model whose input is not a square RGB image of [size] in either
+/// layout, naming the model so the message points at the right file.
+void requireSquareRgbInput(Tensor tensor, int size, String model) {
+  final shape = tensor.shape;
+  final nhwc =
+      shape.length == 4 &&
+      shape[1] == size &&
+      shape[2] == size &&
+      shape[3] == 3;
+  final nchw =
+      shape.length == 4 &&
+      shape[1] == 3 &&
+      shape[2] == size &&
+      shape[3] == size;
+  if (!nhwc && !nchw) {
+    throw ScanFailure(
+      'Input model $model bukan ${size}x$size RGB NHWC/NCHW (bentuk: $shape).',
+    );
+  }
 }
 
 /// Tightest box holding every mask value at or above [threshold], as fractions
@@ -408,10 +443,12 @@ Uint8List premultipliedCutout(
 ) {
   final out = Uint8List(cropRgba.length);
   for (var y = 0; y < cropHeight; y++) {
-    final maskRow = math.min(maskSize - 1, (y * maskSize) ~/ cropHeight) * maskSize;
+    final maskRow =
+        math.min(maskSize - 1, (y * maskSize) ~/ cropHeight) * maskSize;
     for (var x = 0; x < cropWidth; x++) {
-      final alpha = mask[maskRow + math.min(maskSize - 1, (x * maskSize) ~/ cropWidth)]
-          .clamp(0.0, 1.0);
+      final alpha =
+          mask[maskRow + math.min(maskSize - 1, (x * maskSize) ~/ cropWidth)]
+              .clamp(0.0, 1.0);
       final i = (y * cropWidth + x) * 4;
       out[i] = (cropRgba[i] * alpha).round();
       out[i + 1] = (cropRgba[i + 1] * alpha).round();
@@ -436,11 +473,12 @@ Uint8List garmentPixels(
 }) {
   final out = Uint8List(cropRgba.length);
   for (var y = 0; y < cropHeight; y++) {
-    final maskRow = math.min(maskSize - 1, (y * maskSize) ~/ cropHeight) * maskSize;
+    final maskRow =
+        math.min(maskSize - 1, (y * maskSize) ~/ cropHeight) * maskSize;
     for (var x = 0; x < cropWidth; x++) {
       final inside =
           mask[maskRow + math.min(maskSize - 1, (x * maskSize) ~/ cropWidth)] >=
-              threshold;
+          threshold;
       final i = (y * cropWidth + x) * 4;
       out[i] = cropRgba[i];
       out[i + 1] = cropRgba[i + 1];
@@ -510,10 +548,50 @@ Float32List outputFloats(Uint8List bytes, TensorType type) {
 }
 
 /// Raw float32 bytes as a view — no copy, so [bytes] must outlive the view.
-Float32List bytesToFloat32(Uint8List bytes) => bytes.buffer.asFloat32List(
-  bytes.offsetInBytes,
-  bytes.lengthInBytes ~/ 4,
-);
+Float32List bytesToFloat32(Uint8List bytes) =>
+    bytes.buffer.asFloat32List(bytes.offsetInBytes, bytes.lengthInBytes ~/ 4);
+
+/// The first [classes] scores as probabilities.
+///
+/// A model that exports logits instead of a softmax still has the right argmax
+/// but meaningless confidence numbers, and the review screen prints that number
+/// as a percentage — so anything that is not already a distribution is
+/// normalised here rather than shown to the user as "1237%".
+Float32List probabilitiesFrom(Float32List scores, int classes) {
+  if (scores.length < classes) {
+    throw ScanFailure(
+      'Model mengembalikan ${scores.length} nilai untuk $classes kelas.',
+    );
+  }
+
+  var sum = 0.0;
+  var inRange = true;
+  var max = scores[0];
+  for (var i = 0; i < classes; i++) {
+    final value = scores[i];
+    if (value < -1e-6 || value > 1.0 + 1e-6) inRange = false;
+    if (value > max) max = value;
+    sum += value;
+  }
+  if (inRange && (sum - 1.0).abs() <= 0.2) {
+    return Float32List.sublistView(scores, 0, classes);
+  }
+
+  final out = Float32List(classes);
+  var total = 0.0;
+  for (var i = 0; i < classes; i++) {
+    final e = math.exp(scores[i] - max);
+    out[i] = e;
+    total += e;
+  }
+  if (total <= 0) {
+    throw ScanFailure('Skor model tidak bisa dinormalkan.');
+  }
+  for (var i = 0; i < classes; i++) {
+    out[i] = out[i] / total;
+  }
+  return out;
+}
 
 /// Float32 bits to IEEE-754 half precision.
 int floatToHalf(double value) {

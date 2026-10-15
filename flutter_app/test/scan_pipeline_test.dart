@@ -89,32 +89,41 @@ void main() {
         (0, 0, 255, 255),
         (255, 255, 255, 255),
       ]);
-      final whole = cropRgba(
-        rgba,
-        2,
-        2,
-        (left: 0.0, top: 0.0, right: 1.0, bottom: 1.0),
-      );
+      final whole = cropRgba(rgba, 2, 2, (
+        left: 0.0,
+        top: 0.0,
+        right: 1.0,
+        bottom: 1.0,
+      ));
       expect(whole.width, 2);
       expect(whole.height, 2);
       expect(whole.rgba, rgba);
 
-      final rightColumn = cropRgba(
-        rgba,
-        2,
-        2,
-        (left: 0.5, top: 0.0, right: 1.0, bottom: 1.0),
-      );
+      final rightColumn = cropRgba(rgba, 2, 2, (
+        left: 0.5,
+        top: 0.0,
+        right: 1.0,
+        bottom: 1.0,
+      ));
       expect(rightColumn.width, 1);
       expect(rightColumn.height, 2);
-      expect(rightColumn.rgba, rgbaOf([(0, 255, 0, 255), (255, 255, 255, 255)]));
+      expect(
+        rightColumn.rgba,
+        rgbaOf([(0, 255, 0, 255), (255, 255, 255, 255)]),
+      );
     });
   });
 
   group('premultipliedCutout', () {
     test('writes the matte into alpha and premultiplies the colour', () {
       final crop = rgbaOf([(255, 0, 0, 255), (255, 0, 0, 255)]);
-      final out = premultipliedCutout(crop, 2, 1, Float32List.fromList([1, 0.5]), 2);
+      final out = premultipliedCutout(
+        crop,
+        2,
+        1,
+        Float32List.fromList([1, 0.5]),
+        2,
+      );
       expect(out.sublist(0, 4), [255, 0, 0, 255]);
       // 0.5 alpha: colour halves, alpha rounds to 128.
       expect(out.sublist(4, 8), [128, 0, 0, 128]);
@@ -130,11 +139,96 @@ void main() {
   group('garmentPixels', () {
     test('keeps straight colours and only the pixels inside the matte', () {
       final crop = rgbaOf([(10, 20, 30, 255), (200, 100, 50, 255)]);
-      final out = garmentPixels(crop, 2, 1, Float32List.fromList([0.9, 0.2]), 2);
+      final out = garmentPixels(
+        crop,
+        2,
+        1,
+        Float32List.fromList([0.9, 0.2]),
+        2,
+      );
       // Inside: colour untouched, opaque — premultiplication must not darken it.
       expect(out.sublist(0, 4), [10, 20, 30, 255]);
       // Outside: colour kept but transparent, so colour sampling skips it.
       expect(out.sublist(4, 8), [200, 100, 50, 0]);
+    });
+  });
+
+  // A model exported by a different toolchain may arrive as NCHW or with logits
+  // instead of a softmax; both are handled rather than rejected.
+  group('input layout', () {
+    test('rgbaToNchwFloats writes one plane per channel', () {
+      final rgba = rgbaOf([
+        (255, 0, 128, 255),
+        (0, 64, 255, 255),
+        (10, 20, 30, 255),
+        (40, 50, 60, 255),
+      ]);
+      final floats = rgbaToNchwFloats(rgba, 2);
+      expect(floats.length, 12);
+      // Red plane, then green, then blue.
+      expect(floats.sublist(0, 4), [
+        1.0,
+        0.0,
+        closeTo(10 / 255, 1e-6),
+        closeTo(40 / 255, 1e-6),
+      ]);
+      expect(floats[4], 0.0);
+      expect(floats[5], closeTo(64 / 255, 1e-6));
+      expect(floats[8], closeTo(128 / 255, 1e-6));
+      expect(floats[9], 1.0);
+    });
+
+    test('rgbaToInputFloats follows the shape the model declares', () {
+      final rgba = rgbaOf([
+        (255, 0, 0, 255),
+        (0, 255, 0, 255),
+        (0, 0, 255, 255),
+        (255, 255, 255, 255),
+      ]);
+      final nhwc = rgbaToInputFloats(rgba, 2, [1, 2, 2, 3]);
+      expect(nhwc, rgbaToNhwcFloats(rgba, 2));
+      final nchw = rgbaToInputFloats(rgba, 2, [1, 3, 2, 2]);
+      expect(nchw, rgbaToNchwFloats(rgba, 2));
+    });
+
+    test('a non-square-RGB input shape is refused', () {
+      final rgba = rgbaOf(List.filled(4, (1, 2, 3, 255)));
+      expect(
+        () => rgbaToInputFloats(rgba, 2, [1, 5]),
+        throwsA(isA<ScanFailure>()),
+      );
+      expect(
+        () => rgbaToInputFloats(rgba, 2, [1, 2, 2, 4]),
+        throwsA(isA<ScanFailure>()),
+      );
+    });
+  });
+
+  group('probabilitiesFrom', () {
+    test('leaves a real distribution untouched', () {
+      final scores = Float32List.fromList([0.7, 0.2, 0.1]);
+      final probs = probabilitiesFrom(scores, 3);
+      expect(probs, [
+        closeTo(0.7, 1e-6),
+        closeTo(0.2, 1e-6),
+        closeTo(0.1, 1e-6),
+      ]);
+    });
+
+    test('softmaxes logits so the UI never shows a nonsense percentage', () {
+      final logits = Float32List.fromList([2.0, 1.0, -3.0]);
+      final probs = probabilitiesFrom(logits, 3);
+      expect(probs.reduce((a, b) => a + b), closeTo(1.0, 1e-6));
+      expect(probs[0], greaterThan(probs[1]));
+      expect(probs[1], greaterThan(probs[2]));
+      expect(probs.every((value) => value >= 0 && value <= 1), isTrue);
+    });
+
+    test('refuses a model with fewer scores than classes', () {
+      expect(
+        () => probabilitiesFrom(Float32List.fromList([0.5, 0.5]), 3),
+        throwsA(isA<ScanFailure>()),
+      );
     });
   });
 
