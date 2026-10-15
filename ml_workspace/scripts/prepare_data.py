@@ -168,15 +168,16 @@ def read_catalogue(catalogue_dir: Path, kept: list[str]) -> list[tuple[str, str,
             rows.append((article_id, f"images/{photo.name}", label))
     if missing_files:
         print(f"prepare_data: {missing_files} kept rows have no photo on disk and were dropped")
-    rows.sort(key=lambda row: (row[2], int(row[0])))
+    rows.sort(key=lambda row: (row[2], row[0]))
     seen: set[str] = set()
     deduped = [row for row in rows if not (row[0] in seen or seen.add(row[0]))]
     if len(deduped) != len(rows):
         print(f"prepare_data: dropped {len(rows) - len(deduped)} duplicate ids")
+    counts = Counter(row[2] for row in deduped)
     thin = sorted(
-        (label, count)
-        for label, count in Counter(row[2] for row in deduped).items()
-        if count < MIN_IMAGES_PER_CLASS
+        (label, counts.get(label, 0))
+        for label in kept
+        if counts.get(label, 0) < MIN_IMAGES_PER_CLASS
     )
     if thin:
         raise PrepError(
@@ -205,7 +206,7 @@ def stratified_split(
         splits["val"] += group[n_test : n_test + n_val]
         splits["train"] += group[n_test + n_val :]
     for rows_in_split in splits.values():
-        rows_in_split.sort(key=lambda row: (row[2], int(row[0])))
+        rows_in_split.sort(key=lambda row: (row[2], row[0]))
     return splits
 
 
