@@ -1,0 +1,11 @@
+# Colab run outputs stay out of git: the symlinked dataset, the checkpoints and every plot are
+# reproducible from the notebook. classes.json, report.md and the CSVs are worth committing --
+# they are the evidence for the numbers reported in ml_workspace/yolo/README.md.
+dataset/
+runs/
+artifacts/*.tflite
+artifacts/*.onnx
+artifacts/*.pt
+artifacts/*.zip
+
+__pycache__/
