@@ -1,5 +1,7 @@
 # Only permissively licensed model weights ship
 
+**Status**: still in force for the matting model; superseded for the garment classifier by [ADR-0006](./0006-yolov8-classifier-agpl.md), which adopts Ultralytics YOLOv8 (AGPL-3.0) weights at the user's request.
+
 Every model bundled in the APK must be Apache-2.0, MIT or BSD. That rules out the most convenient fashion weights: Ultralytics-trained YOLO models (AGPL-3.0), `mattmdjaga/segformer_b2_clothes` and `sayeed99/segformer-b3-fashion` (NVIDIA non-commercial), BRIA RMBG-2.0 (CC BY-NC 4.0) and `isnet-general-use` (weights never licensed upstream — xuebinqin/DIS#150 is still open). The garment classifier is therefore trained by us and matting uses U-2-Net weights.
 
 ## Considered options
