@@ -21,12 +21,8 @@ void main() {
   });
 
   tearDown(() async {
-    // Reopening on `:memory:` closes the temp file so Windows can delete it.
-    await initWardrobeStore(
-      factory: databaseFactoryFfi,
-      path: inMemoryDatabasePath,
-    );
-    wardrobeItems.value = const [];
+    // Windows keeps the file locked until the connection is closed.
+    await closeWardrobeStore();
     if (await tempDir.exists()) await tempDir.delete(recursive: true);
   });
 

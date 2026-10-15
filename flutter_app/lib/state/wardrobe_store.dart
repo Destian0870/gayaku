@@ -38,6 +38,16 @@ Future<void> initWardrobeStore({DatabaseFactory? factory, String? path}) {
   return next;
 }
 
+/// Closes the connection and empties [wardrobeItems]; the next
+/// [initWardrobeStore] reopens the file. Tests that delete their temporary
+/// directory need this — Windows keeps the file locked while it is open.
+Future<void> closeWardrobeStore() async {
+  final db = _db;
+  _db = null;
+  await db?.close();
+  wardrobeItems.value = const [];
+}
+
 /// Inserts [item] and re-notifies listeners. Same [WardrobeItem.id] replaces.
 Future<void> addWardrobeItem(WardrobeItem item) async {
   final db = _requireDb();
