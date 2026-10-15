@@ -11,9 +11,11 @@
     # 3. from an already extracted catalogue (Kaggle notebook input, offline copy)
     python ml_workspace/scripts/prepare_data.py --catalogue-dir /kaggle/input/fashion-product-images
 
-Step 2 needs a Kaggle token -- ~/.kaggle/kaggle.json, or KAGGLE_USERNAME + KAGGLE_KEY in
-the environment (KAGGLE_CONFIG_DIR overrides the config directory) -- and the `kaggle`
-CLI (`pip install kaggle`). Step 2 fails with instructions when the token is missing;
+Step 2 needs a Kaggle token -- `~/.kaggle/kaggle.json` (username + key), a newer
+`KGAT_...` access token in `~/.kaggle/access_token` or `$KAGGLE_API_TOKEN`, or
+`KAGGLE_USERNAME` + `KAGGLE_KEY` in the environment (`KAGGLE_CONFIG_DIR` overrides the
+config directory) -- and the `kaggle` CLI (`pip install kaggle`). Step 2 fails with
+instructions when the token is missing;
 steps 1 and 3 never touch the network.
 
 Outputs (paths relative to ml_workspace/, override with --data-dir/--artifacts-dir):
@@ -70,12 +72,23 @@ def read_labels(path: Path, dataset: str) -> list[dict]:
 
 
 def kaggle_credentials() -> Path | None:
-    """Where the kaggle CLI would find a token, or None when there is none."""
-    env = Path(os.environ.get("KAGGLE_CONFIG_DIR", Path.home() / ".kaggle")) / "kaggle.json"
-    if env.is_file():
-        return env
+    """Where the kaggle CLI would find a token, or None when there is none.
+
+    Kaggle hands out two shapes of credential and the CLI reads both: the classic
+    `kaggle.json` (username + key) and the newer access token (`KGAT_...`), which
+    the CLI takes from `$KAGGLE_API_TOKEN` or `~/.kaggle/access_token`.
+    """
+    config_dir = Path(os.environ.get("KAGGLE_CONFIG_DIR", Path.home() / ".kaggle"))
+    legacy = config_dir / "kaggle.json"
+    if legacy.is_file():
+        return legacy
     if os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY"):
         return Path("$KAGGLE_USERNAME/$KAGGLE_KEY")
+    if os.environ.get("KAGGLE_API_TOKEN"):
+        return Path("$KAGGLE_API_TOKEN")
+    access_token = config_dir / "access_token"
+    if access_token.is_file():
+        return access_token
     return None
 
 
@@ -320,8 +333,10 @@ def main(argv: list[str] | None = None) -> int:
             if credentials is None:
                 raise PrepError(
                     "no Kaggle token found: expected "
-                    f"{Path.home() / '.kaggle' / 'kaggle.json'} or KAGGLE_USERNAME + KAGGLE_KEY. "
-                    "Download a token from https://www.kaggle.com/settings/account, or run "
+                    f"{Path.home() / '.kaggle' / 'kaggle.json'}, or "
+                    f"{Path.home() / '.kaggle' / 'access_token'}, or KAGGLE_USERNAME + "
+                    "KAGGLE_KEY, or KAGGLE_API_TOKEN. Download a token from "
+                    "https://www.kaggle.com/settings/account, or run "
                     "with --catalogue-dir pointing at an already extracted dataset. "
                     "`--labels-only` writes classes.json without any dataset."
                 )

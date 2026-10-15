@@ -23,9 +23,12 @@ apply: the notebook reuses this repository's scripts, writes everything under
 
 Have all of this ready **before** you open Colab, or the run fails an hour in.
 
-1. **A Kaggle account and API token** for the catalogue path. Kaggle → *Settings* → *API* →
-   *Create New Token* downloads `kaggle.json`; the notebook accepts it either as a Colab Secret
-   (`KAGGLE_USERNAME` + `KAGGLE_KEY`, the key icon in Colab's left sidebar) or as an upload.
+1. **A Kaggle account and API token** for the catalogue path. Kaggle now issues two shapes and
+   the tooling accepts both: `kaggle.json` (username + key) at `~/.kaggle/kaggle.json`, or an
+   access token starting with `KGAT_` at `~/.kaggle/access_token` / `$KAGGLE_API_TOKEN`. The
+   notebook takes whichever you have — from the `ACCESS_TOKEN` line at the top of step c, from
+   Colab Secrets (`KAGGLE_USERNAME` + `KAGGLE_KEY`, or a single `KAGGLE_API_TOKEN`), or from the
+   upload picker (it detects which shape you gave it).
    No Kaggle account? Skip this and use the CC0 path — it needs no credentials at all.
 2. **A GPU runtime**, not just any runtime: *Runtime* → *Change runtime type* → T4 GPU. Free
    Colab is enough. Without a GPU the notebook still runs, but the catalogue takes many hours on
