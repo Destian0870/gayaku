@@ -1142,6 +1142,111 @@
       "name": "Badan",
       "keep": false,
       "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Blazer",
+      "category": "Outerwear",
+      "name": "Blazer",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Celana_Panjang",
+      "category": "Bottoms",
+      "name": "Celana Panjang",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Celana_Pendek",
+      "category": "Bottoms",
+      "name": "Celana Pendek",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Gaun",
+      "category": "Tops",
+      "name": "Gaun",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Hoodie",
+      "category": "Tops",
+      "name": "Hoodie",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket",
+      "category": "Outerwear",
+      "name": "Jaket",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket_Denim",
+      "category": "Outerwear",
+      "name": "Jaket Denim",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket_Olahraga",
+      "category": "Outerwear",
+      "name": "Jaket Olahraga",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jeans",
+      "category": "Bottoms",
+      "name": "Jeans",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kaos",
+      "category": "Tops",
+      "name": "Kaos",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kemeja",
+      "category": "Tops",
+      "name": "Kemeja",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Mantel",
+      "category": "Outerwear",
+      "name": "Mantel",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Polo",
+      "category": "Tops",
+      "name": "Kaos Polo",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Rok",
+      "category": "Bottoms",
+      "name": "Rok",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Sweter",
+      "category": "Outerwear",
+      "name": "Sweter",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
     }
   ]
 }
