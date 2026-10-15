@@ -91,15 +91,27 @@ class ScanPipeline {
   final Interpreter classifier;
 
   /// Loads the bundled models and checks they match the generated label list.
+  ///
+  /// A missing or unreadable asset surfaces as its own [ScanFailure]: it is a
+  /// build problem, not something the user can retry away.
   static Future<ScanPipeline> load() async {
-    final pipeline = ScanPipeline(
-      matting: await Interpreter.fromAsset('assets/models/u2netp_320.tflite'),
-      classifier: await Interpreter.fromAsset(
-        'assets/models/garment_classifier.tflite',
-      ),
-    );
-    pipeline.checkContracts();
-    return pipeline;
+    try {
+      final pipeline = ScanPipeline(
+        matting: await Interpreter.fromAsset('assets/models/u2netp_320.tflite'),
+        classifier: await Interpreter.fromAsset(
+          'assets/models/garment_classifier.tflite',
+        ),
+      );
+      pipeline.checkContracts();
+      return pipeline;
+    } on ScanFailure {
+      rethrow;
+    } on Object {
+      throw const ScanFailure(
+        'Model pemindai tidak tersedia di build ini. Ekspor model dari '
+        'ml_workspace/ lalu build ulang aplikasi.',
+      );
+    }
   }
 
   void close() {
