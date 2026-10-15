@@ -1,0 +1,22 @@
+# CC0 bootstrap clone (~103 MB) and its train/validation/test split manifests
+data/
+
+# bootstrap run outputs stay out of git: the verified model ships from
+# flutter_app/assets/models/garment_classifier.tflite instead
+artifacts/*.pt
+artifacts/*.onnx
+artifacts/*.tflite
+
+# per-image run evidence and converter scratch: reproducible, bulky, not review material
+# (artifacts/classes.json and artifacts/report.md ARE committed)
+artifacts/subset_predictions.json
+artifacts/tflite_predictions.json
+artifacts/onnx_io.json
+artifacts/tflite_io.json
+artifacts/onnx2tf_*
+artifacts/smoke/
+
+# conversion venv (TensorFlow has no stable wheel for the Windows python 3.14 here)
+.venv*/
+
+__pycache__/
