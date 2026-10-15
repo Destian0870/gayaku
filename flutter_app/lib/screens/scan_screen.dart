@@ -116,7 +116,11 @@ class _ScanScreenState extends State<ScanScreen> {
       });
     } on ScanFailure catch (failure) {
       _fail(failure.message);
-    } on Object {
+    } on Object catch (error, stack) {
+      // A genuine defect rather than a user-actionable state: keep the trace in
+      // the logs, show the user something honest.
+      debugPrint('Scan failed: $error');
+      debugPrint('$stack');
       _fail('Pemindaian gagal. Coba lagi.');
     }
   }
