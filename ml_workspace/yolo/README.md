@@ -1,4 +1,4 @@
-# YOLOv8 classifier — the Colab training venue
+# YOLOv8 classifier — the training venues (Colab, and Kaggle for the 15-class dataset)
 
 `fashion_classifier_yolov8.ipynb` trains the garment classifier with **Ultralytics YOLOv8
 classification** (`yolov8n-cls.pt`, 224 px) instead of the MobileNetV3-small that
@@ -234,3 +234,67 @@ training. Explicitly:
 * **The numbers**: this README quotes the measured CC0 bootstrap numbers from
   `ml_workspace/bootstrap/README.md` (0.9194 test top-1, 10 classes) as the bar to compare
   against. No YOLOv8 accuracy figure appears anywhere here, because none has been measured yet.
+
+## The Kaggle variant: `kaggle_clothes_dataset.ipynb`
+
+A second YOLOv8 notebook, trained on Kaggle instead of Colab and on a different dataset:
+`ryanbadai/clothes-dataset` — 15 Indonesian class folders, ~500 photographs each, **no
+train/val split**, attached as a notebook *input* rather than downloaded. It is **self-contained**:
+it does not clone this repository, because a Kaggle input dataset is already there and nothing else
+is needed. Reasons and caveats: `docs/adr/0007-carousell-clothes-dataset.md`.
+
+* **Run it**: Kaggle → *Add Input* → `ryanbadai/clothes-dataset`; right panel → *Accelerator: GPU
+  T4*; right panel → *Internet: On* (without it, `pip install ultralytics` and the `yolov8n-cls.pt`
+  download both fail — the notebook says so where it matters).
+* **Where it writes**: the symlinked split tree and the training run go to `/kaggle/temp` (not
+  committed), the artefacts to `/kaggle/working/artifacts/` (`classes.json`, `confusion_matrix*`,
+  `classification_report.*`, `per_class_accuracy.csv`, `report.md`) and the bundle to
+  `/kaggle/working/gayaku_yolo_clothes.zip`. `/kaggle/working` is what Kaggle saves as the notebook
+  output (max 20 GB), and *Save & Run All (Commit)* runs server-side so the tab can be closed —
+  but it spends GPU quota, so iterate interactively and commit once.
+* **Its class list is 15 classes, not 80 or 10**: `gen_dart_labels.py` will therefore demand a
+  15-entry `garment_labels.dart` and a model whose output width is 15. The label table in the
+  notebook is a copy of the 15 `ryanbadai/clothes-dataset` rows in `ml_workspace/labels.json`
+  (Tops 5, Bottoms 4, Outerwear 6 — no Shoes, no Accessories), and it must stay identical: the
+  codegen refuses two datasets whose shared labels disagree (`Jeans`, `Polo`, `Hoodie`, `Blazer`).
+* **Integration**: same three steps as above, with this zip and the same `--classes` path —
+  unzip into `ml_workspace/yolo/artifacts/`, copy
+  `ml_workspace/yolo/artifacts/garment_classifier.tflite` to
+  `flutter_app/assets/models/garment_classifier.tflite`, then
+  `python ml_workspace/scripts/gen_dart_labels.py --classes ml_workspace/yolo/artifacts/classes.json --labels ml_workspace/labels.json --out flutter_app/lib/logic/garment_labels.dart --model flutter_app/assets/models/garment_classifier.tflite`.
+  Both notebooks write the same `ml_workspace/yolo/artifacts/classes.json` name, so rename one
+  (`classes_catalogue.json` / `classes_clothes15.json`) if you want to keep two runs' evidence
+  side by side — `--classes` takes any path.
+* **Accuracy**: the dataset's public baseline is a fine-tuned ViT-base at 78.47 % accuracy /
+  0.7803 macro-F1 over 15 classes on a 40 % split; this notebook uses a 20 % split, so the support
+  is smaller. Never quote the shipped 10-class bootstrap model's 91.9 % next to it without the
+  class count — 15 classes are not 10.
+
+### What was verified for the Kaggle notebook, and what was not
+
+Verified on the authoring machine (no Kaggle session needed):
+
+* `nbformat.validate` passes (nbformat 4.5, 20 cells: 12 markdown / 9 code), zero stored outputs,
+  and every code cell parses with `ast.parse` after stripping its single `!pip install -q ultralytics`
+  line.
+* The embedded label table is **byte-identical** to the 15 `ryanbadai/clothes-dataset` rows in
+  `ml_workspace/labels.json` (compared by loading both, not by eye), and it is in alphabetical
+  order, which is the order ultralytics derives from the class folders.
+* The dataset-discovery cell and the split cell were **executed for real** against a synthetic
+  `Clothes_Dataset` tree (15 labels × 120 images) with only the two hard-coded `/kaggle/…` paths
+  swapped: folder names validated, 96/24 per class built as **symlinks** pointing back into the
+  input, re-run reuses the marked tree, `CLASSES` equals the sorted label list, and a renamed
+  folder is refused with the intended message (this run also caught — and fixed — a `KeyError`
+  that fired before that message).
+* The `report.md` writer was **executed for real** with stubbed measurements: `classes.json` comes
+  out as `{version, source, labels}` with 15 labels, the report renders 117 lines with no
+  unresolved `{…}` field, and the baseline/label-noise/licence paragraphs are present.
+
+Not verified (needs a Kaggle session):
+
+* everything that touches the real dataset or a GPU: input discovery on the actual mount, the
+  per-class counts (the ~500/class and 1.48 GB figures come from the Kaggle file-listing API and a
+  public kernel, not from a run here), training, `model.val`, the extra `model.predict` pass, the
+  exports, the `.tflite` contract checks, the fidelity gate and the zip;
+* no accuracy, macro-F1 or agreement number is quoted anywhere for this dataset, because none has
+  been measured.
