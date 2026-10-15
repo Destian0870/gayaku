@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1010" viewBox="0 0 1560 1010">
+<rect width="1560" height="1010" fill="#ffffff"/>
+<style>.hdr{font:600 16px "Segoe UI",Arial,sans-serif;fill:#f8fafc}.an{font:14px "Segoe UI",Arial,sans-serif;fill:#0f172a}.at{font:13px "Segoe UI",Arial,sans-serif;fill:#64748b}.k{font:700 11px "Segoe UI",Arial,sans-serif}.lb{font:italic 13px "Segoe UI",Arial,sans-serif;fill:#334155}</style>
+<text x="120" y="26" style="font:700 22px 'Segoe UI',Arial,sans-serif;fill:#0f172a">Gayaku — Entity Relationship Diagram</text>
+<path d="M 270 240 L 270 340" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 420 190 L 560 190 L 560 470 L 660 470" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 420 380 L 540 380 L 540 280 L 660 280" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 810 356 L 810 460" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 270 720 L 270 624" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 1330 312 L 1330 400" fill="none" stroke="#475569" stroke-width="1.8"/>
+<path d="M 1180 700 L 1090 700 L 1090 206 L 1180 206" fill="none" stroke="#475569" stroke-width="1.8"/>
+<rect x="120" y="100" width="300" height="140" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 120 136 H 420" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="120" y="100" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="120" y="128" width="300" height="8" fill="#1e293b"/>
+<text x="134" y="124" class="hdr">USER</text>
+<text x="132" y="153.0" class="k" fill="#b45309">PK</text>
+<text x="164" y="153.0" class="an">uid</text>
+<text x="406" y="153.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 160 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="177.0" class="an">email</text>
+<text x="406" y="177.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 184 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="201.0" class="an">display_name</text>
+<text x="406" y="201.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 208 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="225.0" class="an">photo_url</text>
+<text x="406" y="225.0" class="at" text-anchor="end">TEXT?</text>
+<rect x="120" y="340" width="300" height="284" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 120 376 H 420" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="120" y="340" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="120" y="368" width="300" height="8" fill="#1e293b"/>
+<text x="134" y="364" class="hdr">WARDROBE_ITEM</text>
+<text x="132" y="393.0" class="k" fill="#b45309">PK</text>
+<text x="164" y="393.0" class="an">id</text>
+<text x="406" y="393.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 400 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="417.0" class="an">name</text>
+<text x="406" y="417.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 424 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="441.0" class="an">category</text>
+<text x="406" y="441.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 448 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="465.0" class="an">subcategory</text>
+<text x="406" y="465.0" class="at" text-anchor="end">TEXT?</text>
+<path d="M 128 472 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="489.0" class="an">image_path</text>
+<text x="406" y="489.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 496 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="513.0" class="an">brand</text>
+<text x="406" y="513.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 520 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="537.0" class="an">color_name</text>
+<text x="406" y="537.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 544 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="561.0" class="an">color</text>
+<text x="406" y="561.0" class="at" text-anchor="end">INT</text>
+<path d="M 128 568 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="585.0" class="an">formality</text>
+<text x="406" y="585.0" class="at" text-anchor="end">INT</text>
+<path d="M 128 592 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="609.0" class="an">occasions</text>
+<text x="406" y="609.0" class="at" text-anchor="end">TEXT</text>
+<rect x="120" y="720" width="300" height="212" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 120 756 H 420" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="120" y="720" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="120" y="748" width="300" height="8" fill="#1e293b"/>
+<text x="134" y="744" class="hdr">SCAN_RESULT</text>
+<text x="164" y="773.0" class="an">cutout_png</text>
+<text x="406" y="773.0" class="at" text-anchor="end">BLOB</text>
+<path d="M 128 780 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="797.0" class="an">dominant_color</text>
+<text x="406" y="797.0" class="at" text-anchor="end">INT</text>
+<path d="M 128 804 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="821.0" class="an">color_name</text>
+<text x="406" y="821.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 828 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="845.0" class="an">label</text>
+<text x="406" y="845.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 852 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="869.0" class="an">category</text>
+<text x="406" y="869.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 876 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="893.0" class="an">suggested_name</text>
+<text x="406" y="893.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 128 900 H 412" stroke="#f1f5f9" stroke-width="1"/>
+<text x="164" y="917.0" class="an">confidence</text>
+<text x="406" y="917.0" class="at" text-anchor="end">REAL</text>
+<rect x="660" y="240" width="300" height="116" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 660 276 H 960" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="660" y="240" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="660" y="268" width="300" height="8" fill="#1e293b"/>
+<text x="674" y="264" class="hdr">OUTFIT_ITEM</text>
+<text x="672" y="293.0" class="k" fill="#0369a1">FK</text>
+<text x="704" y="293.0" class="an">outfit_id</text>
+<text x="946" y="293.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 668 300 H 952" stroke="#f1f5f9" stroke-width="1"/>
+<text x="672" y="317.0" class="k" fill="#0369a1">FK</text>
+<text x="704" y="317.0" class="an">item_id</text>
+<text x="946" y="317.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 668 324 H 952" stroke="#f1f5f9" stroke-width="1"/>
+<text x="704" y="341.0" class="an">slot_index</text>
+<text x="946" y="341.0" class="at" text-anchor="end">INT</text>
+<rect x="660" y="460" width="300" height="140" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 660 496 H 960" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="660" y="460" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="660" y="488" width="300" height="8" fill="#1e293b"/>
+<text x="674" y="484" class="hdr">SAVED_OUTFIT</text>
+<text x="672" y="513.0" class="k" fill="#b45309">PK</text>
+<text x="704" y="513.0" class="an">id</text>
+<text x="946" y="513.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 668 520 H 952" stroke="#f1f5f9" stroke-width="1"/>
+<text x="704" y="537.0" class="an">name</text>
+<text x="946" y="537.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 668 544 H 952" stroke="#f1f5f9" stroke-width="1"/>
+<text x="704" y="561.0" class="an">threshold</text>
+<text x="946" y="561.0" class="at" text-anchor="end">REAL</text>
+<path d="M 668 568 H 952" stroke="#f1f5f9" stroke-width="1"/>
+<text x="704" y="585.0" class="an">favorite</text>
+<text x="946" y="585.0" class="at" text-anchor="end">BOOL</text>
+<rect x="1180" y="100" width="300" height="212" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 1180 136 H 1480" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="1180" y="100" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="1180" y="128" width="300" height="8" fill="#1e293b"/>
+<text x="1194" y="124" class="hdr">LOOK</text>
+<text x="1192" y="153.0" class="k" fill="#b45309">PK</text>
+<text x="1224" y="153.0" class="an">id</text>
+<text x="1466" y="153.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 160 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="177.0" class="an">title</text>
+<text x="1466" y="177.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 184 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="201.0" class="an">style_tag</text>
+<text x="1466" y="201.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 208 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="225.0" class="an">subtitle</text>
+<text x="1466" y="225.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 232 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="249.0" class="an">image_path</text>
+<text x="1466" y="249.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 256 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="273.0" class="an">color_harmony</text>
+<text x="1466" y="273.0" class="at" text-anchor="end">INT</text>
+<path d="M 1188 280 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="297.0" class="an">saved_at</text>
+<text x="1466" y="297.0" class="at" text-anchor="end">DATETIME</text>
+<rect x="1180" y="400" width="300" height="164" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 1180 436 H 1480" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="1180" y="400" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="1180" y="428" width="300" height="8" fill="#1e293b"/>
+<text x="1194" y="424" class="hdr">LOOK_ITEM</text>
+<text x="1192" y="453.0" class="k" fill="#0369a1">FK</text>
+<text x="1224" y="453.0" class="an">look_id</text>
+<text x="1466" y="453.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 460 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="477.0" class="an">type</text>
+<text x="1466" y="477.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 484 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="501.0" class="an">name</text>
+<text x="1466" y="501.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 508 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="525.0" class="an">image_path</text>
+<text x="1466" y="525.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 532 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="549.0" class="an">icon</text>
+<text x="1466" y="549.0" class="at" text-anchor="end">TEXT</text>
+<rect x="1180" y="652" width="300" height="140" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<path d="M 1180 688 H 1480" stroke="#e2e8f0" stroke-width="1.5"/>
+<rect x="1180" y="652" width="300" height="36" rx="8" fill="#1e293b"/>
+<rect x="1180" y="680" width="300" height="8" fill="#1e293b"/>
+<text x="1194" y="676" class="hdr">PLANNED_OUTFIT</text>
+<text x="1192" y="705.0" class="k" fill="#b45309">PK</text>
+<text x="1224" y="705.0" class="an">date</text>
+<text x="1466" y="705.0" class="at" text-anchor="end">DATE</text>
+<path d="M 1188 712 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="729.0" class="an">occasion</text>
+<text x="1466" y="729.0" class="at" text-anchor="end">TEXT</text>
+<path d="M 1188 736 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1224" y="753.0" class="an">complete</text>
+<text x="1466" y="753.0" class="at" text-anchor="end">BOOL</text>
+<path d="M 1188 760 H 1472" stroke="#f1f5f9" stroke-width="1"/>
+<text x="1192" y="777.0" class="k" fill="#0369a1">FK</text>
+<text x="1224" y="777.0" class="an">look_id</text>
+<text x="1466" y="777.0" class="at" text-anchor="end">TEXT</text>
+<line x1="277" y1="254" x2="263" y2="254" stroke="#475569" stroke-width="2"/>
+<line x1="270" y1="326" x2="263" y2="337" stroke="#475569" stroke-width="2"/>
+<line x1="270" y1="326" x2="270" y2="337" stroke="#475569" stroke-width="2"/>
+<line x1="270" y1="326" x2="277" y2="337" stroke="#475569" stroke-width="2"/>
+<text x="284" y="296" class="lb" text-anchor="start">owns</text>
+<line x1="434" y1="183" x2="434" y2="197" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="470" x2="657" y2="477" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="470" x2="657" y2="470" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="470" x2="657" y2="463" stroke="#475569" stroke-width="2"/>
+<text x="470" y="182" class="lb" text-anchor="start">owns</text>
+<line x1="434" y1="373" x2="434" y2="387" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="280" x2="657" y2="287" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="280" x2="657" y2="280" stroke="#475569" stroke-width="2"/>
+<line x1="646" y1="280" x2="657" y2="273" stroke="#475569" stroke-width="2"/>
+<text x="470" y="372" class="lb" text-anchor="start">in</text>
+<line x1="810" y1="370" x2="817" y2="359" stroke="#475569" stroke-width="2"/>
+<line x1="810" y1="370" x2="810" y2="359" stroke="#475569" stroke-width="2"/>
+<line x1="810" y1="370" x2="803" y2="359" stroke="#475569" stroke-width="2"/>
+<line x1="803" y1="446" x2="817" y2="446" stroke="#475569" stroke-width="2"/>
+<text x="824" y="412" class="lb" text-anchor="start">holds</text>
+<line x1="263" y1="706" x2="277" y2="706" stroke="#475569" stroke-width="2"/>
+<line x1="277" y1="638" x2="263" y2="638" stroke="#475569" stroke-width="2"/>
+<text x="284" y="676" class="lb" text-anchor="start">creates on save</text>
+<line x1="1337" y1="326" x2="1323" y2="326" stroke="#475569" stroke-width="2"/>
+<line x1="1330" y1="386" x2="1323" y2="397" stroke="#475569" stroke-width="2"/>
+<line x1="1330" y1="386" x2="1330" y2="397" stroke="#475569" stroke-width="2"/>
+<line x1="1330" y1="386" x2="1337" y2="397" stroke="#475569" stroke-width="2"/>
+<text x="1344" y="360" class="lb" text-anchor="start">contains</text>
+<line x1="1166" y1="700" x2="1177" y2="707" stroke="#475569" stroke-width="2"/>
+<line x1="1166" y1="700" x2="1177" y2="700" stroke="#475569" stroke-width="2"/>
+<line x1="1166" y1="700" x2="1177" y2="693" stroke="#475569" stroke-width="2"/>
+<line x1="1194" y1="199" x2="1194" y2="213" stroke="#475569" stroke-width="2"/>
+<text x="1098" y="450" class="lb" text-anchor="end">schedules</text>
+<rect x="660" y="800" width="330" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+<text x="676" y="828" style="font:600 14px 'Segoe UI',Arial,sans-serif;fill:#0f172a">Legend</text>
+<text x="676" y="858" class="k" fill="#b45309">PK</text>
+<text x="716" y="858" class="an" style="font-size:13px">primary key</text>
+<text x="676" y="882" class="k" fill="#0369a1">FK</text>
+<text x="716" y="882" class="an" style="font-size:13px">foreign key</text>
+<line x1="676" y1="912" x2="770" y2="912" stroke="#475569" stroke-width="1.8"/>
+<line x1="756" y1="898" x2="756" y2="926" stroke="#475569" stroke-width="2"/>
+<line x1="756" y1="912" x2="770" y2="905" stroke="#475569" stroke-width="2"/>
+<line x1="756" y1="912" x2="770" y2="919" stroke="#475569" stroke-width="2"/>
+<text x="780" y="917" class="an" style="font-size:13px">one &#8594; many</text>
+<text x="676" y="942" class="lb" style="font-size:12px">TEXT? = nullable; all other columns NOT NULL</text>
+</svg>
