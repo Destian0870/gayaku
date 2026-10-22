@@ -76,11 +76,13 @@ dHash, then keeps one member per group:
 
 * **duplicate, same class** — one copy survives (the larger file; on a tie, `--prefer-source`);
 * **duplicate, different class across sources** — the copy from `--prefer-source` survives and its
-  label wins. The default is `clothes`: the conflicting classes all sit inside one Category
-  (`Sweter` and `Kaos_Lengan_Panjang` are both Tops), Clothes_Dataset keeps its 15 classes at 500,
-  and it carries the UI vocabulary. 403 CC0 `longsleeve` photographs therefore count as `Sweter`,
-  which is why `Kaos_Lengan_Panjang` holds 172 photographs. If the confusion matrix later shows
-  those two colliding, rerun with `--prefer-source cc0`; no code changes.
+  label wins. The default is `clothes`: it keeps the 15 `Clothes_Dataset` classes at 500, it carries
+  the UI vocabulary, and it holds 2.3× the pixels. 403 CC0 `longsleeve` photographs therefore count
+  as `Sweter`, which is why `Kaos_Lengan_Panjang` holds 172 photographs. **This is not only a
+  display change**: `Longsleeve` is Tops in `labels.json` and `Sweter` is Outerwear, so those 403
+  photographs move to another wardrobe tab and reach the outfit matcher under a different Category.
+  Rerun with `--prefer-source cc0` to reverse it — `Sweter` then holds 93 and `Kaos_Lengan_Panjang`
+  575 — without touching code.
 * **duplicate, different class inside one source** — ambiguous, so every member is dropped and the
   group is listed in `conflicts.csv`. Identical photographs filed under `Jaket`, `Kemeja` and
   `Polo` claim two of those labels are wrong, and picking one would invent an answer.
