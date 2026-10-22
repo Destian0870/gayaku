@@ -13,6 +13,7 @@ resulting `.tflite` files and runs them on device; nothing here runs at runtime
 | `labels.json` | yes | semantic source of truth: one entry per catalogue `articleType` (143 of them) plus the CC0 bootstrap vocabulary, each with `category`, Indonesian `name`, `keep` and the `dataset` it belongs to |
 | `artifacts/classes.json` | yes | the catalogue classifier's class list. **`labels[i]` is the label score `i` means** — this file *is* the model's output order. The CC0 bootstrap export carries its own list at `bootstrap/artifacts/classes.json` (see "Where the models stand") |
 | `scripts/prepare_data.py` | yes | Kaggle download, label cleanup, stratified 80/10/10 split, writes `artifacts/classes.json` |
+| `scripts/merge_datasets.py` | yes | the 18-class merged set: dedupes the CC0 clone against `Clothes_Dataset`, maps the labels, splits per source folder, writes the ImageFolder, `manifest.csv`, `conflicts.csv` and `yolo/artifacts/{merged_dataset,classes_merged}.json` |
 | `scripts/gen_dart_labels.py` | yes | emits `flutter_app/lib/logic/garment_labels.dart` from `classes.json` + `labels.json` |
 | `scripts/fetch_matting_model.py` | yes | fetches + verifies `flutter_app/assets/models/u2netp_320.tflite` |
 | `scripts/tflite_io.py` | yes | reads a `.tflite`'s tensor IO with no TensorFlow/LiteRT install (tiny flatbuffers reader) |
@@ -54,12 +55,56 @@ stops a list and the weights it describes from drifting apart: you cannot regene
 file for a model you have not actually swapped in, and you cannot swap weights without
 regenerating the file in the same commit.
 
+## The merged 18-class training set
+
+The classifier's next training set is neither source on its own
+(`docs/adr/0008-merge-the-two-training-sources.md`). `Clothes_Dataset` has the Indonesian labels
+and the fine outerwear split but no Shoes and no Hat; the CC0 clone has both, and its photographs
+are 400 px. `scripts/merge_datasets.py` combines them:
+
+| | |
+|---|---|
+| classes | 18: the 15 `Clothes_Dataset` folders plus `Kaos_Lengan_Panjang`, `Sepatu`, `Topi` from CC0 |
+| unique photographs | **9,728** after dedupe (7,350 from `Clothes_Dataset`, 2,378 from CC0) |
+| files scanned | 11,281 — the sources are not disjoint |
+
+The 1,401 photographs that both sources hold (same picture, resized) are the reason a plain copy
+into one folder would not work: they would sit in `train` from CC0 and in `test` from
+`Clothes_Dataset`, and the test accuracy would measure memorisation. The script therefore groups
+photographs by `sha256`, by shared basename plus a 16×16 greyscale signature, and by a 64-bit
+dHash, then keeps one member per group:
+
+* **duplicate, same class** — one copy survives (the larger file; on a tie, `--prefer-source`);
+* **duplicate, different class across sources** — the copy from `--prefer-source` survives and its
+  label wins. The default is `clothes`: the conflicting classes all sit inside one Category
+  (`Sweter` and `Kaos_Lengan_Panjang` are both Tops), Clothes_Dataset keeps its 15 classes at 500,
+  and it carries the UI vocabulary. 403 CC0 `longsleeve` photographs therefore count as `Sweter`,
+  which is why `Kaos_Lengan_Panjang` holds 172 photographs. If the confusion matrix later shows
+  those two colliding, rerun with `--prefer-source cc0`; no code changes.
+* **duplicate, different class inside one source** — ambiguous, so every member is dropped and the
+  group is listed in `conflicts.csv`. Identical photographs filed under `Jaket`, `Kemeja` and
+  `Polo` claim two of those labels are wrong, and picking one would invent an answer.
+
+Splits are decided per source folder, never per photograph: CC0 keeps the `train` / `validation` /
+`test` split it ships with and each `Clothes_Dataset` class folder is shuffled once with
+`--seed 20261022`. The script refuses to write a tree in which a duplicate group, a `sha256`, a
+basename or a `phash` reaches two splits — those are assertions, not warnings, because a leak here
+only shows up as an accuracy number that looks better than the model is.
+
+`manifest.csv` carries every scanned photograph, dropped ones included, with `source`, `sha256`,
+`phash`, `kept`, `reason`, `class_after` and `split`; `conflicts.csv` carries one row per member of
+every duplicate group. Both live in the git-ignored output directory, and the committed evidence is
+`yolo/artifacts/merged_dataset.json` (per-class counts, mapping, decisions, assertions) plus
+`yolo/artifacts/classes_merged.json` (the class order `sorted()` produces, which is what ultralytics
+derives from folder names).
+
 ## Where the models stand
 
 | Slot | Asset | Class list | State |
 |---|---|---|---|
 | Matting | `flutter_app/assets/models/u2netp_320.tflite` | — | shipped |
 | Classifier | `flutter_app/assets/models/garment_classifier.tflite` | `bootstrap/artifacts/classes.json` (10 CC0 classes) | shipped: the `alexeygrigorev/clothing-dataset-small` bootstrap export, which makes the scanner verifiable end to end today |
+| Classifier, merged | same path, new weights | `yolo/artifacts/classes_merged.json` (18 merged classes) | dataset built and asserted by `scripts/merge_datasets.py`; training pending the Kaggle run in `yolo/kaggle_merged_dataset.ipynb` |
 | Classifier, final | same path, new weights | `artifacts/classes.json` (80 catalogue classes) | pending the Kaggle run; `docs/adr/0003` makes that the final model |
 
 Landing the Kaggle model means replacing the asset **and** regenerating the Dart file in the
@@ -87,6 +132,12 @@ python ml_workspace/scripts/prepare_data.py --catalogue-dir /kaggle/input/fashio
 # 3b. class list for the local CC0 bootstrap run (alexeygrigorev/clothing-dataset)
 python ml_workspace/scripts/prepare_data.py --labels-only --dataset alexeygrigorev/clothing-dataset
 
+# 3c. the 18-class merged set: dedupe, map, split, write the ImageFolder + evidence
+#     ~3 minutes; needs the CC0 clone on disk and Clothes_Dataset/ next to the repo
+python ml_workspace/scripts/merge_datasets.py
+python ml_workspace/scripts/merge_datasets.py --prefer-source cc0 --force   # the other label choice
+python ml_workspace/scripts/merge_datasets.py --limit-per-class 40 --link copy --out .amp/in/scratch  # smoke
+
 # 4. train + export on Kaggle (GPU + Internet, inputs: the catalogue and this labels.json)
 #    upload ml_workspace/kaggle/fashion_classifier.ipynb, run all; it writes
 #    artifacts/{garment_classifier.tflite,garment_classifier.onnx,classes.json,report.md}
@@ -96,6 +147,8 @@ python ml_workspace/scripts/gen_dart_labels.py
 python ml_workspace/scripts/gen_dart_labels.py --check
 # ... for the CC0 bootstrap model that is shipped today (see "Where the models stand")
 python ml_workspace/scripts/gen_dart_labels.py --classes ml_workspace/bootstrap/artifacts/classes.json
+# ... for the merged 18-class model, once its .tflite is in place
+python ml_workspace/scripts/gen_dart_labels.py --classes ml_workspace/yolo/artifacts/classes_merged.json
 
 # 6. read any exported model's IO contract before wiring it up
 python ml_workspace/scripts/tflite_io.py flutter_app/assets/models/garment_classifier.tflite
@@ -117,9 +170,15 @@ cannot be stratified honestly.
   Its `category` is the nearest of the five Categories, which is what the label would
   resolve to if it ever became a class.
 * `dataset` — which catalogue the label comes from: `paramaggarwal/fashion-product-images-dataset`
-  (Kaggle, `articleType`) or `alexeygrigorev/clothing-dataset` (CC0 bootstrap vocabulary).
-  The same label string may appear under both datasets as long as they agree on
-  `category`/`name` (`Shorts`, `Hat`); `--labels-only --dataset <id>` picks the right set.
+  (Kaggle, `articleType`), `alexeygrigorev/clothing-dataset` (CC0 bootstrap vocabulary), or
+  `ryanbadai/clothes-dataset` (`Clothes_Dataset/` folders). The same label string may appear under
+  two datasets as long as they agree on `category`/`name` (`Shorts`, `Hat`);
+  `--labels-only --dataset <id>` picks the right set.
+* `dataset: gayaku/merged` — the three labels only the merged run has: `Kaos_Lengan_Panjang`
+  (Tops), `Sepatu` (Shoes), `Topi` (Accessories). `Clothes_Dataset` has no footwear, headwear or
+  long-sleeve class, and the CC0 rows carry English spellings (`Longsleeve`, `Shoes`, `Hat`) that
+  the shipped 10-class model uses, so the merged class list names those three in the language the
+  UI shows and maps the CC0 folder to it (`scripts/merge_datasets.py`, `docs/adr/0008`).
 * Categories are exactly the five from `CONTEXT.md`: Tops, Bottoms, Outerwear, Shoes,
   Accessories. Names are the Indonesian display names the scanner shows ("Kaos", "Kemeja",
   "Jeans", "Jaket", "Rok", "Sepatu", "Tas", "Topi", …).

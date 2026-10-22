@@ -1,4 +1,4 @@
-# YOLOv8 classifier — the training venues (Colab, and Kaggle for the 15-class dataset)
+# YOLOv8 classifier — the training venues (Colab for the catalogue, Kaggle for the merged set)
 
 `fashion_classifier_yolov8.ipynb` trains the garment classifier with **Ultralytics YOLOv8
 classification** (`yolov8n-cls.pt`, 224 px) instead of the MobileNetV3-small that
@@ -8,16 +8,23 @@ consequence are `docs/adr/0006-yolov8-classifier-agpl.md`; the training data is
 `docs/adr/0003-kaggle-catalogue-training-data.md`; what the classifier sees is
 `docs/adr/0005-classify-the-cutout.md`.
 
-It is the YOLO counterpart of `ml_workspace/kaggle/fashion_classifier.ipynb`, so the same rules
-apply: the notebook reuses this repository's scripts, writes everything under
+`kaggle_merged_dataset.ipynb` is the Kaggle venue for the **18-class merged set**
+(`docs/adr/0008-merge-the-two-training-sources.md`): it clones this repository and the CC0
+dataset, calls `ml_workspace/scripts/merge_datasets.py`, then trains, evaluates on both `val`
+and `test`, and exports. Its predecessor trained on `Clothes_Dataset` alone (15 classes, no
+Shoes, no Hat) and was replaced by the merged run, not kept beside it.
+
+Both are the YOLO counterpart of `ml_workspace/kaggle/fashion_classifier.ipynb`, so the same rules
+apply: the notebook reuses this repository's scripts where it can, writes everything under
 `ml_workspace/yolo/`, and ends with a zip you download.
 
 | file | committed? | what it is |
 | --- | --- | --- |
-| `fashion_classifier_yolov8.ipynb` | yes | the training notebook (no stored outputs; run it top to bottom) |
+| `fashion_classifier_yolov8.ipynb` | yes | the Colab notebook for the catalogue (no stored outputs; run it top to bottom) |
+| `kaggle_merged_dataset.ipynb` | yes | the Kaggle notebook for the 18-class merged set: merge, train, evaluate, export (no stored outputs) |
 | `dataset/` | no | the ultralytics ImageFolder: `{train,val,test}/<Label>/…`, **symlinks** into the catalogue or the CC0 clone |
 | `runs/` | no | ultralytics training and validation output, including `weights/best.pt` |
-| `artifacts/` | partly | `classes.json`, `report.md`, the CSVs and the confusion-matrix PNGs are worth committing; `*.tflite`, `*.pt` and the zip are ignored |
+| `artifacts/` | partly | `classes.json`, `classes_merged.json`, `merged_dataset.json`, `report.md`, the CSVs and the confusion-matrix PNGs are worth committing; `*.tflite`, `*.pt` and the zip are ignored |
 
 ## Preparation checklist
 
@@ -235,66 +242,74 @@ training. Explicitly:
   `ml_workspace/bootstrap/README.md` (0.9194 test top-1, 10 classes) as the bar to compare
   against. No YOLOv8 accuracy figure appears anywhere here, because none has been measured yet.
 
-## The Kaggle variant: `kaggle_clothes_dataset.ipynb`
+## The Kaggle merged run: `kaggle_merged_dataset.ipynb`
 
-A second YOLOv8 notebook, trained on Kaggle instead of Colab and on a different dataset:
-`ryanbadai/clothes-dataset` — 15 Indonesian class folders, ~500 photographs each, **no
-train/val split**, attached as a notebook *input* rather than downloaded. It is **self-contained**:
-it does not clone this repository, because a Kaggle input dataset is already there and nothing else
-is needed. Reasons and caveats: `docs/adr/0007-carousell-clothes-dataset.md`.
+The Kaggle venue trains on the **18-class merged set** instead of one source alone: the notebook
+clones this repository plus `alexeygrigorev/clothing-dataset-small`, runs
+`ml_workspace/scripts/merge_datasets.py`, and only then trains `yolov8n-cls`. The merge rules and
+the measurements behind them are `docs/adr/0008-merge-the-two-training-sources.md`; the notebook
+never re-implements them, so the tree it trains on is the tree this repository's assertions
+produced.
 
-* **Run it**: Kaggle → *Add Input* → `ryanbadai/clothes-dataset`; right panel → *Accelerator: GPU
-  T4*; right panel → *Internet: On* (without it, `pip install ultralytics` and the `yolov8n-cls.pt`
-  download both fail — the notebook says so where it matters).
-* **Where it writes**: the symlinked split tree and the training run go to `/kaggle/temp` (not
-  committed), the artefacts to `/kaggle/working/artifacts/` (`classes.json`, `confusion_matrix*`,
-  `classification_report.*`, `per_class_accuracy.csv`, `report.md`) and the bundle to
-  `/kaggle/working/gayaku_yolo_clothes.zip`. `/kaggle/working` is what Kaggle saves as the notebook
-  output (max 20 GB), and *Save & Run All (Commit)* runs server-side so the tab can be closed —
-  but it spends GPU quota, so iterate interactively and commit once.
-* **Its class list is 15 classes, not 80 or 10**: `gen_dart_labels.py` will therefore demand a
-  15-entry `garment_labels.dart` and a model whose output width is 15. The label table in the
-  notebook is a copy of the 15 `ryanbadai/clothes-dataset` rows in `ml_workspace/labels.json`
-  (Tops 5, Bottoms 4, Outerwear 6 — no Shoes, no Accessories), and it must stay identical: the
-  codegen refuses two datasets whose shared labels disagree (`Jeans`, `Polo`, `Hoodie`, `Blazer`).
-* **Integration**: same three steps as above, with this zip and the same `--classes` path —
-  unzip into `ml_workspace/yolo/artifacts/`, copy
-  `ml_workspace/yolo/artifacts/garment_classifier.tflite` to
-  `flutter_app/assets/models/garment_classifier.tflite`, then
-  `python ml_workspace/scripts/gen_dart_labels.py --classes ml_workspace/yolo/artifacts/classes.json --labels ml_workspace/labels.json --out flutter_app/lib/logic/garment_labels.dart --model flutter_app/assets/models/garment_classifier.tflite`.
-  Both notebooks write the same `ml_workspace/yolo/artifacts/classes.json` name, so rename one
-  (`classes_catalogue.json` / `classes_clothes15.json`) if you want to keep two runs' evidence
-  side by side — `--classes` takes any path.
-* **Accuracy**: the dataset's public baseline is a fine-tuned ViT-base at 78.47 % accuracy /
-  0.7803 macro-F1 over 15 classes on a 40 % split; this notebook uses a 20 % split, so the support
-  is smaller. Never quote the shipped 10-class bootstrap model's 91.9 % next to it without the
-  class count — 15 classes are not 10.
+* **Run it**: Kaggle -> *Add Input* -> `ryanbadai/clothes-dataset`; *Accelerator: GPU T4*;
+  *Internet: On* (the clone of the repository and of the CC0 dataset, `pip install ultralytics`, and
+  the `yolov8n-cls.pt` download all need it). Set `REPO_REF` at the top of step 2 to the branch that
+  contains `merge_datasets.py` if it is not on `main` yet; the cell stops with a message naming the
+  missing file if the ref does not have it.
+* **What the merge produces**: 11,281 files scanned -> **9,728 unique photographs over 18 classes**
+  (7,350 from `Clothes_Dataset`, 2,378 from CC0), split 7,779 train / 957 val / 992 test. Step 3
+  prints the per-class table from `merged_dataset.json`; those are the numbers to quote, not the 500
+  per folder on the dataset page.
+* **Where it writes**: the tree and the training run go to `/kaggle/temp` (not saved), the artefacts
+  to `/kaggle/working/artifacts/` (`garment_classifier.tflite`, `classes.json`, `report.md`,
+  `merged_dataset.json`, `classes_merged.json`, `classification_report_{val,test}.*`,
+  `per_class_accuracy_{val,test}.csv`, `confusion_matrix_{val,test}.csv` and the PNGs) and the
+  bundle to `/kaggle/working/gayaku_yolo_merged.zip`.
+* **Evaluation**: `val` selects the best epoch, so the reported numbers are the **`test`** split --
+  top-1, top-5, accuracy, macro-F1, precision/recall/F1 per class and the confusion matrix. A second
+  `model.predict` pass cross-checks the ultralytics matrix against scikit-learn's; a non-zero cell
+  difference means the two evaluation pipelines disagree, not that the model is wrong.
+* **Integration**: unzip, copy `garment_classifier.tflite` over
+  `flutter_app/assets/models/garment_classifier.tflite`, then regenerate the Dart list from the list
+  that shipped with the zip, in the same commit:
 
-### What was verified for the Kaggle notebook, and what was not
+  ```bash
+  unzip ~/Downloads/gayaku_yolo_merged.zip -d ml_workspace/yolo/artifacts/
+  cp ml_workspace/yolo/artifacts/garment_classifier.tflite \
+     flutter_app/assets/models/garment_classifier.tflite
+  python ml_workspace/scripts/gen_dart_labels.py \
+    --classes ml_workspace/yolo/artifacts/classes.json \
+    --model flutter_app/assets/models/garment_classifier.tflite
+  ```
 
-Verified on the authoring machine (no Kaggle session needed):
+  `ml_workspace/yolo/artifacts/classes_merged.json` holds the same 18 labels in the same order,
+  committed by the merge; `classes.json` from the zip is what the export actually wrote, and
+  `--model` refuses the pair if their counts differ.
+* **Accuracy is not comparable**: 18 classes here, 10 classes at 91.9 % for the shipped bootstrap
+  model, and 78.47 % / 0.7803 for the public 15-class ViT-base baseline on a 40 % split. Quote the
+  class count and the split with any figure.
 
-* `nbformat.validate` passes (nbformat 4.5, 20 cells: 12 markdown / 9 code), zero stored outputs,
-  and every code cell parses with `ast.parse` after stripping its single `!pip install -q ultralytics`
-  line.
-* The embedded label table is **byte-identical** to the 15 `ryanbadai/clothes-dataset` rows in
-  `ml_workspace/labels.json` (compared by loading both, not by eye), and it is in alphabetical
-  order, which is the order ultralytics derives from the class folders.
-* The dataset-discovery cell and the split cell were **executed for real** against a synthetic
-  `Clothes_Dataset` tree (15 labels × 120 images) with only the two hard-coded `/kaggle/…` paths
-  swapped: folder names validated, 96/24 per class built as **symlinks** pointing back into the
-  input, re-run reuses the marked tree, `CLASSES` equals the sorted label list, and a renamed
-  folder is refused with the intended message (this run also caught — and fixed — a `KeyError`
-  that fired before that message).
-* The `report.md` writer was **executed for real** with stubbed measurements: `classes.json` comes
-  out as `{version, source, labels}` with 15 labels, the report renders 117 lines with no
-  unresolved `{…}` field, and the baseline/label-noise/licence paragraphs are present.
+### What was verified for the merged notebook, and what was not
+
+Verified on the authoring machine (no Kaggle session, no GPU):
+
+* `nbformat.validate` passes (nbformat 4.5, 20 cells: 11 markdown / 9 code), zero stored outputs,
+  and every code cell parses with `ast.parse` after stripping its `!pip install` line.
+* The verification cell (step 3) was **executed against the real merged tree** with only the three
+  hard-coded paths swapped: it prints the 18-class table, matches the tree total (9,728) against
+  `merged_dataset.json`, and reads every assert as `passed`.
+* `merge_datasets.py` was run over the real datasets repeatedly: a second identical run reused the
+  tree because every option, input path and per-folder file count still matched, and a forced
+  rebuild wrote the same 9,728 photographs into the same splits.
+* `gen_dart_labels.py --classes .../classes_merged.json` resolves all 18 labels into Categories and
+  Indonesian names, and against the shipped 10-class asset it refuses with the drift message -- the
+  guard that keeps the app's label list and its weights a matched pair.
 
 Not verified (needs a Kaggle session):
 
-* everything that touches the real dataset or a GPU: input discovery on the actual mount, the
-  per-class counts (the ~500/class and 1.48 GB figures come from the Kaggle file-listing API and a
-  public kernel, not from a run here), training, `model.val`, the extra `model.predict` pass, the
-  exports, the `.tflite` contract checks, the fidelity gate and the zip;
-* no accuracy, macro-F1 or agreement number is quoted anywhere for this dataset, because none has
-  been measured.
+* everything that touches the dataset mount or a GPU: the clone of the repository and of the CC0
+  set on Kaggle, `ultralytics` training, `model.val` on `val`/`test`, the extra `model.predict`
+  pass, both exports, the `.tflite` contract checks, the fidelity gate and the zip;
+* no accuracy, macro-F1, per-class recall or agreement number is quoted anywhere for the merged
+  set, because none has been measured. The confusion matrix in `report.md` is where they will
+  appear.
