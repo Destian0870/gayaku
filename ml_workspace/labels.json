@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "Kaggle paramaggarwal/fashion-product-images-dataset styles.csv `articleType` (44,424 rows, 143 distinct values) + alexeygrigorev/clothing-dataset label vocabulary (CC0). See ml_workspace/README.md for the keep rule.",
+  "source": "Kaggle paramaggarwal/fashion-product-images-dataset styles.csv `articleType` (44,424 rows, 143 distinct values) + alexeygrigorev/clothing-dataset label vocabulary (CC0) + ryanbadai/clothes-dataset folders and the three classes only the merged run has (`gayaku/merged`). See ml_workspace/README.md for the keep rule.",
   "labels": [
     {
       "label": "Tshirts",
@@ -1247,6 +1247,27 @@
       "name": "Sweter",
       "keep": true,
       "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kaos_Lengan_Panjang",
+      "category": "Tops",
+      "name": "Kaos Lengan Panjang",
+      "keep": true,
+      "dataset": "gayaku/merged"
+    },
+    {
+      "label": "Sepatu",
+      "category": "Shoes",
+      "name": "Sepatu",
+      "keep": true,
+      "dataset": "gayaku/merged"
+    },
+    {
+      "label": "Topi",
+      "category": "Accessories",
+      "name": "Topi",
+      "keep": true,
+      "dataset": "gayaku/merged"
     }
   ]
 }
