@@ -1,0 +1,43 @@
+# The classifier trains on the CC0 set and the Carousell set merged into one 18-class set
+
+**Status**: accepted — implements the "both, in one model" option of ADR-0007; ADR-0003 and ADR-0006 stand unchanged.
+
+The classifier's next training set is `alexeygrigorev/clothing-dataset-small` (CC0, 10 English folders, the source of the shipped bootstrap model) and Kaggle's `ryanbadai/clothes-dataset` (`Clothes_Dataset/`, 15 Indonesian folders) merged by `ml_workspace/scripts/merge_datasets.py`. Neither source alone is acceptable: swapping to the 15 classes loses `Shoes` and `Hat`, which the shipped model recognises and which outfit recommendation needs, while training on CC0 alone throws away the Indonesian vocabulary and the finer outerwear split the product is judged on.
+
+## What the merge found, and why it is not a copy
+
+The two sources are not disjoint, and far less than ADR-0007 assumed ("at least six files share UUID basenames"). Measured on the copies on disk:
+
+* **1,412 basenames appear in both; 1,401 are the same photograph**, only resized — the CC0 clone caps the long side at 400 px, `Clothes_Dataset` uses 720×1280 (mean absolute difference of a 16×16 greyscale signature ≤ 3).
+* Per `Clothes_Dataset` class: Kaos 461/500, Sweter 407/500, Celana_Pendek 160, Gaun 131, Kemeja 96, Jeans 71, Rok 41, Celana_Panjang 19, Mantel 8, Blazer 4, Jaket_Olahraga 3.
+* **The overlap is the leakage risk.** CC0 ships its own train/validation/test split, `Clothes_Dataset` ships none, so a plain concatenation would place a photograph in `train` from one source and in `test` from the other, and the test accuracy would measure memorisation.
+* **74 exact duplicate files live inside `Clothes_Dataset`**, several across classes: the same photograph is filed under `Jaket`, `Kemeja` and `Polo` at once.
+* **The labels disagree on 423 of the shared photographs**: 403 are `longsleeve` in CC0 and `Sweter` in `Clothes_Dataset`, 16 `outwear` become `Mantel`/`Blazer`/`Jaket_Olahraga`/`Sweter`, and four are scattered (`dress`→Rok, `dress`→Kaos, `skirt`→Gaun, `shirt`→Sweter).
+
+## Decision
+
+1. **One model, 18 classes**, named in the UI's vocabulary: the 15 `Clothes_Dataset` folders plus `Kaos_Lengan_Panjang`, `Sepatu` and `Topi`. `labels.json` gains those three rows tagged `gayaku/merged`; the CC0 folders map onto Indonesian names (`t-shirt`→`Kaos`, …, `hat`→`Topi`).
+2. **Deduplicate before splitting.** Photographs are grouped by `sha256`, by shared basename plus the 16×16 signature, and by a 64-bit dHash; one member of each group survives.
+3. **`--prefer-source clothes` by default.** When the two sources disagree about a photograph's class, the `Clothes_Dataset` copy and label win. The conflicting classes sit inside one Category (`Sweter` and `Kaos_Lengan_Panjang` are both Tops), so the choice cannot change which outfit is built, only the displayed name and the confusion matrix; the 15 classes stay at 500; it carries the UI vocabulary; and it holds 2.3× the pixels.
+4. **A group that disagrees with itself inside one source is dropped entirely** and recorded in `conflicts.csv`. Identical bytes under `Jaket`, `Kemeja` and `Polo` claim two of those labels are wrong, and choosing one would invent an answer the data does not give.
+5. **Split per source folder, never per photograph.** CC0 keeps the split it ships with; each `Clothes_Dataset` class folder is shuffled once with `--seed 20261022`. Leakage is an assertion, not a warning: the script refuses a tree in which a duplicate group, a `sha256`, a basename or a `phash` reaches two splits.
+6. **`Kaos_Lengan_Panjang` stays a class** at its 172 surviving photographs instead of folding into `Kaos`: `Topi` ships with a comparable count today, so a thin class is a measured weakness, not a reason to delete a class the product shows.
+
+## Consequences
+
+* **9,728 unique photographs, not ~11,300**: 7,350 from `Clothes_Dataset`, 2,378 from CC0. The merged count is the honest denominator for any accuracy claim.
+* **The finer outerwear classes get no help from CC0.** CC0's `outwear` is one wide umbrella mapped to `Jaket`, while `Clothes_Dataset` separates Jaket, Jaket_Denim, Jaket_Olahraga, Blazer, Mantel and Sweter; CC0 outerwear competes with five finer classes. Accepted for v1, to be judged by the confusion matrix.
+* **`Kaos_Lengan_Panjang` and `Sweter` are entangled by construction**: 403 CC0 `longsleeve` photographs count as `Sweter`. If the confusion matrix shows the two colliding, rerun `merge_datasets.py --prefer-source cc0` — the alternative leaves `Sweter` at 93 and `Kaos_Lengan_Panjang` at 576 — and retrain. No code change is involved, which is why the flag exists.
+* **`Polo` 500 → 449 and `Kemeja` 500 → 449**: 51 photographs in each were jacket photographs filed under the wrong class too, so the classes lose wrong examples rather than clean ones.
+* **The class list is not comparable across runs.** 10 classes at 91.9 % (shipped bootstrap), 15 classes at 78.47 % / 0.7803 (public ViT-base baseline, 40 % split), 18 classes here. Quote the class count and split with any number.
+* **Licence posture is unchanged**: CC0 for the bootstrap set, and the Carousell photographs remain scraped material, so the weights and any build containing them are coursework artifacts (ADR-0003, ADR-0007). Training with Ultralytics keeps the classifier AGPL-3.0 (ADR-0006).
+* `ml_workspace/data/merged/` (the tree, `manifest.csv`, `conflicts.csv`) is git-ignored and rebuildable; `ml_workspace/yolo/artifacts/merged_dataset.json` and `classes_merged.json` are committed as the evidence.
+* The app is untouched until the trained `.tflite` arrives: `garment_labels.dart` and the shipped asset stay a 10-class pair, and `gen_dart_labels.py --classes .../classes_merged.json` refuses to regenerate against the shipped 10-class asset, which is the guard working as designed.
+
+## Considered options
+
+* **Swap to `Clothes_Dataset` alone** (the 15-class notebook): the fastest path to good Indonesian labels, but the app silently stops recognising shoes and hats. Rejected — it breaks an existing scan.
+* **Keep two models and choose at runtime**: two assets, twice the APK weight, and the app has no signal that would tell it which one to load before a prediction exists.
+* **CC0 only** (the shipped 10 classes): keeps Shoes and Hat, loses `Jaket_Denim` vs `Jaket_Olahraga`, and forces English class names that must then be translated in the UI anyway.
+* **Merge without dedupe**: 11,281 files, ~1,400 of them the same photograph on both sides of a split. Rejected as a measurement error, not a data-diet choice.
+* **Dedupe by filename only**: misses the resized copies whose content differs byte for byte (all 1,401 of them), and would have kept the leak.
