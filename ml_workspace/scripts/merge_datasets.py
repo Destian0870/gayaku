@@ -807,11 +807,14 @@ def conflict_pairs(groups: list[Group]) -> dict[str, int]:
 DECISIONS = {
     "prefer_source": (
         "When one photograph carries different classes in the two sources, the copy from "
-        "--prefer-source survives. `clothes` is the default: the duplicate classes all sit in "
-        "one Category (Sweter and Longsleeve are both Tops), so the choice cannot change which "
-        "outfit the recommender builds, only the displayed name and the confusion matrix; "
-        "Clothes_Dataset keeps its 15 classes at 500 and carries the vocabulary the UI shows; "
-        "and it holds 2.3x the pixels of the CC0 clone."
+        "--prefer-source survives. `clothes` is the default: it keeps the 15 Clothes_Dataset "
+        "classes at 500, carries the vocabulary the UI shows, and holds 2.3x the pixels of the "
+        "CC0 clone. The cost is not a display detail. The largest conflict pair is `longsleeve` "
+        "in CC0 against `Sweter` in Clothes_Dataset, and those two labels sit in different "
+        "Categories: Longsleeve is Tops, Sweter is Outerwear. Choosing `clothes` therefore files "
+        "403 long-sleeve photographs under Outerwear that CC0 would have filed under Tops, which "
+        "changes the wardrobe tab and what the outfit matcher sees. `--prefer-source cc0` "
+        "reverses it without a code change and leaves Sweter at 93, Kaos_Lengan_Panjang at 575."
     ),
     "keep_thin_classes": (
         "Longsleeve keeps its surviving photographs instead of being folded into Kaos. Topi "
