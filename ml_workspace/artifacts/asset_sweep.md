@@ -82,3 +82,49 @@ matting step (it cut a vertical strip of the model instead of the skirt), which
 feeds the classifier a shape it reads as a dress. 52% confidence is the visible
 warning, and the `Dress → Tops` Category mapping is recorded in
 `ml_workspace/README.md`.
+
+# The merged 18-class model on the same photos (not shipped)
+
+Same command, pointed at the model `ml_workspace/yolo/train_local.py` produced from the merged set
+(`docs/adr/0008`). It is **not** in `flutter_app/assets/models/` yet, so the app still answers with
+the 10-class labels above.
+
+```bash
+ml_workspace/yolo/.venv-convert312/Scripts/python.exe ml_workspace/scripts/classify_assets.py \
+  --model ml_workspace/yolo/artifacts/garment_classifier.tflite \
+  --classes ml_workspace/yolo/artifacts/classes.json --markdown
+```
+
+Model: `ml_workspace/yolo/artifacts/garment_classifier.tflite`, sha256 `d0ec7b3514b2572eb79da9a8af06f720951bd8eb57edda8f877d65d4e6d63d4e`, 5,862,976 bytes,
+18 classes, input `[1,224,224,3]` float32, output `[1,18]` float32, scores sum 1.000000.
+
+| Foto | Label | Category | Nama | Keyakinan |
+| `beige_trench.jpg` | Mantel | Outerwear | Mantel | 92.5% |
+| `beige_trench_denim.png` | Mantel | Outerwear | Mantel | 89.4% |
+| `classic_sneakers.jpg` | Sepatu | Shoes | Sepatu | 90.8% |
+| `gold_chain.png` | Kemeja | Tops | Kemeja | 28.0% |
+| `gold_link_chain.jpg` | Topi | Accessories | Topi | 37.4% |
+| `leather_loafers.jpg` | Sepatu | Shoes | Sepatu | 99.9% |
+| `linen_office_set.jpg` | Gaun | Tops | Gaun | 95.0% |
+| `linen_shirt.jpg` | Rok | Bottoms | Rok | 48.3% |
+| `minimal_watch.jpg` | Sepatu | Shoes | Sepatu | 51.2% |
+| `pleated_midi_skirt.jpg` | Gaun | Tops | Gaun | 79.5% |
+| `silk_blouse.png` | Kemeja | Tops | Kemeja | 99.6% |
+| `straight_leg_jeans.jpg` | Celana_Panjang | Bottoms | Celana Panjang | 91.5% |
+| `tailored_trousers.jpg` | Celana_Panjang | Bottoms | Celana Panjang | 90.9% |
+| `todays_look.png` | Mantel | Outerwear | Mantel | 89.4% |
+| `tote_bag_canvas.jpg` | Rok | Bottoms | Rok | 61.6% |
+| `white_sneakers.png` | Sepatu | Shoes | Sepatu | 99.4% |
+
+## Reading it
+
+* The four garment classes the app plausibly shows all come back with high confidence:
+  `classic_sneakers`/`leather_loafers`/`white_sneakers` → `Sepatu` (90.8 / 99.9 / 99.4 %),
+  `straight_leg_jeans`/`tailored_trousers` → `Celana_Panjang` (91.5 / 90.9 %), `silk_blouse` →
+  `Kemeja` (99.6 %), `beige_trench` → `Mantel` (92.5 %). The shipped 10-class model answers
+  `T-Shirt` for the same trench coat at 76.6 %.
+* Accessories the class list does not have are still forced into a garment: `minimal_watch` →
+  `Sepatu`, `tote_bag_canvas` → `Rok`, `gold_chain` → `Kemeja`. That is the class list's limit, not
+  the model's, and it is what the Correction step exists for (`docs/adr/0005`).
+* `linen_shirt.jpg` → `Rok` at 48.3 % is a real mistake the sweep catches; on the test split
+  `Kemeja` scores 84.6 % recall, so this photo is in the 15 % that miss.
