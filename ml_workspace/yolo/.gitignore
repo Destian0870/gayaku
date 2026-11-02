@@ -9,3 +9,4 @@ artifacts/*.pt
 artifacts/*.zip
 
 __pycache__/
+.venv*/
