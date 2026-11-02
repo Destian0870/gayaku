@@ -24,12 +24,17 @@ aborts the run with `OMP: Error #15` before the first checkpoint is saved.
         --index-url https://download.pytorch.org/whl/cpu
     ml_workspace/yolo/.venv-train/Scripts/python.exe -m pip install ultralytics
 
-The `.tflite` export runs in the TensorFlow environment the repository already keeps for
-conversions (`ml_workspace/bootstrap/.venv-convert`) and is skipped by `--no-export`. On the Windows
-interpreter this repository currently uses (Python 3.14, TensorFlow 2.22.0-rc0), `onnx2tf` aborts on
-any graph -- a two-node Gemm/Softmax model fails the same way -- so the conversion is left to WSL
-(`bootstrap/export_tflite_wsl.sh` has the recipe) until a stable TensorFlow exists for that
-interpreter. Training and evaluation are unaffected.
+The `.tflite` export runs in a **separate Python 3.12 environment**, because `onnx2tf` aborts on the
+repository's Windows interpreter (Python 3.14 with TensorFlow 2.22.0-rc0: even a two-node Gemm model
+fails). `uv` builds that environment without touching the system Python:
+
+    uv python install 3.12
+    uv venv --python 3.12 ml_workspace/yolo/.venv-convert312
+    uv pip install --python ml_workspace/yolo/.venv-convert312/Scripts/python.exe \
+        tensorflow onnx2tf onnx onnxruntime pillow ai-edge-litert
+
+`--convert-python` points at it by default; `--no-export` skips the step, and
+`--export-only weights/best.pt` converts an existing checkpoint without retraining.
 
 Outputs, by default in `ml_workspace/yolo/artifacts/` (the directory the app's tooling reads):
 
@@ -104,9 +109,15 @@ def split_counts(data: Path, classes: list[str]) -> dict[str, dict[str, int]]:
 
 
 def train(args: argparse.Namespace) -> tuple[YOLO, Path]:
-    model = YOLO(args.weights)
+    last = args.runs / args.name / "weights" / "last.pt"
+    resuming = args.resume and last.is_file()
+    if args.resume and not resuming:
+        print(f"resume        {last} does not exist, starting a fresh run")
+    model = YOLO(str(last) if resuming else args.weights)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"device        {device}   torch {torch.__version__}   threads {torch.get_num_threads()}")
+    if resuming:
+        print(f"resume        continuing {last}")
     model.train(
         data=str(args.data),
         epochs=args.epochs,
@@ -123,6 +134,7 @@ def train(args: argparse.Namespace) -> tuple[YOLO, Path]:
         seed=args.seed,
         patience=args.patience,
         verbose=True,
+        resume=resuming,
     )
     best = Path(model.trainer.save_dir) / "weights" / "best.pt"
     if not best.is_file():
@@ -261,11 +273,15 @@ import json
 import sys
 
 import numpy as np
-import tensorflow as tf
 from PIL import Image
 
+try:                                       # LiteRT 2.x dropped tf.lite.Interpreter
+    from ai_edge_litert.interpreter import Interpreter
+except ImportError:                        # older stacks still ship it inside TensorFlow
+    from tensorflow.lite import Interpreter
+
 model_path, out_path, image_path, size = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
-interpreter = tf.lite.Interpreter(model_path=model_path)
+interpreter = Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
 inputs = interpreter.get_input_details()[0]
 outputs = interpreter.get_output_details()[0]
@@ -282,7 +298,7 @@ with Image.open(image_path) as image:
     pixels = np.asarray(resized.crop((left, top, left + size, top + size)), dtype=np.float32) / 255.0
 array = pixels[None] if shape[1:] == (size, size, 3) else np.transpose(pixels, (2, 0, 1))[None]
 interpreter.set_tensor(inputs["index"], array.astype(np.float32))
-interpreter.run()
+interpreter.invoke()                      # `run()` is the older spelling of the same call
 scores = interpreter.get_tensor(outputs["index"])[0]
 
 json.dump(
@@ -294,7 +310,6 @@ json.dump(
         "sum": float(scores.sum()),
         "argmax": int(scores.argmax()),
         "max": float(scores.max()),
-        "runtime": tf.__version__,
     },
     open(out_path, "w", encoding="utf-8"),
 )
@@ -313,7 +328,7 @@ def export(best: Path, args: argparse.Namespace, classes: list[str]) -> tuple[Pa
     import tempfile
 
     trained = YOLO(str(best))
-    onnx_path = Path(trained.export(format="onnx", imgsz=args.imgsz, device="cpu"))
+    onnx_path = Path(trained.export(format="onnx", imgsz=args.imgsz, device="cpu")).resolve()
     print(f"onnx          {onnx_path} ({onnx_path.stat().st_size / 1e6:.1f} MB)")
 
     convert_python = args.convert_python
@@ -325,7 +340,7 @@ def export(best: Path, args: argparse.Namespace, classes: list[str]) -> tuple[Pa
     converted_dir = args.runs / "onnx2tf_out"
     shutil.rmtree(converted_dir, ignore_errors=True)
     _run(
-        [str(convert_python), "-m", "onnx2tf", "-i", str(onnx_path), "-o", str(converted_dir), "-osd"],
+        [str(convert_python), "-m", "onnx2tf", "-i", str(onnx_path), "-o", str(converted_dir)],
         cwd=args.runs,
     )
     candidates = sorted(converted_dir.glob("*_float32.tflite")) or sorted(converted_dir.glob("*.tflite"))
@@ -528,10 +543,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--convert-python",
         type=Path,
-        default=REPO_ROOT / "ml_workspace" / "bootstrap" / ".venv-convert" / "Scripts" / "python.exe",
+        default=REPO_ROOT / "ml_workspace" / "yolo" / ".venv-convert312" / "Scripts" / "python.exe",
         help="interpreter with tensorflow + onnx2tf, used only for the .tflite export",
     )
+    parser.add_argument(
+        "--export-only",
+        type=Path,
+        help="skip training: convert this .pt to .tflite and verify it",
+    )
     parser.add_argument("--name", default="yolov8n-cls-merged-224")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="continue runs/<name>/weights/last.pt if it exists (a killed background run)",
+    )
     parser.add_argument("--no-export", action="store_true", help="skip the .tflite export")
     args = parser.parse_args(argv)
 
@@ -546,10 +571,18 @@ def main(argv: list[str] | None = None) -> int:
         args.data = args.data.resolve()
         args.artifacts = args.artifacts.resolve()
         args.runs = args.runs.resolve()
+        if args.export_only:
+            args.export_only = args.export_only.resolve()
         classes = check_tree(args.data)
         counts = split_counts(args.data, classes)
         args.artifacts.mkdir(parents=True, exist_ok=True)
         torch.set_num_threads(args.threads)
+        if args.export_only:
+            write_classes(args.artifacts / "classes.json", classes, args)
+            _, exported = export(args.export_only, args, classes)
+            print(f"written       {args.artifacts / 'classes.json'}")
+            print(f"sha256        {exported['sha256']}")
+            return 0
         model, best = train(args)
         measured = evaluate(best, args, classes, counts)
         write_classes(args.artifacts / "classes.json", classes, args)
