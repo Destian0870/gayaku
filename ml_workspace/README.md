@@ -106,7 +106,7 @@ derives from folder names).
 |---|---|---|---|
 | Matting | `flutter_app/assets/models/u2netp_320.tflite` | — | shipped |
 | Classifier | `flutter_app/assets/models/garment_classifier.tflite` | `bootstrap/artifacts/classes.json` (10 CC0 classes) | shipped: the `alexeygrigorev/clothing-dataset-small` bootstrap export, which makes the scanner verifiable end to end today |
-| Classifier, merged | same path, new weights | `yolo/artifacts/classes_merged.json` (18 merged classes) | dataset built and asserted by `scripts/merge_datasets.py`; training pending the Kaggle run in `yolo/kaggle_merged_dataset.ipynb` |
+| Classifier, merged | same path, new weights | `yolo/artifacts/classes_merged.json` (18 merged classes) | **trained locally on this CPU** (`yolo/train_local.py`, 27 epochs, 2.3 h): test top-1 **81.55 %**, top-5 98.08 %, macro-F1 **0.7968** over 992 photographs; the export passes the app contract but is **not** swapped into `flutter_app/assets/models/` yet |
 | Classifier, final | same path, new weights | `artifacts/classes.json` (80 catalogue classes) | pending the Kaggle run; `docs/adr/0003` makes that the final model |
 
 Landing the Kaggle model means replacing the asset **and** regenerating the Dart file in the
