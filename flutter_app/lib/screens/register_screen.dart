@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 
@@ -34,7 +35,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: Icon(Icons.arrow_back, size: 22, color: palette.onAction),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    size: 22,
+                    color: palette.onAction,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 const SizedBox(height: 16),
@@ -171,7 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const HomeScreen(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
