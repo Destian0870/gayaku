@@ -36,9 +36,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      const MaterialApp(home: WardrobeScreen()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('Wardrobe'), findsWidgets);
@@ -60,9 +58,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(
-      const MaterialApp(home: WardrobeScreen()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
     await tester.pumpAndSettle();
 
     // Both tabs are offered, and the combinations tab starts empty.
@@ -115,9 +111,7 @@ void main() {
     ];
     addTearDown(() => savedOutfits.value = []);
 
-    await tester.pumpWidget(
-      const MaterialApp(home: WardrobeScreen()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Kombinasi (1)'));

@@ -77,65 +77,75 @@ void main() {
     temp.deleteSync(recursive: true);
   });
 
-  testWidgets('detects a garment, lets the user correct it, and saves the Cutout', (
+  testWidgets(
+    'detects a garment, lets the user correct it, and saves the Cutout',
+    (tester) async {
+      await openScanner(
+        tester,
+        scanner: (_) async => detectedGarment(),
+        documents: temp,
+      );
+
+      expect(find.text('Siap memindai'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Pilih dari galeri'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('AI DETECTED DETAILS'), findsOneWidget);
+      expect(find.text('Tops'), findsOneWidget);
+      expect(find.text('Merah'), findsOneWidget);
+      expect(find.text('Kemeja'), findsOneWidget);
+      expect(find.text('Terdeteksi: Shirts • 87% yakin'), findsOneWidget);
+
+      // Correct the detected Category the way a user would.
+      final editButton = find.widgetWithText(TextButton, 'Edit').first;
+      await tester.ensureVisible(editButton);
+      await tester.tap(editButton);
+      await tester.pumpAndSettle();
+      expect(find.text('Pilih category'), findsOneWidget);
+      await tester.tap(find.text('Outerwear').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Outerwear'), findsOneWidget);
+
+      final saveButton = find.widgetWithText(
+        FilledButton,
+        'Simpan ke Wardrobe',
+      );
+      await tester.ensureVisible(saveButton);
+      // Saving writes a PNG and a SQLite row: real I/O that the fake-async test
+      // zone never resolves, so tap and wait inside runAsync.
+      await tester.runAsync(() async {
+        await tester.tap(saveButton);
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        while (wardrobeItems.value.every((item) => item.name != 'Kemeja') &&
+            DateTime.now().isBefore(deadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+      });
+      await tester.pumpAndSettle();
+
+      final saved = wardrobeItems.value.where((item) => item.name == 'Kemeja');
+      expect(saved, hasLength(1));
+      final item = saved.single;
+      expect(item.category, 'Outerwear');
+      expect(item.subcategory, 'Shirts');
+      expect(item.colorName, 'Merah');
+      expect(item.color, const Color(0xFFC81E28));
+      // The recommender needs both, and the scanner may only guess them from the
+      // Category the user settled on.
+      expect(item.formality, defaultFormality('Outerwear'));
+      expect(item.occasions, defaultOccasions('Outerwear'));
+
+      final cutout = File(item.imagePath);
+      expect(cutout.existsSync(), isTrue);
+      expect(cutout.path, startsWith('${temp.path}/garments/'));
+      expect(cutout.readAsBytesSync(), onePixelPng);
+    },
+  );
+
+  testWidgets('a failed scan explains itself and offers no save button', (
     tester,
   ) async {
-    await openScanner(tester, scanner: (_) async => detectedGarment(), documents: temp);
-
-    expect(find.text('Siap memindai'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Pilih dari galeri'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('AI DETECTED DETAILS'), findsOneWidget);
-    expect(find.text('Tops'), findsOneWidget);
-    expect(find.text('Merah'), findsOneWidget);
-    expect(find.text('Kemeja'), findsOneWidget);
-    expect(find.text('Terdeteksi: Shirts • 87% yakin'), findsOneWidget);
-
-    // Correct the detected Category the way a user would.
-    final editButton = find.widgetWithText(TextButton, 'Edit').first;
-    await tester.ensureVisible(editButton);
-    await tester.tap(editButton);
-    await tester.pumpAndSettle();
-    expect(find.text('Pilih category'), findsOneWidget);
-    await tester.tap(find.text('Outerwear').last);
-    await tester.pumpAndSettle();
-    expect(find.text('Outerwear'), findsOneWidget);
-
-    final saveButton = find.widgetWithText(FilledButton, 'Simpan ke Wardrobe');
-    await tester.ensureVisible(saveButton);
-    // Saving writes a PNG and a SQLite row: real I/O that the fake-async test
-    // zone never resolves, so tap and wait inside runAsync.
-    await tester.runAsync(() async {
-      await tester.tap(saveButton);
-      final deadline = DateTime.now().add(const Duration(seconds: 10));
-      while (wardrobeItems.value.every((item) => item.name != 'Kemeja') &&
-          DateTime.now().isBefore(deadline)) {
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-      }
-    });
-    await tester.pumpAndSettle();
-
-    final saved = wardrobeItems.value.where((item) => item.name == 'Kemeja');
-    expect(saved, hasLength(1));
-    final item = saved.single;
-    expect(item.category, 'Outerwear');
-    expect(item.subcategory, 'Shirts');
-    expect(item.colorName, 'Merah');
-    expect(item.color, const Color(0xFFC81E28));
-    // The recommender needs both, and the scanner may only guess them from the
-    // Category the user settled on.
-    expect(item.formality, defaultFormality('Outerwear'));
-    expect(item.occasions, defaultOccasions('Outerwear'));
-
-    final cutout = File(item.imagePath);
-    expect(cutout.existsSync(), isTrue);
-    expect(cutout.path, startsWith('${temp.path}/garments/'));
-    expect(cutout.readAsBytesSync(), onePixelPng);
-  });
-
-  testWidgets('a failed scan explains itself and offers no save button', (tester) async {
     await openScanner(
       tester,
       scanner: (_) async => throw const ScanFailure(
@@ -155,6 +165,9 @@ void main() {
     );
     expect(find.text('Pemindaian gagal'), findsOneWidget);
     expect(find.text('Simpan ke Wardrobe'), findsNothing);
-    expect(wardrobeItems.value.where((item) => item.subcategory != null), isEmpty);
+    expect(
+      wardrobeItems.value.where((item) => item.subcategory != null),
+      isEmpty,
+    );
   });
 }

@@ -144,8 +144,9 @@ class _ScanScreenState extends State<ScanScreen> {
     final navigator = Navigator.of(context);
     try {
       final id = newWardrobeItemId();
-      final directory = await (widget.documentsDirectory ??
-          getApplicationDocumentsDirectory)();
+      final directory =
+          await (widget.documentsDirectory ??
+              getApplicationDocumentsDirectory)();
       final folder = Directory('${directory.path}/garments');
       await folder.create(recursive: true);
       final cutout = File('${folder.path}/$id.png');
@@ -197,7 +198,8 @@ class _ScanScreenState extends State<ScanScreen> {
       builder: (context) => _OptionSheet<(String, Color)>(
         title: 'Pilih warna',
         options: [
-          for (final (name, color) in colorNames) (label: name, value: (name, color)),
+          for (final (name, color) in colorNames)
+            (label: name, value: (name, color)),
         ],
         selected: (_colorName, _color),
         swatches: true,
@@ -308,9 +310,8 @@ class _ScanScreenState extends State<ScanScreen> {
                       Text(
                         'Terdeteksi: ${result.label} • '
                         '${(result.confidence * 100).round()}% yakin',
-                        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                          color: palette.inkMuted,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium!
+                            .copyWith(color: palette.inkMuted),
                       ),
                     ],
                   ],
@@ -375,9 +376,8 @@ class _TopBar extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleLarge!
+                .copyWith(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -534,9 +534,8 @@ class _ErrorNote extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium!.copyWith(color: palette.inkMuted),
+              style: Theme.of(context).textTheme.labelMedium!
+                  .copyWith(color: palette.inkMuted),
             ),
           ),
         ],
@@ -592,7 +591,10 @@ class _DetailRow extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: swatch,
                           shape: BoxShape.circle,
-                          border: Border.all(color: palette.inkMuted, width: 0.5),
+                          border: Border.all(
+                            color: palette.inkMuted,
+                            width: 0.5,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -659,9 +661,8 @@ class _OptionSheet<T> extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge!
+                      .copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -689,7 +690,9 @@ class _OptionSheet<T> extends StatelessWidget {
                           isSelected
                               ? Icons.radio_button_checked
                               : Icons.radio_button_unchecked,
-                          color: isSelected ? palette.actionInk : palette.inkMuted,
+                          color: isSelected
+                              ? palette.actionInk
+                              : palette.inkMuted,
                         ),
                   title: Text(option.label),
                 );

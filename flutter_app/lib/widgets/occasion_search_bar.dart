@@ -55,9 +55,7 @@ class _OccasionSearchBarState extends State<OccasionSearchBar> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                query.isEmpty
-                    ? 'Search coming soon'
-                    : 'Searching for "$query"',
+                query.isEmpty ? 'Search coming soon' : 'Searching for "$query"',
               ),
             ),
           );

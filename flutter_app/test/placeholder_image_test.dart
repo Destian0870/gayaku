@@ -17,7 +17,10 @@ void main() {
     );
 
     final image = tester.widget<Image>(find.byType(Image));
-    expect((image.image as AssetImage).assetName, 'assets/images/silk_blouse.png');
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/images/silk_blouse.png',
+    );
   });
 
   testWidgets('a scanned cutout is drawn from its absolute file path', (

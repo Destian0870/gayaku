@@ -38,13 +38,17 @@ const colorNames = <(String, Color)>[
 /// and lightness dominates for near-greyscale ones.
 String colorNameOf(Color color) {
   final hsv = HSVColor.fromColor(color);
-  final chromatic = hsv.saturation >= 0.18 && hsv.value >= 0.20 && hsv.value <= 0.94;
+  final chromatic =
+      hsv.saturation >= 0.18 && hsv.value >= 0.20 && hsv.value <= 0.94;
   var best = colorNames.first.$1;
   var bestScore = double.infinity;
   for (final (name, reference) in colorNames) {
     final refHsv = HSVColor.fromColor(reference);
     final hue = chromatic
-        ? math.min((hsv.hue - refHsv.hue).abs(), 360 - (hsv.hue - refHsv.hue).abs())
+        ? math.min(
+            (hsv.hue - refHsv.hue).abs(),
+            360 - (hsv.hue - refHsv.hue).abs(),
+          )
         : 0.0;
     final saturation = (hsv.saturation - refHsv.saturation).abs() * 60;
     final value = (hsv.value - refHsv.value).abs() * 120;
@@ -91,12 +95,17 @@ DominantColor? dominantColorFromRgba(
   final samples = <List<double>>[];
   for (var i = 0; i < opaque.length; i += stride) {
     final p = opaque[i] * 4;
-    samples.add([rgba[p].toDouble(), rgba[p + 1].toDouble(), rgba[p + 2].toDouble()]);
+    samples.add([
+      rgba[p].toDouble(),
+      rgba[p + 1].toDouble(),
+      rgba[p + 2].toDouble(),
+    ]);
   }
 
   final clusters = math.max(1, math.min(k, samples.length));
   final centroids = <List<double>>[
-    for (var c = 0; c < clusters; c++) samples[(c * samples.length) ~/ clusters],
+    for (var c = 0; c < clusters; c++)
+      samples[(c * samples.length) ~/ clusters],
   ];
 
   final assignment = List<int>.filled(samples.length, 0);

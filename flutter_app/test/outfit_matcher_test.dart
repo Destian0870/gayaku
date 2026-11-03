@@ -75,7 +75,12 @@ void main() {
 
   group('recommendMatches', () {
     test('drops same-category items and sorts by score', () {
-      final out = recommendMatches(_top, [_top, _otherTop, _bottoms, _accessory]);
+      final out = recommendMatches(_top, [
+        _top,
+        _otherTop,
+        _bottoms,
+        _accessory,
+      ]);
       expect(out.map((m) => m.item.name), isNot(contains('Kaos')));
       expect(out.map((m) => m.item.name), isNot(contains('Kemeja')));
       expect(
@@ -133,8 +138,10 @@ void main() {
     test('stays silent when the set already meets the threshold', () {
       final set = [_top, _bottoms, _accessory];
       expect(outfitScore(set), greaterThan(0));
-      expect(improveOutfit(set, [_top, _bottoms, _accessory], threshold: 0.1),
-          isEmpty);
+      expect(
+        improveOutfit(set, [_top, _bottoms, _accessory], threshold: 0.1),
+        isEmpty,
+      );
     });
 
     test('proposes a swap that lifts the score past the threshold', () {
@@ -162,12 +169,7 @@ void main() {
       // Ids must exist in the catalog: SavedOutfit.itemsOf resolves against it.
       final ids = ['seed-silk-blouse', 'seed-straight-leg-jeans'];
       saveOutfit(
-        SavedOutfit(
-          id: 'a',
-          name: 'Kantor',
-          itemIds: ids,
-          threshold: 0.8,
-        ),
+        SavedOutfit(id: 'a', name: 'Kantor', itemIds: ids, threshold: 0.8),
       );
       expect(savedOutfits.value, hasLength(1));
 
@@ -179,23 +181,35 @@ void main() {
           threshold: 0.9,
         ),
       );
-      expect(savedOutfits.value, hasLength(1), reason: 'same id edits in place');
+      expect(
+        savedOutfits.value,
+        hasLength(1),
+        reason: 'same id edits in place',
+      );
       expect(savedOutfits.value.single.name, 'Kantor Senin');
-      expect(savedOutfits.value.single.itemsOf(seedWardrobeItems), hasLength(2));
+      expect(
+        savedOutfits.value.single.itemsOf(seedWardrobeItems),
+        hasLength(2),
+      );
 
       deleteOutfit('a');
       expect(savedOutfits.value, isEmpty);
     });
   });
 
-  testWidgets('builder shows the score and its improvement suggestions',
-      (tester) async {
+  testWidgets('builder shows the score and its improvement suggestions', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(420, 2600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
     // Two tops in one set: guaranteed clash, so the score sits under 95%.
-    const ids = ['seed-silk-blouse', 'seed-linen-shirt', 'seed-straight-leg-jeans'];
+    const ids = [
+      'seed-silk-blouse',
+      'seed-linen-shirt',
+      'seed-straight-leg-jeans',
+    ];
     final set = [
       for (final id in ids) ...seedWardrobeItems.where((i) => i.id == id),
     ];

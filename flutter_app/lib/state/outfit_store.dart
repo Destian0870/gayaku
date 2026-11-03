@@ -31,8 +31,7 @@ class SavedOutfit {
 
   /// Resolves [itemIds] against [catalog], dropping ids that no longer exist.
   List<WardrobeItem> itemsOf(List<WardrobeItem> catalog) => [
-    for (final id in itemIds)
-      ...catalog.where((i) => i.id == id),
+    for (final id in itemIds) ...catalog.where((i) => i.id == id),
   ];
 }
 
@@ -54,9 +53,7 @@ void saveOutfit(SavedOutfit outfit) {
 }
 
 void deleteOutfit(String id) {
-  savedOutfits.value = savedOutfits.value
-      .where((o) => o.id != id)
-      .toList();
+  savedOutfits.value = savedOutfits.value.where((o) => o.id != id).toList();
 }
 
 /// Flips the favourite flag of one combination and re-notifies listeners.
