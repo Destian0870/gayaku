@@ -5,8 +5,9 @@ classification** (`yolov8n-cls.pt`, 224 px) instead of the MobileNetV3-small tha
 `ml_workspace/bootstrap/` trains, and exports the one file the app loads:
 `flutter_app/assets/models/garment_classifier.tflite`. The model choice and its licence
 consequence are `docs/adr/0006-yolov8-classifier-agpl.md`; the training data is
-`docs/adr/0003-kaggle-catalogue-training-data.md`; what the classifier sees is
-`docs/adr/0005-classify-the-cutout.md`.
+`docs/adr/0003-kaggle-catalogue-training-data.md`; what the classifier sees, and the detector
+stage that now precedes it, is `docs/adr/0005-classify-the-cutout.md` and
+`docs/adr/0009-detect-then-classify-multiple-garments.md`.
 
 `kaggle_merged_dataset.ipynb` is the Kaggle venue for the **18-class merged set**
 (`docs/adr/0008-merge-the-two-training-sources.md`): it clones this repository and the CC0

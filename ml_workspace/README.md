@@ -4,7 +4,8 @@ Offline work only: dataset gathering, training, evaluation, export. The app ship
 resulting `.tflite` files and runs them on device; nothing here runs at runtime
 (`docs/adr/0001-scanner-inference-on-device.md`). Decisions that bound this folder:
 `0002` (permissive model licences only), `0003` (the Kaggle catalogue is the training data),
-`0005` (matte the photo, then classify the cutout, one garment per photo).
+`0005` (matte the photo, then classify the cutout) and `0009` (a detector finds the boxes, so a
+photo may hold several garments).
 
 ## Layout
 

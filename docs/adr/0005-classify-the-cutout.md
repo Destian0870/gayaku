@@ -1,5 +1,7 @@
 # One garment per photo: matte, then classify the cutout
 
+**Status**: superseded by `docs/adr/0009-detect-then-classify-multiple-garments.md` — detection is now in scope, so a photo may hold several garments. The matting, cutout-classification and colour steps described here survive, but they run per detected box instead of once per photo.
+
 The scanner accepts a single flat-lay or hanger photo, so it runs no object detector: the matting model produces a Cutout, the classifier reads that Cutout at 224 px, and the Dominant colour is computed from the Cutout's pixels. Matting ships as `u2netp` (Apache-2.0, a pre-exported `.tflite`, ~5–9 MB) because it needs no conversion work and keeps the APK small; BiRefNet_lite (MIT, 114 MB, ONNX→TFLite conversion of our own) is the documented upgrade, gated on measuring edge quality on real photos first.
 
 ## Consequences
