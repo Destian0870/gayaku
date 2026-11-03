@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/wardrobe_service.dart';
 import 'theme/app_theme.dart';
 
 /// Compile-time credentials, so no secret ever sits in the repo:
@@ -23,7 +24,9 @@ Future<void> main() async {
   // usable before a Supabase project exists.
   if (_supabaseUrl.isNotEmpty && _supabaseKey.isNotEmpty) {
     await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
-    useAuthService(SupabaseAuthService(Supabase.instance.client));
+    final client = Supabase.instance.client;
+    useAuthService(SupabaseAuthService(client));
+    useWardrobeService(SupabaseWardrobeService(client));
   }
 
   runApp(const GayakuApp());

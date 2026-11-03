@@ -1,32 +1,58 @@
 # Supabase backend
 
-Auth, profiles and avatar storage for GAYAKU. Wardrobe items and looks are
-still in memory in the app; they land here once the ML output fields are final.
+Auth, profiles, wardrobe items and their images for GAYAKU. Saved looks and
+the weekly planner are still in memory in the app.
 
 ```
 supabase/
   migrations/20261024120000_profiles.sql        profiles table, RLS, sign-up trigger
   migrations/20261024120100_avatars_bucket.sql  private avatars bucket, per-user rules
+  migrations/20261103090000_wardrobe_items.sql  scanned garments + private cutouts bucket
 ```
 
 ## What the app talks to
 
-`flutter_app/lib/services/auth_service.dart` is the only file that imports the
-Supabase SDK. The screens call `authService`, which is:
+Two files import the Supabase SDK, one per concern; screens never import it:
 
-- `DemoAuthService` by default — accepts any credentials, no network. `flutter
-  run` and `flutter test` work with no project configured.
-- `SupabaseAuthService` when `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are
+- `flutter_app/lib/services/auth_service.dart` — `AuthService`, with
+  `DemoAuthService` by default (accepts any credentials, no network) and
+  `SupabaseAuthService` when `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` are
   compiled in. `main()` installs it before the first frame.
+- `flutter_app/lib/services/wardrobe_service.dart` — `WardrobeService`
+  (`items()`, `add(ScanResult)`, `remove(id)`), with the same Demo/Supabase
+  pair. `SupabaseWardrobeService` uploads the cutout PNG to `cutouts/<uid>/…`
+  and inserts the row.
 
 | Screen | Call |
 | --- | --- |
 | `login_screen.dart` | `authService.signIn(email:, password:)` |
 | `register_screen.dart` | `authService.signUp(email:, password:, displayName:)` |
 | `profile_screen.dart` | `authService.currentUser`, `authService.signOut()` |
+| wardrobe screens (next) | `wardrobeService.items()`, `.add(scan)`, `.remove(id)` |
 
-`AuthException.message` is shown in a SnackBar as-is, so the mapping from
-Supabase's English errors to Indonesian copy lives in `_friendly()`.
+`AuthException.message` / `WardrobeException.message` are shown in a SnackBar
+as-is, so the mapping from Supabase's English errors to Indonesian copy lives in
+`_friendly()`.
+
+## What one scan stores
+
+`ScanResult` (`flutter_app/lib/models/scan_result.dart`) is the contract the
+scanner emits. It maps one-to-one onto the table:
+
+| ScanResult | `wardrobe_items` column | Notes |
+| --- | --- | --- |
+| `cutoutPng` | — (Storage object) | `cutouts/<uid>/<microseconds>.png`, private bucket |
+| `label` | `label` text | one of the 18 classes in `labels.json`, free text in SQL |
+| `category` | `category` text | check: `Tops`, `Bottoms`, `Outerwear`, `Shoes`, `Accessories` |
+| `suggestedName` (or the corrected name) | `name` text | 1–80 chars, trimmed |
+| `confidence` | `confidence` real | 0..1, nullable |
+| `colorName` | `color_name` text | K-Means label, e.g. `Putih` |
+| `dominantColor` | `dominant_color` text | `#RRGGBB`, check-constrained |
+| `formality` | `formality` smallint | 1..5, seeded from category |
+
+`owner_id` defaults to `auth.uid()` and every policy tests it, so a client can
+neither insert for someone else nor read another user's wardrobe. Images are
+private; `items()` hands back a 1-hour signed URL.
 
 ## First-time setup
 
@@ -35,7 +61,7 @@ Supabase's English errors to Indonesian copy lives in `_friendly()`.
    API keys* (older projects call it the **anon** key — same slot, same
    behaviour). That key is public by design; RLS is what protects the data.
    Never ship the `secret` / `service_role` key.
-2. Apply the migrations. Either paste both files from `migrations/` into the
+2. Apply the migrations. Either paste all three files from `migrations/` into the
    dashboard SQL editor in filename order, or use the CLI:
 
    ```bash
@@ -64,6 +90,9 @@ Supabase's English errors to Indonesian copy lives in `_friendly()`.
   confirmation enabled returns to the Sign In screen with a hint.
 - In the SQL editor, `select * from profiles;` as the `anon` role returns
   nothing — that is RLS working, not a bug.
+- A scan (once the scanner is wired to `wardrobeService.add`) shows up in
+  *Table Editor → wardrobe_items* with `label`, `category`, `dominant_color` and
+  `confidence` filled, and *Storage → cutouts → <uid>* holds the PNG.
 
 ## Not covered yet
 
@@ -71,7 +100,12 @@ Supabase's English errors to Indonesian copy lives in `_friendly()`.
   and a redirect URL in the dashboard plus `signInWithOAuth` in
   `SupabaseAuthService`.
 - Avatar upload. The bucket and policies exist, no screen writes to it.
-- Wardrobe items, looks, favourites. Their columns depend on what the scanner
-  emits (category, dominant colour, bbox, confidence), so the tables wait.
+- The scan UI itself. `WardrobeService.add(ScanResult)` is ready and tested
+  against the demo backend, but no screen captures a photo or runs the model
+  yet, and the Wardrobe grid still renders the static catalog.
+- Saved looks, favourites, weekly planner. Their tables wait until the matching
+  rules settle; `wardrobe_items` is what a look will reference.
+- `occasions` (Formal/Kasual/Smart-Casual/Sport) is not a column: it is derived
+  from `category` by `outfit_matcher`, so it stays client-side for now.
 - Offline caching and session refresh UI. `supabase_flutter` persists the
   session on disk and refreshes tokens on its own.

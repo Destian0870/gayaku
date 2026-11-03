@@ -57,19 +57,29 @@ enum LookSortOption { newest, oldest, titleAscending, titleDescending }
 
 class WardrobeItem {
   const WardrobeItem({
+    this.id = '',
     required this.name,
     required this.category,
     required this.imagePath,
+    this.label = '',
     this.brand = '',
     this.colorName = '',
     this.color = const Color(0xFFD3A277),
     this.formality = 3,
     this.occasions = const [],
+    this.confidence,
+    this.imageUrl,
   });
+
+  /// Row id from `wardrobe_items`; empty for the static demo catalog.
+  final String id;
 
   final String name;
   final String category;
   final String imagePath;
+
+  /// Winning scanner class, e.g. `t_shirt`; empty for hand-added items.
+  final String label;
 
   /// Optional maker label, rendered as `Category • Brand` under the name.
   final String brand;
@@ -85,6 +95,12 @@ class WardrobeItem {
 
   /// Occasions this item suits: `Formal`, `Kasual`, `Smart-Casual`, `Sport`.
   final List<String> occasions;
+
+  /// Softmax score the scanner reported, 0..1; null when not scanned.
+  final double? confidence;
+
+  /// Short-lived signed URL of the cutout in the private `cutouts` bucket.
+  final String? imageUrl;
 }
 
 /// Catalog shown on the Wardrobe screen, grouped by the chips below.
