@@ -4,6 +4,7 @@ import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
 import '../navigation.dart';
 import '../state/outfit_store.dart';
+import '../state/wardrobe_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 import '../widgets/placeholder_image.dart';
@@ -12,17 +13,20 @@ import 'outfit_builder_screen.dart';
 
 /// Wardrobe hub with two tabs: the item catalog and the saved combinations.
 ///
-/// UI only — search, filters and combinations live in local state / an
-/// in-memory store; nothing is persisted.
+/// The catalog is the SQLite-backed [wardrobeItems] store (docs/adr/0004);
+/// search and filters stay local, and combinations are still session-only.
 class WardrobeScreen extends StatefulWidget {
   const WardrobeScreen({
     super.key,
-    this.items = wardrobeItems,
+    this.items,
     this.initialTab = 0,
     this.initialFavoritesOnly = false,
   });
 
-  final List<WardrobeItem> items;
+  /// Overrides the store with a fixed catalog, for tests. Null — the app's
+  /// case — follows [wardrobeItems], so a scanned garment shows up here as
+  /// soon as it is saved.
+  final List<WardrobeItem>? items;
   final int initialTab;
   final bool initialFavoritesOnly;
 
@@ -57,27 +61,31 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   Future<void> _openBuilder({SavedOutfit? existing}) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => OutfitBuilderScreen(existing: existing),
+        builder: (_) =>
+            OutfitBuilderScreen(existing: existing, catalog: _catalog),
       ),
     );
   }
 
+  /// The catalog in play: the injected override, else the live store.
+  List<WardrobeItem> get _catalog => widget.items ?? wardrobeItems.value;
+
   /// Occasions present in the catalog, so the filter never offers a dead option.
-  List<String> get _availableOccasions => {
-    for (final item in widget.items) ...item.occasions,
-  }.toList()..sort();
+  List<String> get _availableOccasions =>
+      {for (final item in _catalog) ...item.occasions}.toList()..sort();
 
   Future<void> _openFilters() async {
-    final result = await showModalBottomSheet<({Set<String> occasions, int minFormality})>(
-      context: context,
-      backgroundColor: AppColors.of(context).sheet,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
-      builder: (context) => _FilterSheet(
-        occasions: _availableOccasions,
-        selected: _occasions,
-        minFormality: _minFormality,
-      ),
-    );
+    final result =
+        await showModalBottomSheet<({Set<String> occasions, int minFormality})>(
+          context: context,
+          backgroundColor: AppColors.of(context).sheet,
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+          builder: (context) => _FilterSheet(
+            occasions: _availableOccasions,
+            selected: _occasions,
+            minFormality: _minFormality,
+          ),
+        );
     if (result == null) return;
     setState(() {
       _occasions = result.occasions;
@@ -94,30 +102,42 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         backgroundColor: palette.sheet,
         title: Text(
           'Hapus kombinasi?',
-          style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+          style: textTheme.titleLarge!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: palette.ink,
+          ),
         ),
         content: Text(
           '"${outfit.name}" akan dihapus dari daftar.',
-          style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+          style: textTheme.labelLarge!.copyWith(
+            fontWeight: FontWeight.w500,
+            color: palette.inkMuted,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'Batal',
-              style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
             ),
           ),
           OutlinedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: OutlinedButton.styleFrom(
-              foregroundColor: palette.action,
-              side: BorderSide(color: palette.action),
-              shape: const RoundedRectangleBorder(
-                borderRadius: AppRadius.chip,
+              foregroundColor: palette.actionInk,
+              side: BorderSide(color: palette.actionInk),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.chip),
+            ),
+            child: Text(
+              'Hapus',
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
-            child: Text('Hapus', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -127,7 +147,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   List<WardrobeItem> get _visible {
     final query = _query.trim().toLowerCase();
-    return widget.items.where((item) {
+    return _catalog.where((item) {
       if (_category != wardrobeCategories.first && item.category != _category) {
         return false;
       }
@@ -144,6 +164,15 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The store is the normal path; a test may still hand in a fixed list.
+    if (widget.items != null) return _scaffold(context);
+    return ValueListenableBuilder<List<WardrobeItem>>(
+      valueListenable: wardrobeItems,
+      builder: (context, _, _) => _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
     final palette = AppColors.of(context);
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -156,7 +185,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Header(itemCount: widget.items.length),
+                    _Header(itemCount: _catalog.length),
                     const SizedBox(height: 16),
                     ValueListenableBuilder(
                       valueListenable: savedOutfits,
@@ -209,7 +238,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             child: Text(
               'Nothing in this category yet.',
               textAlign: TextAlign.center,
-              style: textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+              style: textTheme.bodyLarge!.copyWith(
+                fontWeight: FontWeight.w400,
+                color: palette.inkMuted,
+              ),
             ),
           ),
         )
@@ -235,7 +267,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         child: FilledButton.icon(
           onPressed: () => _openBuilder(),
           icon: const Icon(Icons.add, size: 18),
-          label: Text('Buat Kombinasi', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
+          label: Text(
+            'Buat Kombinasi',
+            style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
+          ),
           style: FilledButton.styleFrom(
             backgroundColor: palette.action,
             foregroundColor: palette.onAction,
@@ -265,7 +300,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                   _favoritesOnly
                       ? 'Belum ada favorit tersimpan.'
                       : 'Belum ada kombinasi tersimpan.',
-                  style: textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                  style: textTheme.bodyLarge!.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: palette.inkMuted,
+                  ),
                 ),
               ),
             );
@@ -275,6 +313,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               for (final outfit in _favoritesFirst(visibleOutfits)) ...[
                 _SavedOutfitCard(
                   outfit: outfit,
+                  catalog: _catalog,
                   onEdit: () => _openBuilder(existing: outfit),
                   onDelete: () => _confirmDelete(outfit),
                   onToggleFavorite: () => toggleOutfitFavorite(outfit.id),
@@ -340,11 +379,20 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Wardrobe', style: textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w700, color: palette.ink)),
+              Text(
+                'Wardrobe',
+                style: textTheme.headlineLarge!.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: palette.ink,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 'Total $itemCount items',
-                style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                style: textTheme.labelLarge!.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: palette.inkMuted,
+                ),
               ),
             ],
           ),
@@ -416,7 +464,8 @@ class _TabToggle extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600, 
+            style: textTheme.labelLarge!.copyWith(
+              fontWeight: FontWeight.w600,
               color: active ? palette.onAction : palette.inkMuted,
             ),
           ),
@@ -429,12 +478,17 @@ class _TabToggle extends StatelessWidget {
 class _SavedOutfitCard extends StatelessWidget {
   const _SavedOutfitCard({
     required this.outfit,
+    required this.catalog,
     required this.onEdit,
     required this.onDelete,
     required this.onToggleFavorite,
   });
 
   final SavedOutfit outfit;
+
+  /// Catalog the saved ids resolve against; an id with no row is dropped.
+  final List<WardrobeItem> catalog;
+
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onToggleFavorite;
@@ -443,7 +497,7 @@ class _SavedOutfitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final items = outfit.items;
+    final items = outfit.itemsOf(catalog);
     final percent = (outfitScore(items) * 100).round();
     final threshold = (outfit.threshold * 100).round();
     final meets = percent >= threshold;
@@ -466,7 +520,10 @@ class _SavedOutfitCard extends StatelessWidget {
                   // so a user-named combination would otherwise ellipsize.
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                  style: textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
                 ),
               ),
               IconButton(
@@ -478,7 +535,7 @@ class _SavedOutfitCard extends StatelessWidget {
                   outfit.favorite ? Icons.favorite : Icons.favorite_border,
                   size: 18,
                 ),
-                color: outfit.favorite ? palette.action : palette.ink,
+                color: outfit.favorite ? palette.actionInk : palette.ink,
                 style: IconButton.styleFrom(
                   backgroundColor: palette.sheet,
                   minimumSize: const Size(40, 40),
@@ -541,7 +598,8 @@ class _SavedOutfitCard extends StatelessWidget {
                 ),
                 child: Text(
                   '$percent%',
-                  style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600, 
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: meets ? palette.onAction : palette.ink,
                   ),
                 ),
@@ -554,7 +612,10 @@ class _SavedOutfitCard extends StatelessWidget {
                       : 'Di bawah batas $threshold%',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: palette.inkMuted,
+                  ),
                 ),
               ),
             ],
@@ -601,12 +662,18 @@ class _SearchRow extends StatelessWidget {
                     controller: controller,
                     textInputAction: TextInputAction.search,
                     onChanged: onQuery,
-                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
+                    style: textTheme.labelLarge!.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: palette.ink,
+                    ),
                     decoration: InputDecoration(
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: 'Search your clothes...',
-                      hintStyle: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                      hintStyle: textTheme.labelLarge!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: palette.inkMuted,
+                      ),
                     ),
                   ),
                 ),
@@ -683,11 +750,20 @@ class _FilterSheetState extends State<_FilterSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Filter', style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink)),
+            Text(
+              'Filter',
+              style: textTheme.headlineSmall!.copyWith(
+                fontWeight: FontWeight.w700,
+                color: palette.ink,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               'Acara',
-              style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w500,
+                color: palette.inkMuted,
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -714,12 +790,18 @@ class _FilterSheetState extends State<_FilterSheet> {
                 Expanded(
                   child: Text(
                     'Formalitas minimal',
-                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                    style: textTheme.labelLarge!.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: palette.inkMuted,
+                    ),
                   ),
                 ),
                 Text(
                   '$_minFormality/5',
-                  style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                  style: textTheme.labelLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
                 ),
               ],
             ),
@@ -728,7 +810,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               min: 1,
               max: 5,
               divisions: 4,
-              activeColor: palette.action,
+              activeColor: palette.actionInk,
               inactiveColor: palette.accentTint,
               label: '$_minFormality',
               onChanged: (v) => setState(() => _minFormality = v.round()),
@@ -750,16 +832,20 @@ class _FilterSheetState extends State<_FilterSheet> {
                         borderRadius: AppRadius.panel,
                       ),
                     ),
-                    child: Text('Reset', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Reset',
+                      style: textTheme.labelLarge!.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: () => Navigator.of(context).pop((
-                      occasions: _selected,
-                      minFormality: _minFormality,
-                    )),
+                    onPressed: () => Navigator.of(
+                      context,
+                    ).pop((occasions: _selected, minFormality: _minFormality)),
                     style: FilledButton.styleFrom(
                       backgroundColor: palette.action,
                       foregroundColor: palette.onAction,
@@ -768,7 +854,12 @@ class _FilterSheetState extends State<_FilterSheet> {
                         borderRadius: AppRadius.panel,
                       ),
                     ),
-                    child: Text('Terapkan', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Terapkan',
+                      style: textTheme.labelLarge!.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -807,7 +898,8 @@ class _Chip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, 
+          style: textTheme.labelLarge!.copyWith(
+            fontWeight: FontWeight.w500,
             color: selected ? palette.onAction : palette.inkMuted,
           ),
         ),
@@ -851,8 +943,17 @@ class _CategoryChips extends StatelessWidget {
               ),
               child: Text(
                 label,
-                style: (active ? textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600) : textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500))
-                    .copyWith(color: active ? palette.onAction : palette.inkMuted),
+                style:
+                    (active
+                            ? textTheme.labelLarge!.copyWith(
+                                fontWeight: FontWeight.w600,
+                              )
+                            : textTheme.labelLarge!.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ))
+                        .copyWith(
+                          color: active ? palette.onAction : palette.inkMuted,
+                        ),
               ),
             ),
           );

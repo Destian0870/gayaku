@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "dataset": "alexeygrigorev/clothing-dataset-small",
+  "source": "labels.json CC0 keep:true entries, in labels.json order, restricted to the class folders present in the clone; index = exported model output index",
+  "labels": [
+    "T-Shirt",
+    "Shirt",
+    "Longsleeve",
+    "Outwear",
+    "Dress",
+    "Skirt",
+    "Pants",
+    "Shorts",
+    "Shoes",
+    "Hat"
+  ]
+}

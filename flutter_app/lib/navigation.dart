@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'screens/add_item_stub.dart';
 import 'screens/profile_screen.dart';
+import 'screens/scan_screen.dart';
 import 'screens/wardrobe_screen.dart';
 import 'screens/weekly_planner.dart';
 
@@ -22,7 +22,7 @@ Widget? _screenFor(
     initialTab: initialTab,
     initialFavoritesOnly: initialFavoritesOnly,
   ),
-  2 => const AddItemStub(),
+  2 => const ScanScreen(),
   3 => const WeeklyPlanner(),
   4 => const ProfileScreen(),
   _ => null,

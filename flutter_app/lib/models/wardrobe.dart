@@ -57,8 +57,10 @@ enum LookSortOption { newest, oldest, titleAscending, titleDescending }
 
 class WardrobeItem {
   const WardrobeItem({
+    required this.id,
     required this.name,
     required this.category,
+    this.subcategory,
     required this.imagePath,
     this.brand = '',
     this.colorName = '',
@@ -67,8 +69,17 @@ class WardrobeItem {
     this.occasions = const [],
   });
 
+  /// Stable identity: the `wardrobe.db` primary key for a scanned garment,
+  /// `seed-*` for the demo catalog. Saved combinations store these, so a
+  /// rename never splits a combination (see docs/adr/0004-sqlite-ids.md).
+  final String id;
+
   final String name;
   final String category;
+
+  /// Finer garment type from the scanner, e.g. `Kaos` under `Tops`.
+  final String? subcategory;
+
   final String imagePath;
 
   /// Optional maker label, rendered as `Category • Brand` under the name.
@@ -87,9 +98,11 @@ class WardrobeItem {
   final List<String> occasions;
 }
 
-/// Catalog shown on the Wardrobe screen, grouped by the chips below.
-const wardrobeItems = <WardrobeItem>[
+/// Demo catalog seeded into `wardrobe.db` on the first open, so a fresh
+/// install is not an empty screen. [id]s are stable across releases.
+const seedWardrobeItems = <WardrobeItem>[
   WardrobeItem(
+    id: 'seed-silk-blouse',
     name: 'Silk Blouse',
     category: 'Tops',
     brand: 'Zara',
@@ -100,6 +113,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/silk_blouse.png',
   ),
   WardrobeItem(
+    id: 'seed-beige-trench',
     name: 'Beige Trench',
     category: 'Outerwear',
     brand: 'Burberry',
@@ -110,6 +124,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/beige_trench.jpg',
   ),
   WardrobeItem(
+    id: 'seed-classic-sneakers',
     name: 'Classic Sneakers',
     category: 'Shoes',
     brand: 'Nike',
@@ -120,6 +135,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/classic_sneakers.jpg',
   ),
   WardrobeItem(
+    id: 'seed-gold-link-chain',
     name: 'Gold Link Chain',
     category: 'Accessories',
     brand: 'Mejuri',
@@ -130,6 +146,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/gold_link_chain.jpg',
   ),
   WardrobeItem(
+    id: 'seed-straight-leg-jeans',
     name: 'Straight Leg Jeans',
     category: 'Bottoms',
     brand: "Levi's",
@@ -140,6 +157,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/straight_leg_jeans.jpg',
   ),
   WardrobeItem(
+    id: 'seed-linen-shirt',
     name: 'Linen Shirt',
     category: 'Tops',
     brand: 'Uniqlo',
@@ -150,6 +168,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/linen_shirt.jpg',
   ),
   WardrobeItem(
+    id: 'seed-pleated-midi-skirt',
     name: 'Pleated Midi Skirt',
     category: 'Bottoms',
     brand: 'COS',
@@ -160,6 +179,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/pleated_midi_skirt.jpg',
   ),
   WardrobeItem(
+    id: 'seed-leather-loafers',
     name: 'Leather Loafers',
     category: 'Shoes',
     brand: 'Dr. Martens',
@@ -170,6 +190,7 @@ const wardrobeItems = <WardrobeItem>[
     imagePath: 'assets/images/leather_loafers.jpg',
   ),
   WardrobeItem(
+    id: 'seed-tote-bag-canvas',
     name: 'Tote Bag Canvas',
     category: 'Accessories',
     brand: 'Muji',
@@ -179,6 +200,15 @@ const wardrobeItems = <WardrobeItem>[
     occasions: ['Kasual'],
     imagePath: 'assets/images/tote_bag_canvas.jpg',
   ),
+];
+
+/// The five slots a combination is built from, in builder order.
+const wardrobeSlots = <String>[
+  'Tops',
+  'Bottoms',
+  'Outerwear',
+  'Shoes',
+  'Accessories',
 ];
 
 /// Chip labels: the leading chip clears the category filter.
@@ -202,16 +232,19 @@ const todaysLook = Look(
 
 const recentItems = <WardrobeItem>[
   WardrobeItem(
+    id: 'recent-white-sneakers',
     name: 'White Sneakers',
     category: 'Shoes',
     imagePath: 'assets/images/white_sneakers.png',
   ),
   WardrobeItem(
+    id: 'recent-gold-chain',
     name: 'Gold Chain',
     category: 'Accessories',
     imagePath: 'assets/images/gold_chain.png',
   ),
   WardrobeItem(
+    id: 'recent-silk-blouse',
     name: 'Silk Blouse',
     category: 'Tops',
     imagePath: 'assets/images/silk_blouse.png',

@@ -1,0 +1,10 @@
+# catalogue download and split manifests; rebuild with scripts/prepare_data.py
+data/
+
+# training outputs stay out of git: the exported classifier ships from
+# flutter_app/assets/models/garment_classifier.tflite instead
+artifacts/*.onnx
+artifacts/*.tflite
+artifacts/*.pt
+
+__pycache__/

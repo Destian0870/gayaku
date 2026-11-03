@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
@@ -162,7 +163,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const HomeScreen(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -230,7 +233,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: palette.ink,
                             onTap: () {
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (_) => const HomeScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const HomeScreen(),
+                                ),
                               );
                             },
                           ),
@@ -252,7 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
                         );
                       },
                       child: Text(
@@ -276,7 +283,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton({required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildSocialButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),

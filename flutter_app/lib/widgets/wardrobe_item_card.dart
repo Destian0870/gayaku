@@ -47,7 +47,10 @@ class WardrobeItemCard extends StatelessWidget {
               item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+              style: textTheme.titleLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -56,7 +59,10 @@ class WardrobeItemCard extends StatelessWidget {
                   : '${item.category} • ${item.brand}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+              style: textTheme.labelMedium!.copyWith(
+                fontWeight: FontWeight.w400,
+                color: palette.inkMuted,
+              ),
             ),
           ],
         ),

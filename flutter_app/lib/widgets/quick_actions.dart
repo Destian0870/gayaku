@@ -6,10 +6,10 @@ import 'placeholder_image.dart';
 
 /// Two shortcut cards for destinations not yet built.
 class QuickActions extends StatelessWidget {
-  const QuickActions({super.key, this.onFavoriteTap, this.onPlannerTap,});
+  const QuickActions({super.key, this.onFavoriteTap, this.onPlannerTap});
 
   final VoidCallback? onFavoriteTap;
-    final VoidCallback? onPlannerTap;
+  final VoidCallback? onPlannerTap;
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +52,7 @@ class QuickActions extends StatelessWidget {
 }
 
 class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.label,
-    required this.icon,
-    this.onTap,
-  });
+  const _QuickActionCard({required this.label, required this.icon, this.onTap});
 
   final String label;
   final IconData icon;

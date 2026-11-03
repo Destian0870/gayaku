@@ -9,6 +9,7 @@ import 'package:flutter_app/screens/wardrobe_item_detail_screen.dart';
 import 'package:flutter_app/state/outfit_store.dart';
 
 const _top = WardrobeItem(
+  id: 'test-kaos',
   name: 'Kaos',
   category: 'Tops',
   color: Color(0xFF3B5A80),
@@ -19,6 +20,7 @@ const _top = WardrobeItem(
 );
 
 const _otherTop = WardrobeItem(
+  id: 'test-kemeja',
   name: 'Kemeja',
   category: 'Tops',
   color: Color(0xFFF2EDE3),
@@ -27,6 +29,7 @@ const _otherTop = WardrobeItem(
 );
 
 const _bottoms = WardrobeItem(
+  id: 'test-celana',
   name: 'Celana',
   category: 'Bottoms',
   color: Color(0xFF8B5E3C),
@@ -36,6 +39,7 @@ const _bottoms = WardrobeItem(
 );
 
 const _accessory = WardrobeItem(
+  id: 'test-jam',
   name: 'Jam',
   category: 'Accessories',
   color: Color(0xFFC9A227),
@@ -71,7 +75,12 @@ void main() {
 
   group('recommendMatches', () {
     test('drops same-category items and sorts by score', () {
-      final out = recommendMatches(_top, [_top, _otherTop, _bottoms, _accessory]);
+      final out = recommendMatches(_top, [
+        _top,
+        _otherTop,
+        _bottoms,
+        _accessory,
+      ]);
       expect(out.map((m) => m.item.name), isNot(contains('Kaos')));
       expect(out.map((m) => m.item.name), isNot(contains('Kemeja')));
       expect(
@@ -86,6 +95,7 @@ void main() {
       final onOccasion = recommendMatches(_top, [_bottoms]).single;
       final offOccasion = recommendMatches(_top, [
         const WardrobeItem(
+          id: 'test-sepatu-formal',
           name: 'Sepatu Formal',
           category: 'Shoes',
           color: Color(0xFF8B5E3C),
@@ -128,13 +138,15 @@ void main() {
     test('stays silent when the set already meets the threshold', () {
       final set = [_top, _bottoms, _accessory];
       expect(outfitScore(set), greaterThan(0));
-      expect(improveOutfit(set, [_top, _bottoms, _accessory], threshold: 0.1),
-          isEmpty);
+      expect(
+        improveOutfit(set, [_top, _bottoms, _accessory], threshold: 0.1),
+        isEmpty,
+      );
     });
 
     test('proposes a swap that lifts the score past the threshold', () {
       final set = [_top, _otherTop, _bottoms];
-      final swaps = improveOutfit(set, wardrobeItems, threshold: 0.9);
+      final swaps = improveOutfit(set, seedWardrobeItems, threshold: 0.9);
       expect(swaps, isNotEmpty);
 
       final best = swaps.first;
@@ -154,15 +166,10 @@ void main() {
     setUp(() => savedOutfits.value = []);
 
     test('adds, edits in place, and deletes', () {
-      // Names must exist in the catalog: SavedOutfit.items resolves against it.
-      final names = ['Silk Blouse', 'Straight Leg Jeans'];
+      // Ids must exist in the catalog: SavedOutfit.itemsOf resolves against it.
+      final ids = ['seed-silk-blouse', 'seed-straight-leg-jeans'];
       saveOutfit(
-        SavedOutfit(
-          id: 'a',
-          name: 'Kantor',
-          itemNames: names,
-          threshold: 0.8,
-        ),
+        SavedOutfit(id: 'a', name: 'Kantor', itemIds: ids, threshold: 0.8),
       );
       expect(savedOutfits.value, hasLength(1));
 
@@ -170,29 +177,43 @@ void main() {
         SavedOutfit(
           id: 'a',
           name: 'Kantor Senin',
-          itemNames: names,
+          itemIds: ids,
           threshold: 0.9,
         ),
       );
-      expect(savedOutfits.value, hasLength(1), reason: 'same id edits in place');
+      expect(
+        savedOutfits.value,
+        hasLength(1),
+        reason: 'same id edits in place',
+      );
       expect(savedOutfits.value.single.name, 'Kantor Senin');
-      expect(savedOutfits.value.single.items, hasLength(2));
+      expect(
+        savedOutfits.value.single.itemsOf(seedWardrobeItems),
+        hasLength(2),
+      );
 
       deleteOutfit('a');
       expect(savedOutfits.value, isEmpty);
     });
   });
 
-  testWidgets('builder shows the score and its improvement suggestions',
-      (tester) async {
+  testWidgets('builder shows the score and its improvement suggestions', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(420, 2600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
     // Two tops in one set: guaranteed clash, so the score sits under 95%.
-    const names = ['Silk Blouse', 'Linen Shirt', 'Straight Leg Jeans'];
-    final set = [for (final n in names) ...wardrobeItems.where((i) => i.name == n)];
-    final swap = improveOutfit(set, wardrobeItems, threshold: 0.95).first;
+    const ids = [
+      'seed-silk-blouse',
+      'seed-linen-shirt',
+      'seed-straight-leg-jeans',
+    ];
+    final set = [
+      for (final id in ids) ...seedWardrobeItems.where((i) => i.id == id),
+    ];
+    final swap = improveOutfit(set, seedWardrobeItems, threshold: 0.95).first;
 
     await tester.pumpWidget(
       MaterialApp(
@@ -200,9 +221,10 @@ void main() {
           existing: SavedOutfit(
             id: 'x',
             name: 'Uji',
-            itemNames: names,
+            itemIds: ids,
             threshold: 0.95,
           ),
+          catalog: seedWardrobeItems,
         ),
       ),
     );
@@ -224,16 +246,16 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: WardrobeItemDetailScreen(
-          item: wardrobeItems.first,
-          catalog: wardrobeItems,
+          item: seedWardrobeItems.first,
+          catalog: seedWardrobeItems,
         ),
       ),
     );
 
     expect(find.text('Cocok Dipadukan Dengan'), findsOneWidget);
-    expect(find.text(wardrobeItems.first.name), findsWidgets);
+    expect(find.text(seedWardrobeItems.first.name), findsWidgets);
 
-    final expected = outfitFor(wardrobeItems.first, wardrobeItems);
+    final expected = outfitFor(seedWardrobeItems.first, seedWardrobeItems);
     expect(expected, isNotEmpty);
     for (final match in expected) {
       expect(find.text(match.item.name), findsOneWidget);
