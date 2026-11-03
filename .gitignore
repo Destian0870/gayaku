@@ -2,3 +2,7 @@
 # The training notebook reads this dataset as a Kaggle input, so no checkout needs it.
 # See docs/adr/0007-carousell-clothes-dataset.md.
 Clothes_Dataset/
+# Ultralytics downloads its checkpoints into the working directory when a script runs from
+# the repository root (ml_workspace/yolo/.gitignore already covers the ones inside yolo/).
+yolov8*.pt
+/runs/
