@@ -12,6 +12,7 @@ const garmentCategories = <String>[
   'Shoes',
   'Hat',
 ];
+
 /// Model label -> one of the five Categories (Tops, Bottoms, Outerwear, Shoes, Accessories).
 const garmentLabelCategory = <String, String>{
   'T-Shirt': 'Tops',
@@ -25,6 +26,7 @@ const garmentLabelCategory = <String, String>{
   'Shoes': 'Shoes',
   'Hat': 'Accessories',
 };
+
 /// Model label -> Indonesian display name shown in the scanner's name row.
 const garmentLabelName = <String, String>{
   'T-Shirt': 'Kaos',

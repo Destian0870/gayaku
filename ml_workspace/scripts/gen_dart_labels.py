@@ -160,11 +160,11 @@ def render(rows: list[tuple[str, str, str]]) -> str:
         + CATEGORIES_DOC
         + "const garmentCategories = <String>[\n"
         + categories
-        + "];\n"
+        + "];\n\n"
         + CATEGORY_DOC
         + "const garmentLabelCategory = <String, String>{\n"
         + category_map
-        + "};\n"
+        + "};\n\n"
         + NAME_DOC
         + "const garmentLabelName = <String, String>{\n"
         + name_map
