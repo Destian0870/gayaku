@@ -16,12 +16,19 @@ import 'outfit_builder_screen.dart';
 /// The catalog is the SQLite-backed [wardrobeItems] store (docs/adr/0004);
 /// search and filters stay local, and combinations are still session-only.
 class WardrobeScreen extends StatefulWidget {
-  const WardrobeScreen({super.key, this.items});
+  const WardrobeScreen({
+    super.key,
+    this.items,
+    this.initialTab = 0,
+    this.initialFavoritesOnly = false,
+  });
 
   /// Overrides the store with a fixed catalog, for tests. Null — the app's
   /// case — follows [wardrobeItems], so a scanned garment shows up here as
   /// soon as it is saved.
   final List<WardrobeItem>? items;
+  final int initialTab;
+  final bool initialFavoritesOnly;
 
   @override
   State<WardrobeScreen> createState() => _WardrobeScreenState();
@@ -33,7 +40,15 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   String _query = '';
   Set<String> _occasions = {};
   int _minFormality = 1;
-  int _tab = 0;
+  late int _tab;
+  late bool _favoritesOnly;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = widget.initialTab;
+    _favoritesOnly = widget.initialFavoritesOnly;
+  }
 
   @override
   void dispose() {
@@ -265,15 +280,26 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         ),
       ),
       const SizedBox(height: 16),
+      _SavedOutfitFilters(
+        favoritesOnly: _favoritesOnly,
+        onFavoritesOnlyChanged: (value) =>
+            setState(() => _favoritesOnly = value),
+      ),
+      const SizedBox(height: 16),
       ValueListenableBuilder(
         valueListenable: savedOutfits,
         builder: (context, outfits, _) {
-          if (outfits.isEmpty) {
+          final visibleOutfits = _favoritesOnly
+              ? outfits.where((outfit) => outfit.favorite).toList()
+              : outfits;
+          if (visibleOutfits.isEmpty) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text(
-                  'Belum ada kombinasi tersimpan.',
+                  _favoritesOnly
+                      ? 'Belum ada favorit tersimpan.'
+                      : 'Belum ada kombinasi tersimpan.',
                   style: textTheme.bodyLarge!.copyWith(
                     fontWeight: FontWeight.w400,
                     color: palette.inkMuted,
@@ -284,7 +310,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           }
           return Column(
             children: [
-              for (final outfit in _favoritesFirst(outfits)) ...[
+              for (final outfit in _favoritesFirst(visibleOutfits)) ...[
                 _SavedOutfitCard(
                   outfit: outfit,
                   catalog: _catalog,
@@ -306,6 +332,36 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     ...outfits.where((o) => o.favorite),
     ...outfits.where((o) => !o.favorite),
   ];
+}
+
+class _SavedOutfitFilters extends StatelessWidget {
+  const _SavedOutfitFilters({
+    required this.favoritesOnly,
+    required this.onFavoritesOnlyChanged,
+  });
+
+  final bool favoritesOnly;
+  final ValueChanged<bool> onFavoritesOnlyChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _Chip(
+          label: 'Semua',
+          selected: !favoritesOnly,
+          onTap: () => onFavoritesOnlyChanged(false),
+        ),
+        _Chip(
+          label: 'Favorit',
+          selected: favoritesOnly,
+          onTap: () => onFavoritesOnlyChanged(true),
+        ),
+      ],
+    );
+  }
 }
 
 class _Header extends StatelessWidget {

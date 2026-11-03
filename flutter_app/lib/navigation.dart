@@ -13,8 +13,15 @@ const _navRouteNames = <int, String>{
   4: '/profile',
 };
 
-Widget? _screenFor(int index) => switch (index) {
-  1 => const WardrobeScreen(),
+Widget? _screenFor(
+  int index, {
+  int initialTab = 0,
+  bool initialFavoritesOnly = false,
+}) => switch (index) {
+  1 => WardrobeScreen(
+    initialTab: initialTab,
+    initialFavoritesOnly: initialFavoritesOnly,
+  ),
   2 => const ScanScreen(),
   3 => const WeeklyPlanner(),
   4 => const ProfileScreen(),
@@ -24,9 +31,18 @@ Widget? _screenFor(int index) => switch (index) {
 /// Single source of truth for where a bottom-nav tap goes, so every screen's
 /// bar behaves the same. Home pops back to the root route; the rest push, and
 /// re-tapping the tab you are already on does nothing.
-void openNavDestination(BuildContext context, int index) {
+void openNavDestination(
+  BuildContext context,
+  int index, {
+  int initialTab = 0,
+  bool initialFavoritesOnly = false,
+}) {
   final navigator = Navigator.of(context);
-  final screen = _screenFor(index);
+  final screen = _screenFor(
+    index,
+    initialTab: initialTab,
+    initialFavoritesOnly: initialFavoritesOnly,
+  );
   if (screen == null) {
     navigator.popUntil((route) => route.isFirst);
     return;

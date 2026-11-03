@@ -9,7 +9,6 @@ import '../widgets/occasion_search_bar.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recently_added.dart';
 import '../widgets/todays_look_card.dart';
-import 'favorites_screen.dart';
 
 /// Home dashboard: greeting, Today's Look, search, quick actions, recently
 /// added, and a floating pill bottom nav.
@@ -50,10 +49,11 @@ class HomeScreen extends StatelessWidget {
                     const OccasionSearchBar(),
                     const SizedBox(height: 20),
                     QuickActions(
-                      onFavoriteTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const FavoritesScreen(),
-                        ),
+                      onFavoriteTap: () => openNavDestination(
+                        context,
+                        1,
+                        initialTab: 1,
+                        initialFavoritesOnly: true,
                       ),
                       onPlannerTap: () => openNavDestination(context, 3),
                     ),

@@ -7,6 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_app/screens/wardrobe_screen.dart';
 import 'package:flutter_app/state/outfit_store.dart';
 import 'package:flutter_app/state/wardrobe_store.dart';
+import 'package:flutter_app/theme/app_theme.dart';
 
 void main() {
   // The screen reads the real SQLite store, so every test opens one on a temp
@@ -66,6 +67,7 @@ void main() {
     expect(find.text('Kombinasi (0)'), findsOneWidget);
     await tester.tap(find.text('Kombinasi (0)'));
     await tester.pumpAndSettle();
+    expect(find.text('Semua'), findsOneWidget);
     expect(find.text('Buat Kombinasi'), findsOneWidget);
     expect(find.text('Belum ada kombinasi tersimpan.'), findsOneWidget);
 
@@ -127,5 +129,93 @@ void main() {
     expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byTooltip('Hapus dari favorit'), findsOneWidget);
     expect(savedOutfits.value.single.favorite, isTrue);
+  });
+
+  testWidgets(
+    'WardrobeScreen filters combinations to favorites and shows empty state',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(420, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      savedOutfits.value = [
+        SavedOutfit(
+          id: 'favorite-1',
+          name: 'Favorit Uji',
+          itemIds: const ['seed-silk-blouse'],
+          threshold: 0.80,
+          favorite: true,
+        ),
+        SavedOutfit(
+          id: 'regular-1',
+          name: 'Bukan Favorit',
+          itemIds: const ['seed-straight-leg-jeans'],
+          threshold: 0.80,
+        ),
+      ];
+      addTearDown(() => savedOutfits.value = []);
+
+      await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Kombinasi (2)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Favorit Uji'), findsOneWidget);
+      expect(find.text('Bukan Favorit'), findsOneWidget);
+
+      await tester.tap(find.text('Favorit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Favorit Uji'), findsOneWidget);
+      expect(find.text('Bukan Favorit'), findsNothing);
+
+      savedOutfits.value = [
+        SavedOutfit(
+          id: 'regular-2',
+          name: 'Tanpa Favorit',
+          itemIds: const ['seed-silk-blouse'],
+          threshold: 0.80,
+        ),
+      ];
+      await tester.pumpAndSettle();
+      expect(find.text('Belum ada favorit tersimpan.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('WardrobeScreen favorites filter works in dark mode', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    savedOutfits.value = [
+      SavedOutfit(
+        id: 'dark-favorite',
+        name: 'Favorit Gelap',
+        itemIds: const ['seed-silk-blouse'],
+        threshold: 0.80,
+        favorite: true,
+      ),
+      SavedOutfit(
+        id: 'dark-regular',
+        name: 'Bukan Favorit Gelap',
+        itemIds: const ['seed-straight-leg-jeans'],
+        threshold: 0.80,
+      ),
+    ];
+    addTearDown(() => savedOutfits.value = []);
+
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.dark, home: const WardrobeScreen()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Kombinasi (2)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Favorit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Favorit Gelap'), findsOneWidget);
+    expect(find.text('Bukan Favorit Gelap'), findsNothing);
   });
 }

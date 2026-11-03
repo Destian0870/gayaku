@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_app/screens/home_screen.dart';
 import 'package:flutter_app/screens/favorites_screen.dart';
-import 'package:flutter_app/screens/outfit_detail_screen.dart';
+import 'package:flutter_app/screens/wardrobe_screen.dart';
+import 'package:flutter_app/theme/app_theme.dart';
 import 'package:flutter_app/widgets/greeting_header.dart';
 
 void main() {
@@ -33,26 +34,30 @@ void main() {
     expect(find.text('Recently Added'), findsOneWidget);
   });
 
-  testWidgets('Your Favorite opens the favorites screen', (
+  testWidgets('Your Favorite opens Wardrobe favorites', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
     await tester.ensureVisible(find.text('Your Favorite'));
     await tester.tap(find.text('Your Favorite'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(FavoritesScreen), findsOneWidget);
-    expect(find.text('Favorite Looks'), findsOneWidget);
-    expect(find.text('All'), findsOneWidget);
-    expect(find.text('Beige Trench & Denim'), findsOneWidget);
-
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Beige Trench & Denim'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(OutfitDetailScreen), findsOneWidget);
-    expect(find.text('Outfit Detail'), findsOneWidget);
+    expect(find.byType(WardrobeScreen), findsOneWidget);
+    expect(find.text('Kombinasi (0)'), findsOneWidget);
+    expect(find.text('Favorit'), findsOneWidget);
+    expect(find.text('Belum ada favorit tersimpan.'), findsOneWidget);
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.checkroom_outlined)).color,
+      AppPalette.light.ink,
+    );
+    expect(
+      (tester.widget<Text>(find.text('Favorit')).style?.color),
+      AppPalette.light.onAction,
+    );
   });
 
   testWidgets('Outfit detail shows look components and actions', (
