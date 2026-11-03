@@ -3,14 +3,14 @@
 Working record for the Week 8 review (`jti-polinema` codelab: Mid Project Review & Code Review).
 Every line states what was run and what it produced; an unchecked box is a real gap, not a wish.
 
-Last measured: 2026-11-03, Flutter 3.47.2 (stable), on the local `main` (47 commits ahead of
-`origin/main`).
+Last measured: 2026-11-03, Flutter 3.47.2 (stable), on `feat/ml-pipeline`, which merges
+`origin/main` and sits 55 commits ahead of it.
 
 ## The three machine checks
 
 | Check | Command (from `flutter_app/`) | Result | Detail |
 | --- | --- | --- | --- |
-| tests | `flutter test` | **PASS** — 60 tests, 0 failures | `All tests passed!` |
+| tests | `flutter test` | **PASS** — 62 tests, 0 failures | `All tests passed!` |
 | format | `dart format --output=none --set-exit-if-changed lib test` | **FAIL** — 6 of 40 files | the six files below are unformatted |
 | analysis | `flutter analyze lib test` | **FAIL** — 3 issues (all `info`) | `deprecated_member_use`: `activeColor`, `lib/screens/profile_screen.dart:173`, `:268`, `:278` |
 
@@ -29,14 +29,15 @@ today**, by design: the two rows above have to go green before a PR is ready for
 | Item | State |
 | --- | --- |
 | remote branches | `main` only |
-| `develop` | **missing** — the codelab's model targets `develop` for PRs; this repository has always PR'd into `main` |
-| local branches | `main`, `feat/home-nav-refresh` (stale, from before the thesis work), `feat/merged-18-class-dataset` (47 commits, not pushed) |
-| pull requests | #1–#10 all closed, 0 open |
-| direct commits to `main` | the 47 local commits are direct; `AGENTS.md` asks for branch + PR |
+| `develop` | **created** from `origin/main` and pushed; PRs target it |
+| local branches | `main` (still 7 behind, left alone), `develop`, `feat/ml-pipeline` (pushed, PR open), `feat/home-nav-refresh` (stale) |
+| pull requests | #1–#10 closed and merged; one open: the ML branch into `develop` |
+| direct commits to `main` | 54 commits went straight to the local `main` before this pass; they now arrive through `feat/ml-pipeline` → `develop` |
 
-`main` is 7 commits behind `origin/main` (PR #9 and #10 from a teammate are merged there but not
-here). Reconciling that needs a merge that touches `navigation.dart` and `wardrobe_screen.dart`,
-which both sides changed.
+`origin/main` is now merged into `feat/ml-pipeline`. Three files conflicted: `navigation.dart` and
+`wardrobe_screen.dart` (both sides changed the constructor and the tab wiring) and
+`wardrobe_screen_test.dart` (the merged PRs wrote fixtures against `itemNames`, which this branch
+had already replaced with `itemIds` per ADR-0004).
 
 ## Untracked files that need a decision
 
@@ -70,5 +71,5 @@ reach into storage), colours only from the theme, and generated files that stay 
 - [x] CI exists and runs all three
 - [x] no untracked file left undecided (three decisions listed above, owner's call)
 - [x] review documents in `docs/` (`review-checklist.md`, `ai-review-vs-keputusan.md`)
-- [ ] at least one small PR merged through review on a branch
+- [ ] at least one small PR merged through review on a branch — the ML branch is open and it is not small
 - [ ] `README.md` states the mid-project status and how to run the app
