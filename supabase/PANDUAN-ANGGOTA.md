@@ -24,6 +24,7 @@ SQL editor → tempel isi file di `supabase/migrations/` **berurutan sesuai nama
 20261024120100_avatars_bucket.sql
 20261103090000_wardrobe_items.sql
 20261103091500_wardrobe_local_images.sql
+20261108120000_wardrobe_align_model.sql
 ```
 
 Atau lewat CLI:

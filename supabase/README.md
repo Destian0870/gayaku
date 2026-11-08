@@ -37,6 +37,9 @@ erDiagram
     text name "1..80 chars"
     text label "18 YOLO labels"
     text category "Tops|Bottoms|Outerwear|Shoes|Accessories"
+    text subcategory "label asli dari classifier"
+    text brand
+    text[] occasions "Formal|Smart-Casual|Kasual|Sport"
     text color_name
     text dominant_color "#RRGGBB"
     smallint formality "1..5"
@@ -52,23 +55,30 @@ erDiagram
 
 ## What the app talks to
 
-Two files import the Supabase SDK, one per concern; screens never import it:
+Two services import the Supabase SDK, one per concern; screens never import
+it and never see a Supabase type:
 
 - `flutter_app/lib/services/auth_service.dart` — `AuthService`, with
   `DemoAuthService` by default (accepts any credentials, no network) and
   `SupabaseAuthService` when `SUPABASE_URL` + `SUPABASE_PUBLISHABLE_KEY` are
   compiled in. `main()` installs it before the first frame.
 - `flutter_app/lib/services/wardrobe_service.dart` — `WardrobeService`
-  (`items()`, `add(ScanResult)`, `remove(id)`), with the same Demo/Supabase
-  pair. `SupabaseWardrobeService` uploads the cutout PNG to `cutouts/<uid>/…`
-  and inserts the row.
+  (`items()`, `save(WardrobeItem)`, `add(ScanResult)`, `remove(id)`), with the
+  same Demo/Supabase pair. `SupabaseWardrobeService` writes the cutout PNG to
+  the app's documents folder (`cutouts/`, migration `20261103091500`) and
+  inserts only the file name into `image_file`.
+- `flutter_app/lib/state/wardrobe_sync.dart` — the seam between the two
+  backends: `loadWardrobeFromBackend()`, called from `main()`, fills the
+  `wardrobeItems` notifier from Supabase, and `saveWardrobeItem(item)` writes
+  remote first, then the SQLite cache. Screens keep reading one notifier.
 
 | Screen | Call |
 | --- | --- |
 | `login_screen.dart` | `authService.signIn(email:, password:)` |
 | `register_screen.dart` | `authService.signUp(email:, password:, displayName:)` |
 | `profile_screen.dart` | `authService.currentUser`, `authService.signOut()` |
-| wardrobe screens (next) | `wardrobeService.items()`, `.add(scan)`, `.remove(id)` |
+| `wardrobe_screen.dart` | reads `wardrobeItems` (filled by `loadWardrobeFromBackend`) |
+| `scan_screen.dart` | `saveWardrobeItem(item)` → `wardrobeService.save` + SQLite cache |
 
 `AuthException.message` / `WardrobeException.message` are shown in a SnackBar
 as-is, so the mapping from Supabase's English errors to Indonesian copy lives in
@@ -89,10 +99,14 @@ scanner emits. It maps one-to-one onto the table:
 | `colorName` | `color_name` text | K-Means label, e.g. `Putih` |
 | `dominantColor` | `dominant_color` text | `#RRGGBB`, check-constrained |
 | `formality` | `formality` smallint | 1..5, seeded from category |
+| `label` | `subcategory` text | label asli, `label` menyimpan nama kelas final |
+| — | `brand` text | kosong sampai ada input pengguna/tahap OCR |
+| `defaultOccasions(category)` | `occasions` text[] | disimpan, bukan diturunkan (`logic/garment_defaults.dart`) |
 
 `owner_id` defaults to `auth.uid()` and every policy tests it, so a client can
-neither insert for someone else nor read another user's wardrobe. Images are
-private; `items()` hands back a 1-hour signed URL.
+neither insert for someone else nor read another user's wardrobe. Item ids are
+uuid v4 generated on the device (`logic/ids.dart`), so the id in SQLite equals
+`wardrobe_items.id` and a queued offline insert cannot collide.
 
 ## First-time setup
 
@@ -101,7 +115,7 @@ private; `items()` hands back a 1-hour signed URL.
    API keys* (older projects call it the **anon** key — same slot, same
    behaviour). That key is public by design; RLS is what protects the data.
    Never ship the `secret` / `service_role` key.
-2. Apply the migrations. Either paste all three files from `migrations/` into the
+2. Apply the migrations. Either paste all five files from `migrations/` into the
    dashboard SQL editor in filename order, or use the CLI:
 
    ```bash
@@ -130,9 +144,10 @@ private; `items()` hands back a 1-hour signed URL.
   confirmation enabled returns to the Sign In screen with a hint.
 - In the SQL editor, `select * from profiles;` as the `anon` role returns
   nothing — that is RLS working, not a bug.
-- A scan (once the scanner is wired to `wardrobeService.add`) shows up in
-  *Table Editor → wardrobe_items* with `label`, `category`, `dominant_color` and
-  `confidence` filled, and *Storage → cutouts → <uid>* holds the PNG.
+- A scan shows up in *Table Editor → wardrobe_items* with `label`,
+  `category`, `subcategory`, `occasions`, `dominant_color` and `confidence`
+  filled. The PNG stays on the phone: `image_file` is a bare file name and the
+  bucket `cutouts` no longer exists.
 
 ## Not covered yet
 
@@ -140,12 +155,13 @@ private; `items()` hands back a 1-hour signed URL.
   and a redirect URL in the dashboard plus `signInWithOAuth` in
   `SupabaseAuthService`.
 - Avatar upload. The bucket and policies exist, no screen writes to it.
-- The scan UI itself. `WardrobeService.add(ScanResult)` is ready and tested
-  against the demo backend, but no screen captures a photo or runs the model
-  yet, and the Wardrobe grid still renders the static catalog.
+- Multi-item scan persistence: `scan_screen.dart` saves one garment per scan;
+  `docs/multi-item-scan.md` describes the fan-out that is not wired yet.
 - Saved looks, favourites, weekly planner. Their tables wait until the matching
   rules settle; `wardrobe_items` is what a look will reference.
-- `occasions` (Formal/Kasual/Smart-Casual/Sport) is not a column: it is derived
-  from `category` by `outfit_matcher`, so it stays client-side for now.
-- Offline caching and session refresh UI. `supabase_flutter` persists the
-  session on disk and refreshes tokens on its own.
+- Editing an item in place. `WardrobeService` has no `update`; a changed name
+  is saved as a new row (or nothing, if the user backs out).
+- Offline writes. Reads fall back to the SQLite cache when the fetch fails;
+  a save made while offline fails loudly instead of queueing.
+- Session refresh UI. `supabase_flutter` persists the session on disk and
+  refreshes tokens on its own.

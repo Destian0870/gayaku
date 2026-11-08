@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/wardrobe_service.dart';
 import 'state/wardrobe_store.dart';
+import 'state/wardrobe_sync.dart';
 import 'theme/app_theme.dart';
 
 /// Compile-time credentials, so no secret ever sits in the repo:
@@ -35,6 +36,10 @@ Future<void> main() async {
     useAuthService(SupabaseAuthService(client));
     useWardrobeService(SupabaseWardrobeService(client));
   }
+
+  // Supabase is the shared wardrobe; the SQLite rows are the offline copy. With
+  // no credentials this is a no-op and the cache is all there is.
+  await loadWardrobeFromBackend();
 
   runApp(const GayakuApp());
 }

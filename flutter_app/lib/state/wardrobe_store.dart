@@ -7,6 +7,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/wardrobe.dart';
 
+export '../logic/ids.dart' show newWardrobeItemId;
+
 /// Every garment the user owns, mirroring `wardrobe.db` in insertion order.
 ///
 /// Listen to it with [ValueListenableBuilder] to rebuild on add/delete. The
@@ -65,13 +67,6 @@ Future<void> deleteWardrobeItem(String id) async {
   await db.delete(_table, where: 'id = ?', whereArgs: [id]);
   wardrobeItems.value = await _readAll(db);
 }
-
-int _idSequence = 0;
-
-/// A fresh primary key for a scanned garment. Two garments saved from the same
-/// photo in the same microsecond still get distinct ids.
-String newWardrobeItemId() =>
-    'w${DateTime.now().microsecondsSinceEpoch}-${_idSequence++}';
 
 Future<void> _open({DatabaseFactory? factory, String? path}) async {
   final resolved = path ?? await _documentsPath();

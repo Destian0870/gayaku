@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../logic/garment_defaults.dart';
+import '../logic/ids.dart';
 import '../models/scan_result.dart';
 import '../models/wardrobe.dart';
 
@@ -22,9 +24,12 @@ abstract class WardrobeService {
   /// Owner's items, newest scan first.
   Future<List<WardrobeItem>> items();
 
-  /// Stores the garment metadata. The cutout PNG stays on the device; only its
-  /// file name reaches Postgres. [name] overrides the suggested name the user
-  /// may have corrected on the review screen.
+  /// Stores what the scanner review screen built. The cutout PNG is already on
+  /// the device; only its file name reaches Postgres.
+  Future<WardrobeItem> save(WardrobeItem item);
+
+  /// Stores a bare [ScanResult], writing its PNG first. Kept for callers that
+  /// have no [WardrobeItem] yet (tests); the screens use [save].
   Future<WardrobeItem> add(ScanResult scan, {String? name});
 
   Future<void> remove(String id);
@@ -43,21 +48,27 @@ class DemoWardrobeService implements WardrobeService {
       List.unmodifiable(_items.reversed);
 
   @override
-  Future<WardrobeItem> add(ScanResult scan, {String? name}) async {
-    final item = WardrobeItem(
+  Future<WardrobeItem> save(WardrobeItem item) async {
+    _items.add(item);
+    return item;
+  }
+
+  @override
+  Future<WardrobeItem> add(ScanResult scan, {String? name}) => save(
+    WardrobeItem(
       id: 'demo-${++_seq}',
       name: _name(scan, name),
       label: scan.label,
       category: scan.category.id,
+      subcategory: scan.label,
       imagePath: '',
       colorName: scan.colorName,
       color: scan.dominantColor,
       formality: scan.formality,
+      occasions: defaultOccasions(scan.category.id),
       confidence: scan.confidence,
-    );
-    _items.add(item);
-    return item;
-  }
+    ),
+  );
 
   @override
   Future<void> remove(String id) async =>
@@ -84,29 +95,57 @@ class SupabaseWardrobeService implements WardrobeService {
   }
 
   @override
+  Future<WardrobeItem> save(WardrobeItem item) async {
+    final row = await _guard(
+      () => _client
+          .from(_table)
+          .insert({
+            // Same id on the device and in Postgres (uuid v4), so the cached
+            // row and its cloud row never drift.
+            if (item.id.isNotEmpty) 'id': item.id,
+            'name': item.name,
+            'label': item.label.isEmpty ? (item.subcategory ?? '') : item.label,
+            'category': item.category,
+            'subcategory': item.subcategory ?? item.label,
+            'brand': item.brand,
+            'color_name': item.colorName,
+            'dominant_color': _hex(item.color),
+            'formality': item.formality,
+            'occasions': item.occasions.isEmpty
+                ? defaultOccasions(item.category)
+                : item.occasions,
+            'confidence': item.confidence,
+            'image_file': _basename(item.imagePath),
+          })
+          .select()
+          .single(),
+    );
+    return _toItem(row, await _cutoutDir());
+  }
+
+  @override
   Future<WardrobeItem> add(ScanResult scan, {String? name}) async {
     final dir = await _cutoutDir();
-    final file = '${DateTime.now().microsecondsSinceEpoch}.png';
+    final id = newWardrobeItemId();
+    final file = '$id.png';
     await File('$dir/$file').writeAsBytes(scan.cutoutPng, flush: true);
 
     try {
-      final row = await _guard(
-        () => _client
-            .from(_table)
-            .insert({
-              'name': _name(scan, name),
-              'label': scan.label,
-              'category': scan.category.id,
-              'color_name': scan.colorName,
-              'dominant_color': scan.dominantHex,
-              'formality': scan.formality,
-              'confidence': scan.confidence,
-              'image_file': file,
-            })
-            .select()
-            .single(),
+      return await save(
+        WardrobeItem(
+          id: id,
+          name: _name(scan, name),
+          label: scan.label,
+          category: scan.category.id,
+          subcategory: scan.label,
+          imagePath: '$dir/$file',
+          colorName: scan.colorName,
+          color: scan.dominantColor,
+          formality: scan.formality,
+          occasions: defaultOccasions(scan.category.id),
+          confidence: scan.confidence,
+        ),
       );
-      return _toItem(row, dir);
     } catch (_) {
       // No row means the local cutout is orphaned; drop it.
       File('$dir/$file').delete().ignore();
@@ -138,20 +177,23 @@ class SupabaseWardrobeService implements WardrobeService {
 
   WardrobeItem _toItem(Map<String, dynamic> row, String dir) {
     final file = row['image_file'] as String? ?? '';
-    final formality = (row['formality'] as num?)?.toInt() ?? 3;
+    final category = row['category'] as String;
+    final subcategory = row['subcategory'] as String? ?? '';
+    final occasions = (row['occasions'] as List?)?.cast<String>() ?? const [];
     return WardrobeItem(
       id: row['id'] as String,
       name: row['name'] as String,
       label: row['label'] as String? ?? '',
-      category: row['category'] as String,
+      category: category,
+      subcategory: subcategory.isEmpty ? null : subcategory,
+      brand: row['brand'] as String? ?? '',
       imagePath: file.isEmpty ? '' : '$dir/$file',
       colorName: row['color_name'] as String? ?? '',
       color: _hexColor(row['dominant_color'] as String?),
-      formality: formality,
-      // ponytail: the scanner reports formality, not occasions, so the chip
-      // filter is derived from it. Add an `occasions text[]` column when ML
-      // starts emitting them.
-      occasions: _occasionsFor(formality),
+      formality: (row['formality'] as num?)?.toInt() ?? 3,
+      // A row written before the `occasions` column falls back to the same
+      // default the scanner applies, so old and new items match alike.
+      occasions: occasions.isEmpty ? defaultOccasions(category) : occasions,
       confidence: (row['confidence'] as num?)?.toDouble(),
     );
   }
@@ -176,20 +218,18 @@ class SupabaseWardrobeService implements WardrobeService {
   }
 }
 
-const _occasionByFormality = {
-  1: ['Kasual', 'Sport'],
-  2: ['Kasual', 'Sport'],
-  3: ['Kasual', 'Smart-Casual'],
-  4: ['Formal', 'Smart-Casual'],
-  5: ['Formal'],
-};
-
-List<String> _occasionsFor(int formality) =>
-    _occasionByFormality[formality.clamp(1, 5)]!;
-
 String _name(ScanResult scan, String? override) {
   final name = (override ?? scan.suggestedName).trim();
   return name.isEmpty ? scan.label : name;
+}
+
+String _basename(String path) =>
+    path.isEmpty ? '' : path.split(RegExp(r'[\\/]')).last;
+
+/// Color to the `#RRGGBB` the dominant_color check accepts.
+String _hex(Color color) {
+  final value = color.toARGB32() & 0xFFFFFF;
+  return '#${value.toRadixString(16).padLeft(6, '0').toUpperCase()}';
 }
 
 /// `#RRGGBB` back to a Color; a malformed value falls back to the app's tan.
