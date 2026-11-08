@@ -63,7 +63,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             height: MediaQuery.of(context).size.height * 0.35,
             width: double.infinity,
-            color: palette.ink,
+            // Navy ground: `palette.ink` left the cream copy on near-white.
+            color: palette.canvas,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,7 +213,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ElevatedButton(
                         onPressed: _busy ? null : _signUp,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: palette.ink,
+                          backgroundColor: palette.action,
+                          foregroundColor: palette.onAction,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
