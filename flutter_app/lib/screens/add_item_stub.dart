@@ -67,12 +67,15 @@ class _AddItemStubState extends State<AddItemStub> {
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(title, style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 24,
-                  height: 30 / 24,
-                  fontWeight: FontWeight.bold,
-                  color: palette.ink,
-                )),
+                child: Text(
+                  title,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 24,
+                    height: 30 / 24,
+                    fontWeight: FontWeight.bold,
+                    color: palette.ink,
+                  ),
+                ),
               ),
             ),
             for (final value in values)
@@ -137,13 +140,9 @@ class _AddItemStubState extends State<AddItemStub> {
                     tooltip: 'Back',
                     icon: const Icon(Icons.arrow_back, size: 22),
                     color: palette.ink,
-                    style: IconButton.styleFrom(
-                      backgroundColor: palette.sheet,
-                    ),
+                    style: IconButton.styleFrom(backgroundColor: palette.sheet),
                   ),
-                  const Expanded(
-                    child: Center(child: _PageTitle()),
-                  ),
+                  const Expanded(child: Center(child: _PageTitle())),
                   const SizedBox(width: 48),
                 ],
               ),
@@ -272,75 +271,74 @@ class _ScannerFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     return Container(
-        height: 306,
-        decoration: BoxDecoration(
-          color: palette.surfaceMuted,
-          borderRadius: BorderRadius.circular(32),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
+      height: 306,
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: palette.surfaceMuted,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: palette.sheet, width: 4),
+            ),
+            child: Center(
+              child: Icon(Icons.checkroom, size: 150, color: palette.accentInk),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
-                color: palette.surfaceMuted,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: palette.sheet, width: 4),
+                color: palette.ink.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Icon(
-                  Icons.checkroom,
-                  size: 150,
-                  color: palette.accentInk,
+              child: Text(
+                isScanning ? 'Scanning item...' : 'Ready to scan',
+                style: GoogleFonts.inter(
+                  color: palette.onAction,
+                  fontSize: 11,
+                  height: 15 / 11,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                decoration: BoxDecoration(
-                  color: palette.ink.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  isScanning ? 'Scanning item...' : 'Ready to scan',
-                  style: GoogleFonts.inter(
-                    color: palette.onAction,
-                    fontSize: 11,
-                    height: 15 / 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: IconButton(
+              onPressed: onCapture,
+              tooltip: 'Capture item',
+              icon: const Icon(Icons.camera_alt_outlined, size: 28),
+              color: palette.ink,
+              style: IconButton.styleFrom(
+                backgroundColor: palette.sheet,
+                minimumSize: const Size(68, 68),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: IconButton(
-                onPressed: onCapture,
-                tooltip: 'Capture item',
-                icon: const Icon(Icons.camera_alt_outlined, size: 28),
-                color: palette.ink,
-                style: IconButton.styleFrom(
-                  backgroundColor: palette.sheet,
-                  minimumSize: const Size(68, 68),
-                ),
-              ),
+          ),
+          Positioned(
+            left: 16,
+            bottom: 18,
+            child: Icon(Icons.flash_off_outlined, size: 22, color: palette.ink),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 18,
+            child: Icon(
+              Icons.flip_camera_android_outlined,
+              size: 22,
+              color: palette.ink,
             ),
-            Positioned(
-              left: 16,
-              bottom: 18,
-              child: Icon(Icons.flash_off_outlined, size: 22, color: palette.ink),
-            ),
-            Positioned(
-              right: 16,
-              bottom: 18,
-              child: Icon(Icons.flip_camera_android_outlined,
-                  size: 22, color: palette.ink),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -362,47 +360,53 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: palette.accentTint,
-              child: Icon(icon, color: palette.accentInk, size: 22),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: GoogleFonts.inter(
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: palette.accentTint,
+            child: Icon(icon, color: palette.accentInk, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
                     fontSize: 13,
                     height: 18 / 13,
                     color: palette.inkMuted,
-                  )),
-                  const SizedBox(height: 2),
-                  Text(value, style: GoogleFonts.inter(
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     height: 23 / 16,
                     fontWeight: FontWeight.w600,
                     color: palette.ink,
-                  )),
-                ],
-              ),
-            ),
-            TextButton(
-              onPressed: onEdit,
-              child: Text(
-                'Edit',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  height: 18 / 13,
-                  color: palette.action,
+                  ),
                 ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onEdit,
+            child: Text(
+              'Edit',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                height: 18 / 13,
+                color: palette.action,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -29,8 +29,7 @@ class SavedOutfit {
   bool favorite;
 
   List<WardrobeItem> get items => [
-    for (final name in itemNames)
-      ...wardrobeItems.where((i) => i.name == name),
+    for (final name in itemNames) ...wardrobeItems.where((i) => i.name == name),
   ];
 }
 
@@ -52,9 +51,7 @@ void saveOutfit(SavedOutfit outfit) {
 }
 
 void deleteOutfit(String id) {
-  savedOutfits.value = savedOutfits.value
-      .where((o) => o.id != id)
-      .toList();
+  savedOutfits.value = savedOutfits.value.where((o) => o.id != id).toList();
 }
 
 /// Flips the favourite flag of one combination and re-notifies listeners.

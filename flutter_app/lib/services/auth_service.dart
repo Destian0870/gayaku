@@ -2,7 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 /// Who is signed in, without any Supabase type leaking into the UI.
 class AuthUser {
-  const AuthUser({required this.id, required this.email, this.displayName = ''});
+  const AuthUser({
+    required this.id,
+    required this.email,
+    this.displayName = '',
+  });
 
   final String id;
   final String email;
@@ -91,18 +95,18 @@ class SupabaseAuthService implements AuthService {
   }
 
   @override
-  Future<AuthUser> signIn({
-    required String email,
-    required String password,
-  }) => _guard(() async {
-    final res = await _client.auth.signInWithPassword(
-      email: email.trim(),
-      password: password,
-    );
-    final user = res.user;
-    if (user == null) throw const AuthException('Email atau password salah.');
-    return _fromUser(user);
-  });
+  Future<AuthUser> signIn({required String email, required String password}) =>
+      _guard(() async {
+        final res = await _client.auth.signInWithPassword(
+          email: email.trim(),
+          password: password,
+        );
+        final user = res.user;
+        if (user == null) {
+          throw const AuthException('Email atau password salah.');
+        }
+        return _fromUser(user);
+      });
 
   @override
   Future<AuthUser?> signUp({

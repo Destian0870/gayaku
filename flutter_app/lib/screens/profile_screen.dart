@@ -34,16 +34,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
   }
 
   // --- MODAL EDIT PROFILE ---
   void _showEditProfileBottomSheet(AppPalette palette) {
-    final TextEditingController nameController = TextEditingController(text: _userName);
+    final TextEditingController nameController = TextEditingController(
+      text: _userName,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -85,7 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _userName.isNotEmpty ? _userName[0].toUpperCase() : 'I',
+                          _userName.isNotEmpty
+                              ? _userName[0].toUpperCase()
+                              : 'I',
                           style: GoogleFonts.bricolageGrotesque(
                             fontSize: 36,
                             color: palette.accentInk,
@@ -109,7 +110,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(color: palette.canvas, width: 2),
                           ),
-                          child: Icon(Icons.camera_alt, size: 16, color: palette.onAccent),
+                          child: Icon(
+                            Icons.camera_alt,
+                            size: 16,
+                            color: palette.onAccent,
+                          ),
                         ),
                       ),
                     ),
@@ -117,15 +122,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('Nama Pengguna', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: palette.inkMuted)),
+              Text(
+                'Nama Pengguna',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: palette.inkMuted,
+                ),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: palette.canvas,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
                 style: TextStyle(color: palette.ink, fontSize: 16),
               ),
@@ -137,7 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundColor: palette.accent,
                     foregroundColor: palette.onAccent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 0,
                   ),
                   onPressed: () {
@@ -149,7 +169,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pop(modalContext);
                     _showSnackBar('Profil berhasil diperbarui!');
                   },
-                  child: const Text('Simpan Perubahan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Simpan Perubahan',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -164,7 +187,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (modalContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -174,11 +199,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Preferences', style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.bold, color: palette.ink)),
+                  Text(
+                    'Preferences',
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: palette.ink,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   SwitchListTile(
-                    title: Text('Mode Gelap', style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600)),
-                    subtitle: Text('Mengubah tampilan ke warna gelap', style: TextStyle(color: palette.inkMuted, fontSize: 12)),
+                    title: Text(
+                      'Mode Gelap',
+                      style: TextStyle(
+                        color: palette.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Mengubah tampilan ke warna gelap',
+                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
+                    ),
                     value: _darkMode,
                     activeColor: palette.accent,
                     onChanged: (val) {
@@ -188,7 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(),
                   ListTile(
-                    title: Text('Bahasa Aplikasi', style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600)),
+                    title: Text(
+                      'Bahasa Aplikasi',
+                      style: TextStyle(
+                        color: palette.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     trailing: DropdownButton<String>(
                       value: _selectedLanguage,
                       underline: const SizedBox(),
@@ -217,7 +264,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (modalContext) {
         return Padding(
           padding: const EdgeInsets.all(24.0),
@@ -225,27 +274,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Account Info', style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.bold, color: palette.ink)),
+              Text(
+                'Account Info',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: palette.ink,
+                ),
+              ),
               const SizedBox(height: 16),
               ListTile(
                 leading: Icon(Icons.email_outlined, color: palette.accentInk),
-                title: Text('Email', style: TextStyle(fontSize: 12, color: palette.inkMuted)),
+                title: Text(
+                  'Email',
+                  style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                ),
                 subtitle: Text(
                   authService.currentUser?.email.isNotEmpty == true
                       ? authService.currentUser!.email
                       : 'isabella@gayaku.id',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: palette.ink),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
                 ),
               ),
               ListTile(
                 leading: Icon(Icons.phone_outlined, color: palette.accentInk),
-                title: Text('Nomor Telepon', style: TextStyle(fontSize: 12, color: palette.inkMuted)),
-                subtitle: Text('+62 812 3456 7890', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: palette.ink)),
+                title: Text(
+                  'Nomor Telepon',
+                  style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                ),
+                subtitle: Text(
+                  '+62 812 3456 7890',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
+                ),
               ),
               const Divider(),
               ListTile(
-                leading: Icon(Icons.lock_reset_outlined, color: palette.accentInk),
-                title: Text('Ubah Kata Sandi', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: palette.ink)),
+                leading: Icon(
+                  Icons.lock_reset_outlined,
+                  color: palette.accentInk,
+                ),
+                title: Text(
+                  'Ubah Kata Sandi',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(modalContext);
@@ -264,7 +347,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (modalContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -274,11 +359,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Notification Settings', style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.bold, color: palette.ink)),
+                  Text(
+                    'Notification Settings',
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: palette.ink,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   SwitchListTile(
-                    title: Text('Notifikasi Push', style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600)),
-                    subtitle: Text('Terima pengingat dan info promo', style: TextStyle(color: palette.inkMuted, fontSize: 12)),
+                    title: Text(
+                      'Notifikasi Push',
+                      style: TextStyle(
+                        color: palette.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Terima pengingat dan info promo',
+                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
+                    ),
                     value: _pushNotif,
                     activeColor: palette.accent,
                     onChanged: (val) {
@@ -287,8 +388,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
                   SwitchListTile(
-                    title: Text('Pengingat Outfit Harian', style: TextStyle(color: palette.ink, fontWeight: FontWeight.w600)),
-                    subtitle: Text('Rekomendasi pakaian setiap pagi', style: TextStyle(color: palette.inkMuted, fontSize: 12)),
+                    title: Text(
+                      'Pengingat Outfit Harian',
+                      style: TextStyle(
+                        color: palette.ink,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Rekomendasi pakaian setiap pagi',
+                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
+                    ),
                     value: _dailyReminder,
                     activeColor: palette.accent,
                     onChanged: (val) {
@@ -310,7 +420,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (modalContext) {
         return Padding(
           padding: const EdgeInsets.all(24.0),
@@ -318,12 +430,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Data & Privacy', style: GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.bold, color: palette.ink)),
+              Text(
+                'Data & Privacy',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: palette.ink,
+                ),
+              ),
               const SizedBox(height: 16),
               ListTile(
-                leading: Icon(Icons.cleaning_services_outlined, color: palette.accentInk),
-                title: Text('Hapus Cache Aplikasi', style: TextStyle(fontWeight: FontWeight.w600, color: palette.ink)),
-                subtitle: Text('Membebaskan memori tanpa menghapus akun', style: TextStyle(fontSize: 12, color: palette.inkMuted)),
+                leading: Icon(
+                  Icons.cleaning_services_outlined,
+                  color: palette.accentInk,
+                ),
+                title: Text(
+                  'Hapus Cache Aplikasi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
+                ),
+                subtitle: Text(
+                  'Membebaskan memori tanpa menghapus akun',
+                  style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                ),
                 onTap: () {
                   Navigator.pop(modalContext);
                   _showSnackBar('Cache berhasil dibersihkan!');
@@ -331,8 +462,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const Divider(),
               ListTile(
-                leading: Icon(Icons.privacy_tip_outlined, color: palette.accentInk),
-                title: Text('Kebijakan Privasi', style: TextStyle(fontWeight: FontWeight.w600, color: palette.ink)),
+                leading: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: palette.accentInk,
+                ),
+                title: Text(
+                  'Kebijakan Privasi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
+                ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(modalContext);
@@ -357,7 +497,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -365,7 +508,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(Icons.arrow_back, size: 22, color: palette.ink),
+                          icon: Icon(
+                            Icons.arrow_back,
+                            size: 22,
+                            color: palette.ink,
+                          ),
                           onPressed: () => Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
@@ -390,11 +537,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Container(
                               width: 72,
                               height: 72,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: palette.surface),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: palette.surface,
+                              ),
                               child: Center(
                                 child: Text(
-                                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'I',
-                                  style: GoogleFonts.bricolageGrotesque(fontSize: 32, height: 38 / 32, color: palette.accentInk, fontWeight: FontWeight.bold),
+                                  _userName.isNotEmpty
+                                      ? _userName[0].toUpperCase()
+                                      : 'I',
+                                  style: GoogleFonts.bricolageGrotesque(
+                                    fontSize: 32,
+                                    height: 38 / 32,
+                                    color: palette.accentInk,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -402,11 +559,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               bottom: 0,
                               right: 0,
                               child: GestureDetector(
-                                onTap: () => _showEditProfileBottomSheet(palette),
+                                onTap: () =>
+                                    _showEditProfileBottomSheet(palette),
                                 child: Container(
                                   padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(color: palette.accent, shape: BoxShape.circle, border: Border.all(color: palette.canvas, width: 2)),
-                                  child: Icon(Icons.edit, size: 18, color: palette.onAccent),
+                                  decoration: BoxDecoration(
+                                    color: palette.accent,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: palette.canvas,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 18,
+                                    color: palette.onAccent,
+                                  ),
                                 ),
                               ),
                             ),
@@ -418,10 +587,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             Text(
                               _userName,
-                              style: GoogleFonts.bricolageGrotesque(fontSize: 32, height: 38 / 32, fontWeight: FontWeight.bold, color: palette.ink),
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 32,
+                                height: 38 / 32,
+                                fontWeight: FontWeight.bold,
+                                color: palette.ink,
+                              ),
                             ),
                             const SizedBox(height: 4),
-                            Text('Premium Member', style: TextStyle(fontSize: 11, height: 15 / 11, color: palette.ink.withValues(alpha: 0.6))),
+                            Text(
+                              'Premium Member',
+                              style: TextStyle(
+                                fontSize: 11,
+                                height: 15 / 11,
+                                color: palette.ink.withValues(alpha: 0.6),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -472,9 +653,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context: context,
                             builder: (dialogContext) => AlertDialog(
                               title: const Text('Konfirmasi Log Out'),
-                              content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
+                              content: const Text(
+                                'Apakah Anda yakin ingin keluar dari akun?',
+                              ),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Batal')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  child: const Text('Batal'),
+                                ),
                                 TextButton(
                                   onPressed: () async {
                                     await authService.signOut();
@@ -482,11 +668,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     Navigator.pop(dialogContext);
                                     Navigator.pushAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen(),
+                                      ),
                                       (route) => false,
                                     );
                                   },
-                                  child: const Text('Keluar', style: TextStyle(color: Colors.red)),
+                                  child: const Text(
+                                    'Keluar',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
                                 ),
                               ],
                             ),
@@ -494,7 +686,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                         child: Text(
                           'Log Out',
-                          style: TextStyle(color: palette.action, fontSize: 13, height: 18 / 13, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: palette.action,
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -519,7 +716,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _sectionTitle(AppPalette palette, String title) {
     return Text(
       title,
-      style: TextStyle(fontSize: 11, height: 15 / 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: palette.inkMuted),
+      style: TextStyle(
+        fontSize: 11,
+        height: 15 / 11,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+        color: palette.inkMuted,
+      ),
     );
   }
 
@@ -538,10 +741,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(color: palette.accentTint, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: palette.accentTint,
+            shape: BoxShape.circle,
+          ),
           child: Icon(icon, color: palette.accentInk, size: 22),
         ),
-        title: Text(title, style: TextStyle(fontSize: 16, height: 23 / 16, fontWeight: FontWeight.w600, color: palette.ink)),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            height: 23 / 16,
+            fontWeight: FontWeight.w600,
+            color: palette.ink,
+          ),
+        ),
         trailing: Icon(Icons.chevron_right, color: palette.inkMuted, size: 22),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

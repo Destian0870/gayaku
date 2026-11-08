@@ -68,7 +68,6 @@ class WardrobeItem {
     this.formality = 3,
     this.occasions = const [],
     this.confidence,
-    this.imageUrl,
   });
 
   /// Row id from `wardrobe_items`; empty for the static demo catalog.
@@ -100,7 +99,6 @@ class WardrobeItem {
   final double? confidence;
 
   /// Short-lived signed URL of the cutout in the private `cutouts` bucket.
-  final String? imageUrl;
 }
 
 /// Catalog shown on the Wardrobe screen, grouped by the chips below.

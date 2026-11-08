@@ -156,10 +156,7 @@ abstract final class AppTheme {
         brightness: brightness,
         surface: palette.canvas,
       ),
-      textTheme: text.apply(
-        displayColor: palette.ink,
-        bodyColor: palette.ink,
-      ),
+      textTheme: text.apply(displayColor: palette.ink, bodyColor: palette.ink),
       appBarTheme: AppBarTheme(
         backgroundColor: palette.canvas,
         foregroundColor: palette.ink,

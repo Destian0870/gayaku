@@ -11,7 +11,11 @@ import '../widgets/placeholder_image.dart';
 /// A live [outfitScore] meter plus a threshold slider: while the score sits
 /// below the threshold, [improveOutfit] proposes swaps that lift it.
 class OutfitBuilderScreen extends StatefulWidget {
-  const OutfitBuilderScreen({super.key, this.existing, this.catalog = wardrobeItems});
+  const OutfitBuilderScreen({
+    super.key,
+    this.existing,
+    this.catalog = wardrobeItems,
+  });
 
   /// Pass a saved outfit to edit it in place; null creates a new one.
   final SavedOutfit? existing;
@@ -46,17 +50,14 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   double get _score => outfitScore(_picked);
 
   /// One item per slot; outerwear and accessories are optional layers.
-  bool _isOptional(String slot) =>
-      slot == 'Outerwear' || slot == 'Accessories';
+  bool _isOptional(String slot) => slot == 'Outerwear' || slot == 'Accessories';
 
-  WardrobeItem? _at(String slot) => _picked.where((i) => i.category == slot).firstOrNull;
+  WardrobeItem? _at(String slot) =>
+      _picked.where((i) => i.category == slot).firstOrNull;
 
   void _set(String slot, WardrobeItem item) {
     setState(() {
-      _picked = [
-        ..._picked.where((i) => i.category != slot),
-        item,
-      ];
+      _picked = [..._picked.where((i) => i.category != slot), item];
     });
   }
 
@@ -107,11 +108,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final swaps = improveOutfit(
-      _picked,
-      widget.catalog,
-      threshold: _threshold,
-    );
+    final swaps = improveOutfit(_picked, widget.catalog, threshold: _threshold);
 
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -137,7 +134,10 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Susun Kombinasi',
-                      style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
+                      style: textTheme.headlineSmall!.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: palette.ink,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     for (final slot in _slots) ...[
@@ -173,7 +173,9 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     widget.existing == null
                         ? 'Simpan Kombinasi'
                         : 'Simpan Perubahan',
-                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.labelLarge!.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: palette.action,
@@ -218,7 +220,10 @@ class _TopBar extends StatelessWidget {
         Expanded(
           child: Text(
             editing ? 'Edit Kombinasi' : 'Kombinasi Baru',
-            style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+            style: textTheme.titleLarge!.copyWith(
+              fontWeight: FontWeight.w600,
+              color: palette.ink,
+            ),
           ),
         ),
       ],
@@ -249,12 +254,18 @@ class _NameField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w500,
+                color: palette.ink,
+              ),
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Nama kombinasi, mis. Kantor Senin',
-                hintStyle: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                hintStyle: textTheme.labelLarge!.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: palette.inkMuted,
+                ),
               ),
             ),
           ),
@@ -300,7 +311,10 @@ class _ScoreCard extends StatelessWidget {
             children: [
               Text(
                 '$percent%',
-                style: textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
+                style: textTheme.headlineLarge!.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: palette.ink,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -312,7 +326,10 @@ class _ScoreCard extends StatelessWidget {
                         : 'Di bawah batas ${(threshold * 100).round()}%',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: palette.inkMuted,
+                    ),
                   ),
                 ),
               ),
@@ -333,7 +350,10 @@ class _ScoreCard extends StatelessWidget {
             Text(
               'Pasangan terlemah: ${weak.a.name} + ${weak.b.name} '
               '(${(weak.score * 100).round()}%)',
-              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+              style: textTheme.labelMedium!.copyWith(
+                fontWeight: FontWeight.w400,
+                color: palette.inkMuted,
+              ),
             ),
           ],
           const SizedBox(height: 8),
@@ -341,7 +361,10 @@ class _ScoreCard extends StatelessWidget {
             children: [
               Text(
                 'Batas minimum',
-                style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                style: textTheme.labelLarge!.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: palette.ink,
+                ),
               ),
               Expanded(
                 child: Slider(
@@ -357,7 +380,10 @@ class _ScoreCard extends StatelessWidget {
               ),
               Text(
                 '${(threshold * 100).round()}%',
-                style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                style: textTheme.labelLarge!.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: palette.inkMuted,
+                ),
               ),
             ],
           ),
@@ -405,7 +431,11 @@ class _SlotRow extends StatelessWidget {
                 child: chosen == null
                     ? Container(
                         color: palette.surfaceMuted,
-                        child: Icon(Icons.add, size: 18, color: palette.inkMuted),
+                        child: Icon(
+                          Icons.add,
+                          size: 18,
+                          color: palette.inkMuted,
+                        ),
                       )
                     : PlaceholderImage(
                         imagePath: chosen.imagePath,
@@ -420,14 +450,18 @@ class _SlotRow extends StatelessWidget {
                 children: [
                   Text(
                     slot + (optional ? ' · opsional' : ''),
-                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: palette.inkMuted,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     chosen?.name ?? 'Pilih item',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, 
+                    style: textTheme.bodyMedium!.copyWith(
+                      fontWeight: FontWeight.w500,
                       color: chosen == null ? palette.inkMuted : palette.ink,
                     ),
                   ),
@@ -469,13 +503,19 @@ class _ImproveSection extends StatelessWidget {
       children: [
         Text(
           'Rekomendasi Peningkatan',
-          style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink),
+          style: textTheme.headlineSmall!.copyWith(
+            fontWeight: FontWeight.w700,
+            color: palette.ink,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           'Skor masih di bawah batas ${(threshold * 100).round()}%. '
           'Ganti salah satu item:',
-          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+          style: textTheme.labelMedium!.copyWith(
+            fontWeight: FontWeight.w400,
+            color: palette.inkMuted,
+          ),
         ),
         const SizedBox(height: 12),
         for (final swap in swaps) ...[
@@ -510,7 +550,8 @@ class _ImproveSection extends StatelessWidget {
                           'Ganti ${swap.from.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
+                          style: textTheme.labelMedium!.copyWith(
+                            fontWeight: FontWeight.w400,
                             color: palette.inkMuted,
                           ),
                         ),
@@ -519,13 +560,15 @@ class _ImproveSection extends StatelessWidget {
                           swap.to.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, 
+                          style: textTheme.bodyMedium!.copyWith(
+                            fontWeight: FontWeight.w500,
                             color: palette.ink,
                           ),
                         ),
                         Text(
                           '${swap.to.category} • ${swap.to.colorName}',
-                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
+                          style: textTheme.labelMedium!.copyWith(
+                            fontWeight: FontWeight.w400,
                             color: palette.inkMuted,
                           ),
                         ),
@@ -538,11 +581,15 @@ class _ImproveSection extends StatelessWidget {
                     children: [
                       Text(
                         '${swap.gainPercent}%',
-                        style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                        style: textTheme.titleLarge!.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: palette.ink,
+                        ),
                       ),
                       Text(
                         'Terapkan',
-                        style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, 
+                        style: textTheme.labelMedium!.copyWith(
+                          fontWeight: FontWeight.w400,
                           color: palette.inkMuted,
                         ),
                       ),
@@ -593,7 +640,10 @@ class _PickerSheet extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Pilih $slot',
-                  style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                  style: textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
                 ),
               ],
             ),
@@ -619,11 +669,17 @@ class _PickerSheet extends StatelessWidget {
                   ),
                   title: Text(
                     item.name,
-                    style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
+                    style: textTheme.bodyMedium!.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: palette.ink,
+                    ),
                   ),
                   subtitle: Text(
                     '${item.colorName} • Formalitas ${item.formality}/5',
-                    style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                    style: textTheme.labelLarge!.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: palette.inkMuted,
+                    ),
                   ),
                 );
               },

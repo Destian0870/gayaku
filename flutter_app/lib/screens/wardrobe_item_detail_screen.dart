@@ -25,7 +25,8 @@ class WardrobeItemDetailScreen extends StatelessWidget {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
     final matches = outfitFor(item, catalog);
-    final alternatives = recommendMatches(item, catalog).length - matches.length;
+    final alternatives =
+        recommendMatches(item, catalog).length - matches.length;
 
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -57,7 +58,10 @@ class WardrobeItemDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '+$alternatives pilihan lain dengan skor lebih rendah',
-                    style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: palette.inkMuted,
+                    ),
                   ),
                 ),
               const SizedBox(height: 20),
@@ -97,7 +101,10 @@ class _TopBar extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+            style: textTheme.titleLarge!.copyWith(
+              fontWeight: FontWeight.w600,
+              color: palette.ink,
+            ),
           ),
         ),
       ],
@@ -143,14 +150,20 @@ class _Hero extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+                  style: textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   item.brand.isEmpty
                       ? item.category
                       : '${item.category} • ${item.brand}',
-                  style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted),
+                  style: textTheme.labelLarge!.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: palette.inkMuted,
+                  ),
                 ),
               ],
             ),
@@ -232,7 +245,13 @@ class _Pill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (leading != null) ...[leading!, const SizedBox(width: 8)],
-          Text(label, style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w500, color: palette.inkMuted)),
+          Text(
+            label,
+            style: textTheme.labelLarge!.copyWith(
+              fontWeight: FontWeight.w500,
+              color: palette.inkMuted,
+            ),
+          ),
         ],
       ),
     );
@@ -252,9 +271,21 @@ class _SectionTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: palette.ink)),
+        Text(
+          title,
+          style: textTheme.headlineSmall!.copyWith(
+            fontWeight: FontWeight.w700,
+            color: palette.ink,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(subtitle, style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted)),
+        Text(
+          subtitle,
+          style: textTheme.labelMedium!.copyWith(
+            fontWeight: FontWeight.w400,
+            color: palette.inkMuted,
+          ),
+        ),
       ],
     );
   }
@@ -299,14 +330,20 @@ class _MatchCard extends StatelessWidget {
                   item.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: palette.ink),
+                  style: textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: palette.ink,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${item.category} • ${item.colorName}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: palette.inkMuted,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -325,7 +362,10 @@ class _MatchCard extends StatelessWidget {
                         ),
                         child: Text(
                           reason,
-                          style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.ink),
+                          style: textTheme.labelMedium!.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: palette.ink,
+                          ),
                         ),
                       ),
                   ],
@@ -342,7 +382,10 @@ class _MatchCard extends StatelessWidget {
             ),
             child: Text(
               '${match.percent}%',
-              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+              style: textTheme.labelMedium!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
             ),
           ),
         ],
@@ -383,7 +426,10 @@ class _CombineButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: () => _save(context),
         icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-        label: Text('Simpan Kombinasi', style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600)),
+        label: Text(
+          'Simpan Kombinasi',
+          style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
+        ),
         style: FilledButton.styleFrom(
           backgroundColor: palette.action,
           foregroundColor: palette.onAction,

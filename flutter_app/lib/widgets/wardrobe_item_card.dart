@@ -7,9 +7,12 @@ import 'placeholder_image.dart';
 
 /// Grid tile: photo over `Name` and `Category • Brand`.
 class WardrobeItemCard extends StatelessWidget {
-  const WardrobeItemCard({super.key, required this.item});
+  const WardrobeItemCard({super.key, required this.item, this.catalog});
 
   final WardrobeItem item;
+
+  /// Passed to the detail page so it ranks real partners, not the demo set.
+  final List<WardrobeItem>? catalog;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +21,10 @@ class WardrobeItemCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => WardrobeItemDetailScreen(item: item),
+          builder: (_) => WardrobeItemDetailScreen(
+            item: item,
+            catalog: catalog ?? wardrobeItems,
+          ),
         ),
       ),
       child: Container(
@@ -47,7 +53,10 @@ class WardrobeItemCard extends StatelessWidget {
               item.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600, color: palette.ink),
+              style: textTheme.titleLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -56,7 +65,10 @@ class WardrobeItemCard extends StatelessWidget {
                   : '${item.category} • ${item.brand}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w400, color: palette.inkMuted),
+              style: textTheme.labelMedium!.copyWith(
+                fontWeight: FontWeight.w400,
+                color: palette.inkMuted,
+              ),
             ),
           ],
         ),

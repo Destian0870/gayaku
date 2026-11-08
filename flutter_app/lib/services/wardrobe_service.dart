@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../models/scan_result.dart';
@@ -19,8 +22,9 @@ abstract class WardrobeService {
   /// Owner's items, newest scan first.
   Future<List<WardrobeItem>> items();
 
-  /// Stores the scan and its cutout; [name] overrides the suggested name the
-  /// user may have corrected on the review screen.
+  /// Stores the garment metadata. The cutout PNG stays on the device; only its
+  /// file name reaches Postgres. [name] overrides the suggested name the user
+  /// may have corrected on the review screen.
   Future<WardrobeItem> add(ScanResult scan, {String? name});
 
   Future<void> remove(String id);
@@ -60,38 +64,30 @@ class DemoWardrobeService implements WardrobeService {
       _items.removeWhere((item) => item.id == id);
 }
 
-/// Postgres + Storage. `wardrobe_items` holds the scan fields, `cutouts` the PNG.
+/// Postgres only. `wardrobe_items` holds the scan metadata plus the file name
+/// of the cutout, which lives in this device's documents dir.
 class SupabaseWardrobeService implements WardrobeService {
   SupabaseWardrobeService(this._client);
 
   final sb.SupabaseClient _client;
 
-  static const _bucket = 'cutouts';
   static const _table = 'wardrobe_items';
+  static const _dir = 'cutouts';
 
   @override
   Future<List<WardrobeItem>> items() async {
     final rows = await _guard(
       () => _client.from(_table).select().order('created_at', ascending: false),
     );
-    return Future.wait(rows.map(_toItem));
+    final dir = await _cutoutDir();
+    return rows.map((row) => _toItem(row, dir)).toList();
   }
 
   @override
   Future<WardrobeItem> add(ScanResult scan, {String? name}) async {
-    final uid = _client.auth.currentUser?.id;
-    if (uid == null) throw const WardrobeException('Sesi habis, masuk ulang.');
-
-    final path = '$uid/${DateTime.now().microsecondsSinceEpoch}.png';
-    await _guard(
-      () => _client.storage
-          .from(_bucket)
-          .uploadBinary(
-            path,
-            scan.cutoutPng,
-            fileOptions: const sb.FileOptions(contentType: 'image/png'),
-          ),
-    );
+    final dir = await _cutoutDir();
+    final file = '${DateTime.now().microsecondsSinceEpoch}.png';
+    await File('$dir/$file').writeAsBytes(scan.cutoutPng, flush: true);
 
     try {
       final row = await _guard(
@@ -105,15 +101,15 @@ class SupabaseWardrobeService implements WardrobeService {
               'dominant_color': scan.dominantHex,
               'formality': scan.formality,
               'confidence': scan.confidence,
-              'image_path': path,
+              'image_file': file,
             })
             .select()
             .single(),
       );
-      return await _toItem(row);
+      return _toItem(row, dir);
     } catch (_) {
-      // No row means the PNG is orphaned; Postgres cannot clean up storage.
-      await _client.storage.from(_bucket).remove([path]);
+      // No row means the local cutout is orphaned; drop it.
+      File('$dir/$file').delete().ignore();
       rethrow;
     }
   }
@@ -122,32 +118,40 @@ class SupabaseWardrobeService implements WardrobeService {
   Future<void> remove(String id) async {
     final row = await _guard(
       () =>
-          _client.from(_table).select('image_path').eq('id', id).maybeSingle(),
+          _client.from(_table).select('image_file').eq('id', id).maybeSingle(),
     );
     await _guard(() => _client.from(_table).delete().eq('id', id));
 
-    final path = row?['image_path'];
-    if (path is String && path.isNotEmpty) {
-      await _guard(() => _client.storage.from(_bucket).remove([path]));
+    final file = row?['image_file'] as String?;
+    if (file != null && file.isNotEmpty) {
+      File('${await _cutoutDir()}/$file').delete().ignore();
     }
   }
 
-  Future<WardrobeItem> _toItem(Map<String, dynamic> row) async {
-    final path = row['image_path'] as String? ?? '';
+  /// Absolute path of a stored cutout; empty when the row has no file.
+  Future<String> _cutoutDir() async {
+    final docs = await getApplicationDocumentsDirectory();
+    final dir = Directory('${docs.path}/$_dir');
+    if (!dir.existsSync()) dir.createSync(recursive: true);
+    return dir.path;
+  }
+
+  WardrobeItem _toItem(Map<String, dynamic> row, String dir) {
+    final file = row['image_file'] as String? ?? '';
+    final formality = (row['formality'] as num?)?.toInt() ?? 3;
     return WardrobeItem(
       id: row['id'] as String,
       name: row['name'] as String,
       label: row['label'] as String? ?? '',
       category: row['category'] as String,
-      imagePath: '',
-      imageUrl: path.isEmpty
-          ? null
-          : await _guard(
-              () => _client.storage.from(_bucket).createSignedUrl(path, 3600),
-            ),
+      imagePath: file.isEmpty ? '' : '$dir/$file',
       colorName: row['color_name'] as String? ?? '',
       color: _hexColor(row['dominant_color'] as String?),
-      formality: (row['formality'] as num?)?.toInt() ?? 3,
+      formality: formality,
+      // ponytail: the scanner reports formality, not occasions, so the chip
+      // filter is derived from it. Add an `occasions text[]` column when ML
+      // starts emitting them.
+      occasions: _occasionsFor(formality),
       confidence: (row['confidence'] as num?)?.toDouble(),
     );
   }
@@ -156,8 +160,6 @@ class SupabaseWardrobeService implements WardrobeService {
     try {
       return await call();
     } on sb.PostgrestException catch (e) {
-      throw WardrobeException(_friendly(e.message));
-    } on sb.StorageException catch (e) {
       throw WardrobeException(_friendly(e.message));
     }
   }
@@ -173,6 +175,17 @@ class SupabaseWardrobeService implements WardrobeService {
     return message;
   }
 }
+
+const _occasionByFormality = {
+  1: ['Kasual', 'Sport'],
+  2: ['Kasual', 'Sport'],
+  3: ['Kasual', 'Smart-Casual'],
+  4: ['Formal', 'Smart-Casual'],
+  5: ['Formal'],
+};
+
+List<String> _occasionsFor(int formality) =>
+    _occasionByFormality[formality.clamp(1, 5)]!;
 
 String _name(ScanResult scan, String? override) {
   final name = (override ?? scan.suggestedName).trim();
