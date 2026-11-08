@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,49 +25,54 @@ void main() {
     expect({for (var i = 0; i < 200; i++) newWardrobeItemId()}.length, 200);
   });
 
-  test('save keeps every model field the scanner review screen edited', () async {
-    final service = DemoWardrobeService();
-    final item = WardrobeItem(
-      id: newWardrobeItemId(),
-      name: 'Kemeja Linen',
-      label: 'Kemeja',
-      category: 'Tops',
-      subcategory: 'Kemeja',
-      brand: 'Uniqlo',
-      imagePath: '/tmp/cutouts/a.png',
-      colorName: 'Putih',
-      color: const Color(0xFFF5F5F0),
-      formality: 4,
-      occasions: const ['Formal', 'Smart-Casual'],
-      confidence: 0.91,
-    );
-
-    final stored = await service.save(item);
-
-    expect(stored.id, item.id);
-    expect(stored.subcategory, 'Kemeja');
-    expect(stored.brand, 'Uniqlo');
-    expect(stored.occasions, ['Formal', 'Smart-Casual']);
-    expect((await service.items()).single.id, item.id);
-  });
-
-  test('add derives subcategory and occasions the way the SQL backfill does',
-      () async {
-    final service = DemoWardrobeService();
-    final stored = await service.add(
-      ScanResult(
+  test(
+    'save keeps every model field the scanner review screen edited',
+    () async {
+      final service = DemoWardrobeService();
+      final item = WardrobeItem(
+        id: newWardrobeItemId(),
+        name: 'Kemeja Linen',
         label: 'Kemeja',
-        category: GarmentCategory.tops,
-        suggestedName: 'Kemeja Putih',
-        confidence: 0.8,
+        category: 'Tops',
+        subcategory: 'Kemeja',
+        brand: 'Uniqlo',
+        imagePath: '/tmp/cutouts/a.png',
         colorName: 'Putih',
-        dominantColor: const Color(0xFFFFFFFF),
+        color: const Color(0xFFF5F5F0),
         formality: 4,
-        cutoutPng: Uint8List(0),
-      ),
-    );
+        occasions: const ['Formal', 'Smart-Casual'],
+        confidence: 0.91,
+      );
 
-    expect(stored.subcategory, 'Kemeja');
-    expect(stored.occasions, defaultOccasions('Tops'));
-  });
+      final stored = await service.save(item);
+
+      expect(stored.id, item.id);
+      expect(stored.subcategory, 'Kemeja');
+      expect(stored.brand, 'Uniqlo');
+      expect(stored.occasions, ['Formal', 'Smart-Casual']);
+      expect((await service.items()).single.id, item.id);
+    },
+  );
+
+  test(
+    'add derives subcategory and occasions the way the SQL backfill does',
+    () async {
+      final service = DemoWardrobeService();
+      final stored = await service.add(
+        ScanResult(
+          label: 'Kemeja',
+          category: GarmentCategory.tops,
+          suggestedName: 'Kemeja Putih',
+          confidence: 0.8,
+          colorName: 'Putih',
+          dominantColor: const Color(0xFFFFFFFF),
+          formality: 4,
+          cutoutPng: Uint8List(0),
+        ),
+      );
+
+      expect(stored.subcategory, 'Kemeja');
+      expect(stored.occasions, defaultOccasions('Tops'));
+    },
+  );
 }
