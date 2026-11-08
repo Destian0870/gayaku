@@ -7,7 +7,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/outfit_service.dart';
 import 'services/wardrobe_service.dart';
+import 'state/outfit_store.dart';
+import 'state/planner_store.dart';
 import 'state/wardrobe_store.dart';
 import 'state/wardrobe_sync.dart';
 import 'theme/app_theme.dart';
@@ -42,6 +45,8 @@ Future<void> main() async {
       final client = Supabase.instance.client;
       useAuthService(SupabaseAuthService(client));
       useWardrobeService(SupabaseWardrobeService(client));
+      useOutfitService(SupabaseOutfitService(client));
+      usePlannerService(SupabasePlannerService(client));
     } catch (_) {
       // Wrong URL or no network at launch: demo services keep the UI usable
       // instead of leaving the splash screen up forever.
@@ -55,6 +60,8 @@ Future<void> main() async {
   // slow or dead network used to hold the splash screen for over a minute. The
   // notifier fills in when the rows arrive.
   unawaited(loadWardrobeFromBackend());
+  unawaited(loadOutfitsFromBackend());
+  unawaited(loadPlannerFromBackend());
 }
 
 class GayakuApp extends StatelessWidget {
