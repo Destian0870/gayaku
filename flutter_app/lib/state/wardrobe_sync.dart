@@ -12,11 +12,15 @@ import 'wardrobe_store.dart';
 
 /// Replaces the catalog with the owner's rows. No-op on the demo backend, and a
 /// failed fetch leaves the local cache in place rather than blanking the UI.
+///
+/// Catches everything, not just `WardrobeException`: a DNS failure surfaces as
+/// `AuthRetryableFetchException` from gotrue and used to escape `main()` as an
+/// unhandled async error, freezing the app on the splash screen.
 Future<void> loadWardrobeFromBackend() async {
   if (wardrobeService is DemoWardrobeService) return;
   try {
     wardrobeItems.value = await wardrobeService.items();
-  } on WardrobeException {
+  } catch (_) {
     // Offline or signed out: keep what the file already holds.
   }
 }

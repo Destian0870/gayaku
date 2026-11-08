@@ -61,7 +61,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           // 1. Header Bagian Atas
           Container(
-            height: MediaQuery.of(context).size.height * 0.35,
+            // A fixed 35% header overflowed on short screens; a min height
+            // lets it grow instead.
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.sizeOf(context).height * 0.35,
+            ),
             width: double.infinity,
             // Navy ground: `palette.ink` left the cream copy on near-white.
             color: palette.canvas,

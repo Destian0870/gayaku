@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/wardrobe_service.dart';
@@ -31,17 +34,27 @@ Future<void> main() async {
   // DemoAuthService/DemoWardrobeService, so the UI still works before a
   // project exists - see supabase/README.md for the switch-over.
   if (_supabaseUrl.isNotEmpty && _supabaseKey.isNotEmpty) {
-    await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
-    final client = Supabase.instance.client;
-    useAuthService(SupabaseAuthService(client));
-    useWardrobeService(SupabaseWardrobeService(client));
+    try {
+      await Supabase.initialize(
+        url: _supabaseUrl,
+        publishableKey: _supabaseKey,
+      );
+      final client = Supabase.instance.client;
+      useAuthService(SupabaseAuthService(client));
+      useWardrobeService(SupabaseWardrobeService(client));
+    } catch (_) {
+      // Wrong URL or no network at launch: demo services keep the UI usable
+      // instead of leaving the splash screen up forever.
+    }
   }
 
-  // Supabase is the shared wardrobe; the SQLite rows are the offline copy. With
-  // no credentials this is a no-op and the cache is all there is.
-  await loadWardrobeFromBackend();
-
   runApp(const GayakuApp());
+
+  // Supabase is the shared wardrobe and SQLite is the offline copy. Fired after
+  // the first frame, not awaited: the token refresh retries with backoff, so a
+  // slow or dead network used to hold the splash screen for over a minute. The
+  // notifier fills in when the rows arrive.
+  unawaited(loadWardrobeFromBackend());
 }
 
 class GayakuApp extends StatelessWidget {
@@ -54,7 +67,11 @@ class GayakuApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const LoginScreen(),
+      // A stored session still starts on its own: opening the app on the login
+      // form while the token is alive made every relaunch look like a logout.
+      home: authService.currentUser == null
+          ? const LoginScreen()
+          : const HomeScreen(),
     );
   }
 }
