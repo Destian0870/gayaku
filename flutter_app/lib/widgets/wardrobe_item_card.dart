@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/wardrobe.dart';
 import '../screens/wardrobe_item_detail_screen.dart';
+import '../state/wardrobe_store.dart';
 import '../theme/app_theme.dart';
 import 'placeholder_image.dart';
 
@@ -23,7 +24,7 @@ class WardrobeItemCard extends StatelessWidget {
         MaterialPageRoute<void>(
           builder: (_) => WardrobeItemDetailScreen(
             item: item,
-            catalog: catalog ?? wardrobeItems,
+            catalog: catalog ?? wardrobeItems.value,
           ),
         ),
       ),

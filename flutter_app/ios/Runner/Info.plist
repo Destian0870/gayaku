@@ -24,6 +24,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Gayaku memakai kamera untuk memfoto pakaian yang akan ditambahkan ke Wardrobe.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Gayaku membuka galeri untuk memilih foto pakaian yang ingin dipindai.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

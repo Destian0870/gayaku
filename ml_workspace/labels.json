@@ -1,0 +1,1273 @@
+{
+  "version": 1,
+  "source": "Kaggle paramaggarwal/fashion-product-images-dataset styles.csv `articleType` (44,424 rows, 143 distinct values) + alexeygrigorev/clothing-dataset label vocabulary (CC0) + ryanbadai/clothes-dataset folders and the three classes only the merged run has (`gayaku/merged`). See ml_workspace/README.md for the keep rule.",
+  "labels": [
+    {
+      "label": "Tshirts",
+      "category": "Tops",
+      "name": "Kaos",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shirts",
+      "category": "Tops",
+      "name": "Kemeja",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Casual Shoes",
+      "category": "Shoes",
+      "name": "Sepatu Kasual",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Watches",
+      "category": "Accessories",
+      "name": "Jam Tangan",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sports Shoes",
+      "category": "Shoes",
+      "name": "Sepatu Olahraga",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Kurtas",
+      "category": "Tops",
+      "name": "Kurta",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Tops",
+      "category": "Tops",
+      "name": "Blus",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Handbags",
+      "category": "Accessories",
+      "name": "Tas Tangan",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Heels",
+      "category": "Shoes",
+      "name": "Sepatu Hak Tinggi",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sunglasses",
+      "category": "Accessories",
+      "name": "Kacamata Hitam",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Wallets",
+      "category": "Accessories",
+      "name": "Dompet",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Flip Flops",
+      "category": "Shoes",
+      "name": "Sandal Jepit",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sandals",
+      "category": "Shoes",
+      "name": "Sandal",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Briefs",
+      "category": "Bottoms",
+      "name": "Celana Dalam",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Belts",
+      "category": "Accessories",
+      "name": "Ikat Pinggang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Backpacks",
+      "category": "Accessories",
+      "name": "Ransel",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Socks",
+      "category": "Accessories",
+      "name": "Kaus Kaki",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Formal Shoes",
+      "category": "Shoes",
+      "name": "Sepatu Formal",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Perfume and Body Mist",
+      "category": null,
+      "name": "Parfum",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Jeans",
+      "category": "Bottoms",
+      "name": "Jeans",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shorts",
+      "category": "Bottoms",
+      "name": "Celana Pendek",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Trousers",
+      "category": "Bottoms",
+      "name": "Celana Panjang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Flats",
+      "category": "Shoes",
+      "name": "Sepatu Flat",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Bra",
+      "category": "Tops",
+      "name": "Bra",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Dresses",
+      "category": "Tops",
+      "name": "Gaun",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sarees",
+      "category": "Tops",
+      "name": "Sari",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Earrings",
+      "category": "Accessories",
+      "name": "Anting",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Deodorant",
+      "category": null,
+      "name": "Deodoran",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Nail Polish",
+      "category": null,
+      "name": "Cat Kuku",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lipstick",
+      "category": null,
+      "name": "Lipstik",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Track Pants",
+      "category": "Bottoms",
+      "name": "Celana Training",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Clutches",
+      "category": "Accessories",
+      "name": "Tas Genggam",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sweatshirts",
+      "category": "Tops",
+      "name": "Sweter",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Caps",
+      "category": "Accessories",
+      "name": "Topi",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sweaters",
+      "category": "Tops",
+      "name": "Baju Rajut",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Ties",
+      "category": "Accessories",
+      "name": "Dasi",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Jackets",
+      "category": "Outerwear",
+      "name": "Jaket",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Innerwear Vests",
+      "category": "Tops",
+      "name": "Kaos Dalam",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Kurtis",
+      "category": "Tops",
+      "name": "Kurti",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Tunics",
+      "category": "Tops",
+      "name": "Tunik",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Nightdress",
+      "category": "Tops",
+      "name": "Daster",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Leggings",
+      "category": "Bottoms",
+      "name": "Legging",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Pendant",
+      "category": "Accessories",
+      "name": "Liontin",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Capris",
+      "category": "Bottoms",
+      "name": "Celana Capri",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Necklace and Chains",
+      "category": "Accessories",
+      "name": "Kalung",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lip Gloss",
+      "category": null,
+      "name": "Lip Gloss",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Night suits",
+      "category": "Tops",
+      "name": "Piama",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Trunk",
+      "category": "Bottoms",
+      "name": "Celana Dalam Boxer",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Skirts",
+      "category": "Bottoms",
+      "name": "Rok",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Scarves",
+      "category": "Accessories",
+      "name": "Syal",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Ring",
+      "category": "Accessories",
+      "name": "Cincin",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Dupatta",
+      "category": "Accessories",
+      "name": "Selendang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Cufflinks",
+      "category": "Accessories",
+      "name": "Kancing Manset",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Kajal and Eyeliner",
+      "category": null,
+      "name": "Eyeliner",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Accessory Gift Set",
+      "category": "Accessories",
+      "name": "Set Aksesori",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Kurta Sets",
+      "category": "Tops",
+      "name": "Set Kurta",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Free Gifts",
+      "category": null,
+      "name": "Hadiah Gratis",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Stoles",
+      "category": "Accessories",
+      "name": "Syal Panjang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Duffel Bag",
+      "category": "Accessories",
+      "name": "Tas Duffle",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Bangle",
+      "category": "Accessories",
+      "name": "Gelang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Laptop Bag",
+      "category": "Accessories",
+      "name": "Tas Laptop",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Foundation and Primer",
+      "category": null,
+      "name": "Foundation",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sports Sandals",
+      "category": "Shoes",
+      "name": "Sandal Olahraga",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Bracelet",
+      "category": "Accessories",
+      "name": "Gelang Tangan",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lounge Pants",
+      "category": "Bottoms",
+      "name": "Celana Santai",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Face Moisturisers",
+      "category": null,
+      "name": "Pelembap Wajah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Jewellery Set",
+      "category": "Accessories",
+      "name": "Set Perhiasan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Fragrance Gift Set",
+      "category": null,
+      "name": "Set Parfum",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Highlighter and Blush",
+      "category": null,
+      "name": "Highlighter",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Boxers",
+      "category": "Bottoms",
+      "name": "Celana Boxer",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Compact",
+      "category": null,
+      "name": "Bedak Padat",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lip Liner",
+      "category": null,
+      "name": "Pensil Bibir",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Mobile Pouch",
+      "category": "Accessories",
+      "name": "Sarung Ponsel",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Messenger Bag",
+      "category": "Accessories",
+      "name": "Tas Selempang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Eyeshadow",
+      "category": null,
+      "name": "Eyeshadow",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Suspenders",
+      "category": "Accessories",
+      "name": "Bretel",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Camisoles",
+      "category": "Tops",
+      "name": "Camisole",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Mufflers",
+      "category": "Accessories",
+      "name": "Syal Rajut",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Patiala",
+      "category": "Bottoms",
+      "name": "Celana Patiala",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lounge Shorts",
+      "category": "Bottoms",
+      "name": "Celana Pendek Santai",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Jeggings",
+      "category": "Bottoms",
+      "name": "Jegging",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Stockings",
+      "category": "Accessories",
+      "name": "Stocking",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Salwar",
+      "category": "Bottoms",
+      "name": "Celana Salwar",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Churidar",
+      "category": "Bottoms",
+      "name": "Celana Churidar",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Tracksuits",
+      "category": "Tops",
+      "name": "Set Olahraga",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Face Wash and Cleanser",
+      "category": null,
+      "name": "Sabun Wajah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Sunscreen",
+      "category": null,
+      "name": "Tabir Surya",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shoe Accessories",
+      "category": null,
+      "name": "Aksesori Sepatu",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Bath Robe",
+      "category": "Outerwear",
+      "name": "Jubah Mandi",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Gloves",
+      "category": "Accessories",
+      "name": "Sarung Tangan",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Hair Colour",
+      "category": null,
+      "name": "Pewarna Rambut",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Rain Jacket",
+      "category": "Outerwear",
+      "name": "Jas Hujan",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Swimwear",
+      "category": "Tops",
+      "name": "Baju Renang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Waist Pouch",
+      "category": "Accessories",
+      "name": "Tas Pinggang",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Baby Dolls",
+      "category": "Tops",
+      "name": "Baby Doll",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Travel Accessory",
+      "category": null,
+      "name": "Aksesori Perjalanan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lip Care",
+      "category": null,
+      "name": "Perawatan Bibir",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Jumpsuit",
+      "category": "Tops",
+      "name": "Jumpsuit",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Waistcoat",
+      "category": "Outerwear",
+      "name": "Rompi",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Basketballs",
+      "category": null,
+      "name": "Bola Basket",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Mascara",
+      "category": null,
+      "name": "Mascara",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Mask and Peel",
+      "category": null,
+      "name": "Masker Wajah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Rompers",
+      "category": "Tops",
+      "name": "Romper",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Booties",
+      "category": "Shoes",
+      "name": "Sepatu Bot",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Water Bottle",
+      "category": null,
+      "name": "Botol Minum",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Concealer",
+      "category": null,
+      "name": "Concealer",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Rucksacks",
+      "category": "Accessories",
+      "name": "Ransel Gunung",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Tights",
+      "category": "Accessories",
+      "name": "Celana Ketat",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shapewear",
+      "category": "Tops",
+      "name": "Korset",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Blazers",
+      "category": "Outerwear",
+      "name": "Blazer",
+      "keep": true,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Footballs",
+      "category": null,
+      "name": "Bola Sepak",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Clothing Set",
+      "category": null,
+      "name": "Set Pakaian",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Salwar and Dupatta",
+      "category": "Bottoms",
+      "name": "Set Salwar",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Headband",
+      "category": "Accessories",
+      "name": "Bando",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Wristbands",
+      "category": "Accessories",
+      "name": "Gelang Karet",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shrug",
+      "category": "Outerwear",
+      "name": "Bolero",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Eye Cream",
+      "category": null,
+      "name": "Krim Mata",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Nail Essentials",
+      "category": null,
+      "name": "Perawatan Kuku",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Body Lotion",
+      "category": null,
+      "name": "Losion Badan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Umbrellas",
+      "category": "Accessories",
+      "name": "Payung",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Face Scrub and Exfoliator",
+      "category": null,
+      "name": "Scrub Wajah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Nehru Jackets",
+      "category": "Outerwear",
+      "name": "Jaket Nehru",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Toner",
+      "category": null,
+      "name": "Toner",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Beauty Accessory",
+      "category": null,
+      "name": "Aksesori Kecantikan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Robe",
+      "category": "Outerwear",
+      "name": "Jubah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lehenga Choli",
+      "category": "Tops",
+      "name": "Lehenga",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Makeup Remover",
+      "category": null,
+      "name": "Pembersih Rias",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lip Plumper",
+      "category": null,
+      "name": "Lip Plumper",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Trolley Bag",
+      "category": "Accessories",
+      "name": "Koper",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Lounge Tshirts",
+      "category": "Tops",
+      "name": "Kaos Santai",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Tablet Sleeve",
+      "category": "Accessories",
+      "name": "Sarung Tablet",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Hat",
+      "category": "Accessories",
+      "name": "Topi",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Ties and Cufflinks",
+      "category": "Accessories",
+      "name": "Dasi & Kancing Manset",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Key chain",
+      "category": null,
+      "name": "Gantungan Kunci",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Face Serum and Gel",
+      "category": null,
+      "name": "Serum Wajah",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Rain Trousers",
+      "category": "Bottoms",
+      "name": "Celana Hujan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Shoe Laces",
+      "category": null,
+      "name": "Tali Sepatu",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Hair Accessory",
+      "category": "Accessories",
+      "name": "Aksesori Rambut",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Cushion Covers",
+      "category": null,
+      "name": "Sarung Bantal",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Mens Grooming Kit",
+      "category": null,
+      "name": "Perawatan Pria",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Body Wash and Scrub",
+      "category": null,
+      "name": "Sabun Badan",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Suits",
+      "category": "Outerwear",
+      "name": "Jas",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "Ipad",
+      "category": null,
+      "name": "Ipad",
+      "keep": false,
+      "dataset": "paramaggarwal/fashion-product-images-dataset"
+    },
+    {
+      "label": "T-Shirt",
+      "category": "Tops",
+      "name": "Kaos",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Shirt",
+      "category": "Tops",
+      "name": "Kemeja",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Top",
+      "category": "Tops",
+      "name": "Atasan",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Blouse",
+      "category": "Tops",
+      "name": "Blus",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Polo",
+      "category": "Tops",
+      "name": "Kaos Polo",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Longsleeve",
+      "category": "Tops",
+      "name": "Kaos Lengan Panjang",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Hoodie",
+      "category": "Tops",
+      "name": "Hoodie",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Blazer",
+      "category": "Outerwear",
+      "name": "Blazer",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Outwear",
+      "category": "Outerwear",
+      "name": "Jaket",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Dress",
+      "category": "Tops",
+      "name": "Gaun",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Skirt",
+      "category": "Bottoms",
+      "name": "Rok",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Pants",
+      "category": "Bottoms",
+      "name": "Celana Panjang",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Shorts",
+      "category": "Bottoms",
+      "name": "Celana Pendek",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Shoes",
+      "category": "Shoes",
+      "name": "Sepatu",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Hat",
+      "category": "Accessories",
+      "name": "Topi",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Undershirt",
+      "category": "Tops",
+      "name": "Kaos Dalam",
+      "keep": true,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Not sure",
+      "category": null,
+      "name": "Tidak Yakin",
+      "keep": false,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Skip",
+      "category": null,
+      "name": "Lewati",
+      "keep": false,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Other",
+      "category": null,
+      "name": "Lainnya",
+      "keep": false,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Body",
+      "category": null,
+      "name": "Badan",
+      "keep": false,
+      "dataset": "alexeygrigorev/clothing-dataset"
+    },
+    {
+      "label": "Blazer",
+      "category": "Outerwear",
+      "name": "Blazer",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Celana_Panjang",
+      "category": "Bottoms",
+      "name": "Celana Panjang",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Celana_Pendek",
+      "category": "Bottoms",
+      "name": "Celana Pendek",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Gaun",
+      "category": "Tops",
+      "name": "Gaun",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Hoodie",
+      "category": "Tops",
+      "name": "Hoodie",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket",
+      "category": "Outerwear",
+      "name": "Jaket",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket_Denim",
+      "category": "Outerwear",
+      "name": "Jaket Denim",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jaket_Olahraga",
+      "category": "Outerwear",
+      "name": "Jaket Olahraga",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Jeans",
+      "category": "Bottoms",
+      "name": "Jeans",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kaos",
+      "category": "Tops",
+      "name": "Kaos",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kemeja",
+      "category": "Tops",
+      "name": "Kemeja",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Mantel",
+      "category": "Outerwear",
+      "name": "Mantel",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Polo",
+      "category": "Tops",
+      "name": "Kaos Polo",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Rok",
+      "category": "Bottoms",
+      "name": "Rok",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Sweter",
+      "category": "Outerwear",
+      "name": "Sweter",
+      "keep": true,
+      "dataset": "ryanbadai/clothes-dataset"
+    },
+    {
+      "label": "Kaos_Lengan_Panjang",
+      "category": "Tops",
+      "name": "Kaos Lengan Panjang",
+      "keep": true,
+      "dataset": "gayaku/merged"
+    },
+    {
+      "label": "Sepatu",
+      "category": "Shoes",
+      "name": "Sepatu",
+      "keep": true,
+      "dataset": "gayaku/merged"
+    },
+    {
+      "label": "Topi",
+      "category": "Accessories",
+      "name": "Topi",
+      "keep": true,
+      "dataset": "gayaku/merged"
+    }
+  ]
+}

@@ -122,7 +122,7 @@ Mengelola katalog produk partner yang digunakan pada Smart Affiliate.
 |---|---|
 | Home / Dashboard (antarmuka) | Selesai, telah dijalankan di emulator |
 | Account & Profile | Dalam pengembangan |
-| Smart Scanner | Dalam pengembangan |
+| Smart Scanner | Berjalan di perangkat: pemisahan latar, klasifikasi pakaian, dan warna dominan dihitung di ponsel; model klasifikasi masih model *bootstrap* (lihat [`ml_workspace/`](ml_workspace/)) |
 | Digital Wardrobe | Dalam pengembangan |
 | OOTD Recommendation | Dalam pengembangan |
 | Collection & Planner | Dalam pengembangan |
@@ -147,10 +147,12 @@ flowchart LR
 
 | Tahap | Metode | Fungsi |
 |---|---|---|
-| Background Removal | MediaPipe | Memisahkan objek pakaian dari background gambar |
-| Clothing Classification | YOLOv8 | Mengidentifikasi jenis atau kategori pakaian |
-| Color Extraction | K-Means Clustering | Memperoleh warna dominan pakaian |
+| Background Removal | U-2-Net small (`u2netp`) via TensorFlow Lite | Memisahkan objek pakaian dari background gambar |
+| Clothing Classification | MobileNetV3-small yang dilatih sendiri, dijalankan sebagai TensorFlow Lite | Mengidentifikasi jenis pakaian; hasilnya dipetakan ke lima Category |
+| Color Extraction | K-Means (implementasi Dart) atas piksel hasil potongan | Memperoleh warna dominan pakaian |
 | Manual Correction | Input pengguna | Memperbaiki hasil bila deteksi tidak sesuai |
+
+Klasifikasi dijalankan pada hasil potongan, bukan pada foto mentah, karena data latih berupa foto produk berlatar putih. Seluruh model berjalan di perangkat dan foto tidak dikirim ke server. Alasan tiap pilihan beserta batasannya tercatat di [`docs/adr/`](docs/adr/), dan proses pelatihan serta ekspor model ada di [`ml_workspace/`](ml_workspace/).
 
 ---
 
@@ -160,10 +162,12 @@ flowchart LR
 |---|---|
 | Flutter | Pengembangan aplikasi mobile |
 | Dart | Bahasa pemrograman |
-| MediaPipe | Background removal |
-| YOLOv8 | Klasifikasi pakaian |
-| K-Means Clustering | Ekstraksi warna |
-| Machine Learning | Rekomendasi dan pengolahan informasi pakaian |
+| TensorFlow Lite (LiteRT) dan `tflite_flutter` | Menjalankan model di perangkat |
+| U-2-Net (u2netp) | Background removal |
+| MobileNetV3-small | Klasifikasi pakaian, dilatih pada `ml_workspace/` |
+| K-Means Clustering | Ekstraksi warna, implementasi Dart |
+| PyTorch dan torchvision | Pelatihan model pada notebook Colab/Kaggle |
+| SQLite (`sqflite`) | Penyimpanan Digital Wardrobe |
 | Computer Vision | Pengolahan gambar pakaian |
 | Git dan GitHub | Version control dan kolaborasi tim |
 
@@ -199,7 +203,7 @@ Screenshot aplikasi akan ditambahkan seiring penyelesaian setiap halaman.
 
 ## Istilah Domain
 
-Istilah berikut digunakan secara konsisten dalam pengembangan dan tampilan aplikasi.
+Istilah berikut digunakan secara konsisten dalam pengembangan dan tampilan aplikasi. Daftar lengkapnya, termasuk istilah Smart Scanner, ada di [`CONTEXT.md`](CONTEXT.md).
 
 | Istilah | Definisi |
 |---|---|
@@ -221,10 +225,10 @@ Pengujian dilakukan untuk memastikan fungsi utama aplikasi berjalan sesuai kebut
 |---|---|---|---|---|
 | TC-01 | Account & Profile | Pengguna membuka halaman profil | Informasi profil pengguna ditampilkan | Belum diuji |
 | TC-02 | Account & Profile | Pengguna login dengan data yang valid | Pengguna berhasil masuk ke aplikasi | Belum diuji |
-| TC-03 | Smart Scanner | Pengguna memilih gambar pakaian | Gambar pakaian berhasil diproses | Belum diuji |
-| TC-04 | Smart Scanner | Sistem memproses gambar pakaian | Informasi pakaian dapat dihasilkan | Belum diuji |
-| TC-05 | Digital Wardrobe | Pengguna menambahkan pakaian | Pakaian tersimpan di Digital Wardrobe | Belum diuji |
-| TC-06 | Digital Wardrobe | Pengguna membuka Digital Wardrobe | Daftar pakaian ditampilkan | Belum diuji |
+| TC-03 | Smart Scanner | Pengguna memilih gambar pakaian | Gambar pakaian berhasil diproses | Teruji di emulator (kamera/galeri terbuka, foto terpilih) |
+| TC-04 | Smart Scanner | Sistem memproses gambar pakaian | Informasi pakaian dapat dihasilkan | Teruji di emulator (Bottoms, warna, nama, keyakinan 91%) |
+| TC-05 | Digital Wardrobe | Pengguna menambahkan pakaian | Pakaian tersimpan di Digital Wardrobe | Teruji di emulator (10 item setelah menyimpan hasil pindai) |
+| TC-06 | Digital Wardrobe | Pengguna membuka Digital Wardrobe | Daftar pakaian ditampilkan | Teruji di emulator, termasuk setelah aplikasi ditutup lalu dibuka lagi |
 | TC-07 | OOTD Recommendation | Pengguna memilih jenis acara | Rekomendasi outfit ditampilkan | Belum diuji |
 | TC-08 | OOTD Recommendation | Pengguna melihat rekomendasi outfit | Informasi outfit ditampilkan dengan benar | Belum diuji |
 | TC-09 | Collection & Planner | Pengguna menyimpan outfit | Outfit tersimpan dalam koleksi | Belum diuji |
@@ -241,10 +245,10 @@ Mengevaluasi proses pada Smart Scanner.
 
 | ID | Aspek | Hasil yang Diharapkan | Status |
 |---|---|---|---|
-| CV-01 | Background Removal | Background pakaian dapat dipisahkan dengan baik | Belum diuji |
-| CV-02 | Clothing Classification | Jenis pakaian dikenali sesuai kategori | Belum diuji |
-| CV-03 | Color Extraction | Warna dominan pakaian dapat diperoleh | Belum diuji |
-| CV-04 | Manual Correction | Pengguna dapat memperbaiki hasil deteksi | Belum diuji |
+| CV-01 | Background Removal | Background pakaian dapat dipisahkan dengan baik | Teruji di emulator (foto celana denim, latar hilang seluruhnya) |
+| CV-02 | Clothing Classification | Jenis pakaian dikenali sesuai kategori | Teruji di emulator (Pants, keyakinan 91%; akurasi uji model 91,9%) |
+| CV-03 | Color Extraction | Warna dominan pakaian dapat diperoleh | Teruji (unit test) dan tampil di emulator (Beige) |
+| CV-04 | Manual Correction | Pengguna dapat memperbaiki hasil deteksi | Teruji (widget test): Category, Warna, dan Nama dapat diubah sebelum disimpan |
 
 ### Recommendation Testing
 
@@ -321,11 +325,15 @@ Untuk memasang APK di luar Play Store, aktifkan izin instalasi dari sumber tidak
 ```text
 gayaku/
 ├── README.md
+├── CONTEXT.md         Istilah domain (ubiquitous language)
+├── docs/adr/          Catatan keputusan arsitektur
+├── ml_workspace/      Pelatihan dan ekspor model (offline)
 ├── design/            Mockup antarmuka
 └── flutter_app/       Source code aplikasi Flutter
     ├── android/
     ├── ios/
     ├── lib/
+    ├── assets/models/ Model .tflite yang dibundel ke aplikasi
     ├── test/
     └── pubspec.yaml
 ```

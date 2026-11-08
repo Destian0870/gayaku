@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
 import '../state/outfit_store.dart';
+import '../state/wardrobe_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/placeholder_image.dart';
 
@@ -11,15 +12,14 @@ import '../widgets/placeholder_image.dart';
 /// A live [outfitScore] meter plus a threshold slider: while the score sits
 /// below the threshold, [improveOutfit] proposes swaps that lift it.
 class OutfitBuilderScreen extends StatefulWidget {
-  const OutfitBuilderScreen({
-    super.key,
-    this.existing,
-    this.catalog = wardrobeItems,
-  });
+  const OutfitBuilderScreen({super.key, this.existing, this.catalog});
 
   /// Pass a saved outfit to edit it in place; null creates a new one.
   final SavedOutfit? existing;
-  final List<WardrobeItem> catalog;
+
+  /// Overrides the store with a fixed catalog, for tests. Null — the app's
+  /// case — follows [wardrobeItems].
+  final List<WardrobeItem>? catalog;
 
   @override
   State<OutfitBuilderScreen> createState() => _OutfitBuilderScreenState();
@@ -30,12 +30,15 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   late List<WardrobeItem> _picked;
   late double _threshold;
 
+  /// The garments offered per slot: the injected override, else the live store.
+  List<WardrobeItem> get _catalog => widget.catalog ?? wardrobeItems.value;
+
   @override
   void initState() {
     super.initState();
     final existing = widget.existing;
     _name = TextEditingController(text: existing?.name ?? '');
-    _picked = existing?.items ?? [];
+    _picked = existing?.itemsOf(_catalog) ?? [];
     _threshold = existing?.threshold ?? 0.80;
   }
 
@@ -45,7 +48,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     super.dispose();
   }
 
-  List<String> get _slots => wardrobeCategories.skip(1).toList();
+  List<String> get _slots => wardrobeSlots;
 
   double get _score => outfitScore(_picked);
 
@@ -66,7 +69,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   }
 
   Future<void> _pick(String slot) async {
-    final options = widget.catalog.where((i) => i.category == slot).toList();
+    final options = _catalog.where((i) => i.category == slot).toList();
     if (options.isEmpty) {
       showNote(context, 'Belum ada item $slot');
       return;
@@ -96,7 +99,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
       SavedOutfit(
         id: widget.existing?.id ?? newOutfitId(),
         name: name.isEmpty ? 'Kombinasi Baru' : name,
-        itemNames: _picked.map((i) => i.name).toList(),
+        itemIds: _picked.map((i) => i.id).toList(),
         threshold: _threshold,
         favorite: widget.existing?.favorite ?? false,
       ),
@@ -108,7 +111,7 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final swaps = improveOutfit(_picked, widget.catalog, threshold: _threshold);
+    final swaps = improveOutfit(_picked, _catalog, threshold: _threshold);
 
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -342,7 +345,7 @@ class _ScoreCard extends StatelessWidget {
               value: score,
               minHeight: 8,
               backgroundColor: palette.accentTint,
-              valueColor: AlwaysStoppedAnimation(palette.action),
+              valueColor: AlwaysStoppedAnimation(palette.actionInk),
             ),
           ),
           if (weak != null && weak.score < 0.6) ...[
@@ -372,7 +375,7 @@ class _ScoreCard extends StatelessWidget {
                   min: 0.50,
                   max: 0.95,
                   divisions: 9,
-                  activeColor: palette.action,
+                  activeColor: palette.actionInk,
                   inactiveColor: palette.accentTint,
                   label: '${(threshold * 100).round()}%',
                   onChanged: onThreshold,

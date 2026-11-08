@@ -1,0 +1,462 @@
+{
+  "version": 1,
+  "sources": {
+    "cc0": {
+      "dataset": "alexeygrigorev/clothing-dataset",
+      "dir": "ml_workspace\\bootstrap\\data\\clothing-dataset-small",
+      "splits": [
+        "test",
+        "train",
+        "val"
+      ],
+      "folders": 10
+    },
+    "clothes": {
+      "dataset": "ryanbadai/clothes-dataset",
+      "dir": "Clothes_Dataset",
+      "splits": [],
+      "folders": 15
+    }
+  },
+  "mapping": {
+    "cc0_to_merged": {
+      "dress": "Gaun",
+      "hat": "Topi",
+      "longsleeve": "Kaos_Lengan_Panjang",
+      "outwear": "Jaket",
+      "pants": "Celana_Panjang",
+      "shirt": "Kemeja",
+      "shoes": "Sepatu",
+      "shorts": "Celana_Pendek",
+      "skirt": "Rok",
+      "t-shirt": "Kaos"
+    },
+    "clothes_to_merged": "identity (folder name is the class)"
+  },
+  "options": {
+    "prefer_source": "clothes",
+    "seed": 20261022,
+    "val_frac": 0.1,
+    "test_frac": 0.1,
+    "signature_size": 16,
+    "signature_max_diff": 8.0,
+    "link_mode_requested": "auto",
+    "limit_per_class": 0,
+    "link_mode_used": {
+      "hardlink": 9728
+    }
+  },
+  "decisions": {
+    "prefer_source": "When one photograph carries different classes in the two sources, the copy from --prefer-source survives. `clothes` is the default: it keeps the 15 Clothes_Dataset classes at 500, carries the vocabulary the UI shows, and holds 2.3x the pixels of the CC0 clone. The cost is not a display detail. The largest conflict pair is `longsleeve` in CC0 against `Sweter` in Clothes_Dataset, and those two labels sit in different Categories: Longsleeve is Tops, Sweter is Outerwear. Choosing `clothes` therefore files 403 long-sleeve photographs under Outerwear that CC0 would have filed under Tops, which changes the wardrobe tab and what the outfit matcher sees. `--prefer-source cc0` reverses it without a code change and leaves Sweter at 93, Kaos_Lengan_Panjang at 575.",
+    "keep_thin_classes": "Longsleeve keeps its surviving photographs instead of being folded into Kaos. Topi ships with a comparable count today, so a thin class is a measurable weakness -- the per-class recall in the training report -- rather than a reason to delete a class the product shows.",
+    "ambiguous_groups": "A group that disagrees with itself inside one source gets no survivor: every member is dropped and listed in conflicts.csv. Identical bytes filed under Jaket, Kemeja and Polo claim two of those labels are wrong, and picking one would invent an answer the data does not give.",
+    "splits": "CC0 keeps the train/validation/test split it ships with; Clothes_Dataset has none, so each class folder is shuffled once with --seed and cut. Nothing is shuffled per photograph, so a re-run reproduces the same assignment and no photograph crosses a split.",
+    "class_names": "The merged class list is the Indonesian vocabulary for all 18 classes, including the three Clothes_Dataset does not have: Kaos_Lengan_Panjang, Sepatu and Topi. Their rows in labels.json are tagged `gayaku/merged`, because the CC0 dataset itself only has the English spellings (Longsleeve, Shoes, Hat) that the bootstrap 10-class model uses. Every merged class therefore reaches the UI with the same name it would have had as a Clothes_Dataset folder, and gen_dart_labels.py needs no special case."
+  },
+  "classes": {
+    "Blazer": {
+      "category": "Outerwear",
+      "name": "Blazer",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Celana_Panjang": {
+      "category": "Bottoms",
+      "name": "Celana Panjang",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Celana_Pendek": {
+      "category": "Bottoms",
+      "name": "Celana Pendek",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Gaun": {
+      "category": "Tops",
+      "name": "Gaun",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Hoodie": {
+      "category": "Tops",
+      "name": "Hoodie",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Jaket": {
+      "category": "Outerwear",
+      "name": "Jaket",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Jaket_Denim": {
+      "category": "Outerwear",
+      "name": "Jaket Denim",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Jaket_Olahraga": {
+      "category": "Outerwear",
+      "name": "Jaket Olahraga",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Jeans": {
+      "category": "Bottoms",
+      "name": "Jeans",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Kaos": {
+      "category": "Tops",
+      "name": "Kaos",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Kaos_Lengan_Panjang": {
+      "category": "Tops",
+      "name": "Kaos Lengan Panjang",
+      "label_from": "alexeygrigorev/clothing-dataset"
+    },
+    "Kemeja": {
+      "category": "Tops",
+      "name": "Kemeja",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Mantel": {
+      "category": "Outerwear",
+      "name": "Mantel",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Polo": {
+      "category": "Tops",
+      "name": "Kaos Polo",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Rok": {
+      "category": "Bottoms",
+      "name": "Rok",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Sepatu": {
+      "category": "Shoes",
+      "name": "Sepatu",
+      "label_from": "alexeygrigorev/clothing-dataset"
+    },
+    "Sweter": {
+      "category": "Outerwear",
+      "name": "Sweter",
+      "label_from": "ryanbadai/clothes-dataset"
+    },
+    "Topi": {
+      "category": "Accessories",
+      "name": "Topi",
+      "label_from": "alexeygrigorev/clothing-dataset"
+    }
+  },
+  "totals": {
+    "scanned": 11281,
+    "kept": 9728,
+    "groups": 9787,
+    "groups_with_several_members": 1488,
+    "by_reason": {
+      "dropped_cross_source_conflict_cc0": 495,
+      "dropped_exact_duplicate": 14,
+      "dropped_intra_source_conflict_cc0": 4,
+      "dropped_intra_source_conflict_clothes": 120,
+      "dropped_resized_duplicate": 920,
+      "kept_cross_source_conflict": 495,
+      "kept_first_of_duplicates": 934,
+      "kept_unique": 8299
+    },
+    "by_source_scanned": {
+      "cc0": 3781,
+      "clothes": 7500
+    },
+    "by_source_kept": {
+      "cc0": 2378,
+      "clothes": 7350
+    }
+  },
+  "per_class": {
+    "Blazer": {
+      "unique": 499,
+      "train": 399,
+      "val": 50,
+      "test": 50,
+      "by_source": {
+        "clothes": 499
+      }
+    },
+    "Celana_Panjang": {
+      "unique": 965,
+      "train": 785,
+      "val": 94,
+      "test": 86,
+      "by_source": {
+        "cc0": 469,
+        "clothes": 496
+      }
+    },
+    "Celana_Pendek": {
+      "unique": 595,
+      "train": 473,
+      "val": 61,
+      "test": 61,
+      "by_source": {
+        "cc0": 97,
+        "clothes": 498
+      }
+    },
+    "Gaun": {
+      "unique": 654,
+      "train": 529,
+      "val": 66,
+      "test": 59,
+      "by_source": {
+        "cc0": 156,
+        "clothes": 498
+      }
+    },
+    "Hoodie": {
+      "unique": 499,
+      "train": 399,
+      "val": 50,
+      "test": 50,
+      "by_source": {
+        "clothes": 499
+      }
+    },
+    "Jaket": {
+      "unique": 719,
+      "train": 563,
+      "val": 71,
+      "test": 85,
+      "by_source": {
+        "cc0": 230,
+        "clothes": 489
+      }
+    },
+    "Jaket_Denim": {
+      "unique": 499,
+      "train": 399,
+      "val": 50,
+      "test": 50,
+      "by_source": {
+        "clothes": 499
+      }
+    },
+    "Jaket_Olahraga": {
+      "unique": 491,
+      "train": 393,
+      "val": 49,
+      "test": 49,
+      "by_source": {
+        "clothes": 491
+      }
+    },
+    "Jeans": {
+      "unique": 497,
+      "train": 397,
+      "val": 50,
+      "test": 50,
+      "by_source": {
+        "clothes": 497
+      }
+    },
+    "Kaos": {
+      "unique": 967,
+      "train": 797,
+      "val": 92,
+      "test": 78,
+      "by_source": {
+        "cc0": 468,
+        "clothes": 499
+      }
+    },
+    "Kaos_Lengan_Panjang": {
+      "unique": 172,
+      "train": 135,
+      "val": 16,
+      "test": 21,
+      "by_source": {
+        "cc0": 172
+      }
+    },
+    "Kemeja": {
+      "unique": 695,
+      "train": 565,
+      "val": 65,
+      "test": 65,
+      "by_source": {
+        "cc0": 246,
+        "clothes": 449
+      }
+    },
+    "Mantel": {
+      "unique": 494,
+      "train": 396,
+      "val": 49,
+      "test": 49,
+      "by_source": {
+        "clothes": 494
+      }
+    },
+    "Polo": {
+      "unique": 449,
+      "train": 359,
+      "val": 45,
+      "test": 45,
+      "by_source": {
+        "clothes": 449
+      }
+    },
+    "Rok": {
+      "unique": 588,
+      "train": 470,
+      "val": 59,
+      "test": 59,
+      "by_source": {
+        "cc0": 94,
+        "clothes": 494
+      }
+    },
+    "Sepatu": {
+      "unique": 297,
+      "train": 198,
+      "val": 26,
+      "test": 73,
+      "by_source": {
+        "cc0": 297
+      }
+    },
+    "Sweter": {
+      "unique": 499,
+      "train": 399,
+      "val": 50,
+      "test": 50,
+      "by_source": {
+        "clothes": 499
+      }
+    },
+    "Topi": {
+      "unique": 149,
+      "train": 123,
+      "val": 14,
+      "test": 12,
+      "by_source": {
+        "cc0": 149
+      }
+    }
+  },
+  "conflict_pairs": {
+    "cc0:longsleeve -> Sweter": 403,
+    "cc0:pants -> Jeans": 71,
+    "clothes:Polo -> dropped as ambiguous": 51,
+    "clothes:Kemeja -> dropped as ambiguous": 49,
+    "clothes:Jaket -> dropped as ambiguous": 11,
+    "cc0:outwear -> Mantel": 8,
+    "clothes:Jaket_Olahraga -> dropped as ambiguous": 5,
+    "cc0:outwear -> Blazer": 4,
+    "cc0:outwear -> Jaket_Olahraga": 3,
+    "cc0:shirt -> Sweter": 2,
+    "cc0:dress -> Kaos": 1,
+    "cc0:dress -> Rok": 1,
+    "cc0:longsleeve -> dropped as ambiguous": 1,
+    "cc0:outwear -> Sweter": 1,
+    "cc0:shorts -> dropped as ambiguous": 1,
+    "cc0:skirt -> Gaun": 1,
+    "cc0:skirt -> dropped as ambiguous": 1,
+    "cc0:t-shirt -> dropped as ambiguous": 1,
+    "clothes:Celana_Pendek -> dropped as ambiguous": 1,
+    "clothes:Kaos -> dropped as ambiguous": 1,
+    "clothes:Mantel -> dropped as ambiguous": 1,
+    "clothes:Sweter -> dropped as ambiguous": 1
+  },
+  "assertions": {
+    "every_kept_photo_has_a_split": "passed (9728 photographs)",
+    "duplicate_groups_single_split": "passed (9787 groups)",
+    "sha256_unique": "passed (9728 photographs)",
+    "basename_single_split": "passed (9717 basenames)",
+    "phash_unique_per_split": "passed (9677 distinct phash values, 7 shared by different pictures and recorded in phash_collisions)",
+    "every_class_on_every_split": "passed"
+  },
+  "phash_collisions": [
+    {
+      "phash": "0707070707070707",
+      "photographs": 8,
+      "splits": [
+        "test",
+        "train",
+        "val"
+      ],
+      "example": [
+        "ml_workspace\\bootstrap\\data\\clothing-dataset-small\\train\\shirt\\162af0e8-a43c-45af-8d28-f46976d8142c.jpg",
+        "ml_workspace\\bootstrap\\data\\clothing-dataset-small\\validation\\shirt\\a9fe576c-a408-4b3f-80de-d9cb04d36360.jpg"
+      ]
+    },
+    {
+      "phash": "0f0f0f0f0f0f0f0f",
+      "photographs": 2,
+      "splits": [
+        "train",
+        "val"
+      ],
+      "example": [
+        "ml_workspace\\bootstrap\\data\\clothing-dataset-small\\train\\shirt\\b5613279-a7fc-4d80-9d7d-df632d12c452.jpg",
+        "Clothes_Dataset\\Jaket\\jaket_windbraker_nike_big_logo_1686247772_3c88e2c0_progressive_thumbnail.jpg"
+      ]
+    },
+    {
+      "phash": "f0f0f0e0e0f0f0e0",
+      "photographs": 2,
+      "splits": [
+        "train",
+        "val"
+      ],
+      "example": [
+        "Clothes_Dataset\\Blazer\\hm_sexy_long_black_blazzer__ja_1617618137_d4bb0725_progressive_thumbnail.jpg",
+        "Clothes_Dataset\\Rok\\saoi__black_skirt_1696293902_3ac1b6ed_progressive_thumbnail.jpg"
+      ]
+    },
+    {
+      "phash": "707070686868e8e8",
+      "photographs": 5,
+      "splits": [
+        "train",
+        "val"
+      ],
+      "example": [
+        "Clothes_Dataset\\Jeans\\celana_jeans_pria_acp_slim_tap_1690007306_9f609ce7_progressive_thumbnail.jpg",
+        "Clothes_Dataset\\Jeans\\celana_jeans_pria_bangbang_sof_1689148276_50c54292_progressive_thumbnail.jpg"
+      ]
+    },
+    {
+      "phash": "7070706868686868",
+      "photographs": 5,
+      "splits": [
+        "test",
+        "train"
+      ],
+      "example": [
+        "Clothes_Dataset\\Jeans\\celana_jeans_pria_bangbang_sli_1693542575_25881654_progressive_thumbnail.jpg",
+        "Clothes_Dataset\\Jeans\\celana_jeans_pria_get_used_str_1653977268_68bc4d80_progressive_thumbnail.jpg"
+      ]
+    },
+    {
+      "phash": "3371716969696969",
+      "photographs": 8,
+      "splits": [
+        "train",
+        "val"
+      ],
+      "example": [
+        "Clothes_Dataset\\Jeans\\celana_panjang_denim_jeans_des_1686739559_776d2abf_progressive_thumbnail.jpg",
+        "Clothes_Dataset\\Jeans\\celana_panjang_denim_jeans_evi_1689617435_d12e784d_progressive_thumbnail.jpg"
+      ]
+    },
+    {
+      "phash": "0f07070707070707",
+      "photographs": 3,
+      "splits": [
+        "train",
+        "val"
+      ],
+      "example": [
+        "Clothes_Dataset\\Kaos\\074e0101-337d-404e-9288-44902cc0f0b9.jpg",
+        "Clothes_Dataset\\Kaos\\4617d065-8091-438c-9c7c-e6c53896aab0.jpg"
+      ]
+    }
+  ]
+}

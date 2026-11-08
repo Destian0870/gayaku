@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/wardrobe_service.dart';
+import 'state/wardrobe_store.dart';
 import 'theme/app_theme.dart';
 
 /// Compile-time credentials, so no secret ever sits in the repo:
@@ -20,8 +21,14 @@ Future<void> main() async {
   // different face at runtime.
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  // Without credentials the app runs on DemoAuthService, so the UI is still
-  // usable before a Supabase project exists.
+  // The wardrobe is a database, not a constant: read it before the first frame
+  // so the home and wardrobe screens never flash an empty catalog.
+  await initWardrobeStore();
+
+  // ponytail: SQLite is what the screens read today; Supabase is the shared
+  // copy behind the same service seam. Without credentials the app runs on
+  // DemoAuthService/DemoWardrobeService, so the UI still works before a
+  // project exists - see supabase/README.md for the switch-over.
   if (_supabaseUrl.isNotEmpty && _supabaseKey.isNotEmpty) {
     await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseKey);
     final client = Supabase.instance.client;

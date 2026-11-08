@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'screens/add_item_stub.dart';
 import 'screens/profile_screen.dart';
+import 'screens/scan_screen.dart';
 import 'screens/wardrobe_screen.dart';
-import 'services/wardrobe_service.dart';
 import 'screens/weekly_planner.dart';
 
 /// Route name for each bottom-nav destination. Index 0 is home, the root route.
@@ -20,11 +19,10 @@ Widget? _screenFor(
   bool initialFavoritesOnly = false,
 }) => switch (index) {
   1 => WardrobeScreen(
-    load: wardrobeService.items,
     initialTab: initialTab,
     initialFavoritesOnly: initialFavoritesOnly,
   ),
-  2 => const AddItemStub(),
+  2 => const ScanScreen(),
   3 => const WeeklyPlanner(),
   4 => const ProfileScreen(),
   _ => null,

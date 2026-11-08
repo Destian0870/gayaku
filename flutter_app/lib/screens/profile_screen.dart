@@ -221,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(color: palette.inkMuted, fontSize: 12),
                     ),
                     value: _darkMode,
-                    activeColor: palette.accent,
+                    activeThumbColor: palette.accent,
                     onChanged: (val) {
                       setModalState(() => _darkMode = val);
                       setState(() => _darkMode = val);
@@ -381,7 +381,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(color: palette.inkMuted, fontSize: 12),
                     ),
                     value: _pushNotif,
-                    activeColor: palette.accent,
+                    activeThumbColor: palette.accent,
                     onChanged: (val) {
                       setModalState(() => _pushNotif = val);
                       setState(() => _pushNotif = val);
@@ -400,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(color: palette.inkMuted, fontSize: 12),
                     ),
                     value: _dailyReminder,
-                    activeColor: palette.accent,
+                    activeThumbColor: palette.accent,
                     onChanged: (val) {
                       setModalState(() => _dailyReminder = val);
                       setState(() => _dailyReminder = val);
@@ -662,6 +662,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: const Text('Batal'),
                                 ),
                                 TextButton(
+                                  onPressed: () => Navigator.pop(dialogContext),
+                                  child: const Text('Batal'),
+                                ),
+                                TextButton(
                                   onPressed: () async {
                                     await authService.signOut();
                                     if (!context.mounted) return;
@@ -732,10 +736,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: palette.sheet,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.sheet,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Container(

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dataset": "merged",
+  "source": "ml_workspace/yolo/train_local.py: yolov8n-cls.pt trained on the merge_datasets.py tree (18 classes, imgsz 224, 30 epochs, batch 32, seed 42); labels in the model's output order",
+  "labels": [
+    "Blazer",
+    "Celana_Panjang",
+    "Celana_Pendek",
+    "Gaun",
+    "Hoodie",
+    "Jaket",
+    "Jaket_Denim",
+    "Jaket_Olahraga",
+    "Jeans",
+    "Kaos",
+    "Kaos_Lengan_Panjang",
+    "Kemeja",
+    "Mantel",
+    "Polo",
+    "Rok",
+    "Sepatu",
+    "Sweter",
+    "Topi"
+  ]
+}

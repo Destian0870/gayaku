@@ -4,31 +4,29 @@ import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
 import '../navigation.dart';
 import '../state/outfit_store.dart';
+import '../state/wardrobe_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 import '../widgets/placeholder_image.dart';
 import '../widgets/wardrobe_item_card.dart';
-import '../services/wardrobe_service.dart';
 import 'outfit_builder_screen.dart';
 
 /// Wardrobe hub with two tabs: the item catalog and the saved combinations.
 ///
-/// UI only — search, filters and combinations live in local state / an
-/// in-memory store; nothing is persisted.
+/// The catalog is the SQLite-backed [wardrobeItems] store (docs/adr/0004);
+/// search and filters stay local, and combinations are still session-only.
 class WardrobeScreen extends StatefulWidget {
   const WardrobeScreen({
     super.key,
-    this.items = wardrobeItems,
-    this.load,
+    this.items,
     this.initialTab = 0,
     this.initialFavoritesOnly = false,
   });
 
-  final List<WardrobeItem> items;
-
-  /// Async source used instead of [items] when non-null; the screens pass
-  /// `wardrobeService.items`, tests leave it null and stay offline.
-  final Future<List<WardrobeItem>> Function()? load;
+  /// Overrides the store with a fixed catalog, for tests. Null — the app's
+  /// case — follows [wardrobeItems], so a scanned garment shows up here as
+  /// soon as it is saved.
+  final List<WardrobeItem>? items;
   final int initialTab;
   final bool initialFavoritesOnly;
 
@@ -44,23 +42,12 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   int _minFormality = 1;
   late int _tab;
   late bool _favoritesOnly;
-  late List<WardrobeItem> _items = widget.items;
 
   @override
   void initState() {
     super.initState();
     _tab = widget.initialTab;
     _favoritesOnly = widget.initialFavoritesOnly;
-    if (widget.load != null) _refresh();
-  }
-
-  Future<void> _refresh() async {
-    try {
-      final items = await widget.load!();
-      if (mounted) setState(() => _items = items);
-    } on WardrobeException catch (e) {
-      if (mounted) showNote(context, e.message);
-    }
   }
 
   @override
@@ -75,14 +62,17 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>
-            OutfitBuilderScreen(existing: existing, catalog: _items),
+            OutfitBuilderScreen(existing: existing, catalog: _catalog),
       ),
     );
   }
 
+  /// The catalog in play: the injected override, else the live store.
+  List<WardrobeItem> get _catalog => widget.items ?? wardrobeItems.value;
+
   /// Occasions present in the catalog, so the filter never offers a dead option.
   List<String> get _availableOccasions =>
-      {for (final item in _items) ...item.occasions}.toList()..sort();
+      {for (final item in _catalog) ...item.occasions}.toList()..sort();
 
   Future<void> _openFilters() async {
     final result =
@@ -138,8 +128,8 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           OutlinedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: OutlinedButton.styleFrom(
-              foregroundColor: palette.action,
-              side: BorderSide(color: palette.action),
+              foregroundColor: palette.actionInk,
+              side: BorderSide(color: palette.actionInk),
               shape: const RoundedRectangleBorder(borderRadius: AppRadius.chip),
             ),
             child: Text(
@@ -157,7 +147,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   List<WardrobeItem> get _visible {
     final query = _query.trim().toLowerCase();
-    return _items.where((item) {
+    return _catalog.where((item) {
       if (_category != wardrobeCategories.first && item.category != _category) {
         return false;
       }
@@ -174,6 +164,15 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The store is the normal path; a test may still hand in a fixed list.
+    if (widget.items != null) return _scaffold(context);
+    return ValueListenableBuilder<List<WardrobeItem>>(
+      valueListenable: wardrobeItems,
+      builder: (context, _, _) => _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
     final palette = AppColors.of(context);
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -186,7 +185,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Header(itemCount: _items.length),
+                    _Header(itemCount: _catalog.length),
                     const SizedBox(height: 16),
                     ValueListenableBuilder(
                       valueListenable: savedOutfits,
@@ -254,10 +253,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           childAspectRatio: 0.75,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          children: [
-            for (final item in items)
-              WardrobeItemCard(item: item, catalog: _items),
-          ],
+          children: [for (final item in items) WardrobeItemCard(item: item)],
         ),
     ];
   }
@@ -317,6 +313,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               for (final outfit in _favoritesFirst(visibleOutfits)) ...[
                 _SavedOutfitCard(
                   outfit: outfit,
+                  catalog: _catalog,
                   onEdit: () => _openBuilder(existing: outfit),
                   onDelete: () => _confirmDelete(outfit),
                   onToggleFavorite: () => toggleOutfitFavorite(outfit.id),
@@ -481,12 +478,17 @@ class _TabToggle extends StatelessWidget {
 class _SavedOutfitCard extends StatelessWidget {
   const _SavedOutfitCard({
     required this.outfit,
+    required this.catalog,
     required this.onEdit,
     required this.onDelete,
     required this.onToggleFavorite,
   });
 
   final SavedOutfit outfit;
+
+  /// Catalog the saved ids resolve against; an id with no row is dropped.
+  final List<WardrobeItem> catalog;
+
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onToggleFavorite;
@@ -495,7 +497,7 @@ class _SavedOutfitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final items = outfit.items;
+    final items = outfit.itemsOf(catalog);
     final percent = (outfitScore(items) * 100).round();
     final threshold = (outfit.threshold * 100).round();
     final meets = percent >= threshold;
@@ -533,7 +535,7 @@ class _SavedOutfitCard extends StatelessWidget {
                   outfit.favorite ? Icons.favorite : Icons.favorite_border,
                   size: 18,
                 ),
-                color: outfit.favorite ? palette.action : palette.ink,
+                color: outfit.favorite ? palette.actionInk : palette.ink,
                 style: IconButton.styleFrom(
                   backgroundColor: palette.sheet,
                   minimumSize: const Size(40, 40),
@@ -808,7 +810,7 @@ class _FilterSheetState extends State<_FilterSheet> {
               min: 1,
               max: 5,
               divisions: 4,
-              activeColor: palette.action,
+              activeColor: palette.actionInk,
               inactiveColor: palette.accentTint,
               label: '$_minFormality',
               onChanged: (v) => setState(() => _minFormality = v.round()),
