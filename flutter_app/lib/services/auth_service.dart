@@ -40,6 +40,12 @@ abstract class AuthService {
   });
 
   Future<void> signOut();
+
+  /// Stores the display name on the account and returns the updated user.
+  Future<AuthUser> updateDisplayName(String name);
+
+  /// Sends the "reset your password" mail to [email].
+  Future<void> requestPasswordReset(String email);
 }
 
 /// Stands in for the backend in tests and in runs built without credentials,
@@ -49,6 +55,7 @@ abstract class AuthService {
 /// `flutter run` (see supabase/README.md); no screen depends on this class.
 class DemoAuthService implements AuthService {
   AuthUser? _user;
+  String _displayName = '';
 
   @override
   AuthUser? get currentUser => _user;
@@ -69,14 +76,25 @@ class DemoAuthService implements AuthService {
   @override
   Future<void> signOut() async => _user = null;
 
+  @override
+  Future<void> requestPasswordReset(String email) async {}
+
+  @override
+  Future<AuthUser> updateDisplayName(String name) async {
+    _displayName = name.trim();
+    final email = _user?.email ?? '';
+    return _user = _userFor(email, _displayName);
+  }
+
   AuthUser _userFor(String email, String displayName) {
     final trimmed = email.trim();
+    final chosen = displayName.trim().isEmpty ? _displayName : displayName;
     return AuthUser(
       id: 'demo-user',
       email: trimmed,
-      displayName: displayName.trim().isEmpty
+      displayName: chosen.trim().isEmpty
           ? trimmed.split('@').first
-          : displayName.trim(),
+          : chosen.trim(),
     );
   }
 }
@@ -127,6 +145,24 @@ class SupabaseAuthService implements AuthService {
 
   @override
   Future<void> signOut() => _guard(() => _client.auth.signOut());
+
+  @override
+  Future<void> requestPasswordReset(String email) =>
+      _guard(() => _client.auth.resetPasswordForEmail(email.trim()));
+
+  @override
+  Future<AuthUser> updateDisplayName(String name) => _guard(() async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw const AuthException('Sesi habis, masuk ulang.');
+    final clean = name.trim();
+    // The name lives on `profiles`; `auth.users` metadata is not writable from
+    // the client without a second call, and nothing else reads it.
+    await _client
+        .from('profiles')
+        .update({'display_name': clean})
+        .eq('id', user.id);
+    return AuthUser(id: user.id, email: user.email ?? '', displayName: clean);
+  });
 
   Future<T> _guard<T>(Future<T> Function() call) async {
     try {

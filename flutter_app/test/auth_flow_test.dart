@@ -27,6 +27,13 @@ class _FailingAuthService implements AuthService {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> requestPasswordReset(String email) async {}
+
+  @override
+  Future<AuthUser> updateDisplayName(String name) async =>
+      throw const AuthException('Sesi habis, masuk ulang.');
 }
 
 void main() {

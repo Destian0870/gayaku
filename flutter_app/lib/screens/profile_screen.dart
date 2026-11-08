@@ -15,22 +15,18 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _userName = 'Isabella';
+  String _userName = '';
 
   @override
   void initState() {
     super.initState();
     // A signed-in user's name comes from the auth backend; the mockup name is
     // only a fallback for the demo backend.
-    final name = authService.currentUser?.displayName ?? '';
-    if (name.isNotEmpty) _userName = name;
+    final user = authService.currentUser;
+    _userName = (user?.displayName ?? '').trim().isNotEmpty
+        ? user!.displayName.trim()
+        : (user?.email ?? '').split('@').first;
   }
-
-  // State sederhana untuk contoh pengaturan
-  bool _darkMode = false;
-  String _selectedLanguage = 'Indonesia';
-  bool _pushNotif = true;
-  bool _dailyReminder = false;
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -160,14 +156,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     elevation: 0,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      if (nameController.text.trim().isNotEmpty) {
-                        _userName = nameController.text.trim();
-                      }
-                    });
-                    Navigator.pop(modalContext);
-                    _showSnackBar('Profil berhasil diperbarui!');
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) {
+                      Navigator.pop(modalContext);
+                      return;
+                    }
+                    try {
+                      final updated = await authService.updateDisplayName(name);
+                      if (!mounted || !modalContext.mounted) return;
+                      setState(() => _userName = updated.displayName);
+                      Navigator.pop(modalContext);
+                      _showSnackBar('Profil berhasil diperbarui!');
+                    } catch (_) {
+                      if (!modalContext.mounted) return;
+                      _showSnackBar('Gagal menyimpan profil.');
+                    }
                   },
                   child: const Text(
                     'Simpan Perubahan',
@@ -177,83 +181,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  // --- MODAL 1: PREFERENCES ---
-  void _showPreferencesBottomSheet(AppPalette palette) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (modalContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Preferences',
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: palette.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: Text(
-                      'Mode Gelap',
-                      style: TextStyle(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Mengubah tampilan ke warna gelap',
-                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
-                    ),
-                    value: _darkMode,
-                    activeThumbColor: palette.accent,
-                    onChanged: (val) {
-                      setModalState(() => _darkMode = val);
-                      setState(() => _darkMode = val);
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    title: Text(
-                      'Bahasa Aplikasi',
-                      style: TextStyle(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    trailing: DropdownButton<String>(
-                      value: _selectedLanguage,
-                      underline: const SizedBox(),
-                      items: ['Indonesia', 'English'].map((lang) {
-                        return DropdownMenuItem(value: lang, child: Text(lang));
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setModalState(() => _selectedLanguage = val);
-                          setState(() => _selectedLanguage = val);
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
         );
       },
     );
@@ -290,24 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(fontSize: 12, color: palette.inkMuted),
                 ),
                 subtitle: Text(
-                  authService.currentUser?.email.isNotEmpty == true
-                      ? authService.currentUser!.email
-                      : 'isabella@gayaku.id',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: palette.ink,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.phone_outlined, color: palette.accentInk),
-                title: Text(
-                  'Nomor Telepon',
-                  style: TextStyle(fontSize: 12, color: palette.inkMuted),
-                ),
-                subtitle: Text(
-                  '+62 812 3456 7890',
+                  authService.currentUser?.email ?? '',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -330,153 +240,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(modalContext);
-                  _showSnackBar('Fitur Ubah Password dikirim ke Email!');
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // --- MODAL 3: NOTIFICATIONS ---
-  void _showNotificationsBottomSheet(AppPalette palette) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (modalContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Notification Settings',
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: palette.ink,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: Text(
-                      'Notifikasi Push',
-                      style: TextStyle(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Terima pengingat dan info promo',
-                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
-                    ),
-                    value: _pushNotif,
-                    activeThumbColor: palette.accent,
-                    onChanged: (val) {
-                      setModalState(() => _pushNotif = val);
-                      setState(() => _pushNotif = val);
-                    },
-                  ),
-                  SwitchListTile(
-                    title: Text(
-                      'Pengingat Outfit Harian',
-                      style: TextStyle(
-                        color: palette.ink,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Rekomendasi pakaian setiap pagi',
-                      style: TextStyle(color: palette.inkMuted, fontSize: 12),
-                    ),
-                    value: _dailyReminder,
-                    activeThumbColor: palette.accent,
-                    onChanged: (val) {
-                      setModalState(() => _dailyReminder = val);
-                      setState(() => _dailyReminder = val);
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // --- MODAL 4: DATA & PRIVACY ---
-  void _showPrivacyBottomSheet(AppPalette palette) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: palette.sheet,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (modalContext) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Data & Privacy',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: palette.ink,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Icon(
-                  Icons.cleaning_services_outlined,
-                  color: palette.accentInk,
-                ),
-                title: Text(
-                  'Hapus Cache Aplikasi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: palette.ink,
-                  ),
-                ),
-                subtitle: Text(
-                  'Membebaskan memori tanpa menghapus akun',
-                  style: TextStyle(fontSize: 12, color: palette.inkMuted),
-                ),
-                onTap: () {
-                  Navigator.pop(modalContext);
-                  _showSnackBar('Cache berhasil dibersihkan!');
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: Icon(
-                  Icons.privacy_tip_outlined,
-                  color: palette.accentInk,
-                ),
-                title: Text(
-                  'Kebijakan Privasi',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: palette.ink,
-                  ),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.pop(modalContext);
-                  _showSnackBar('Membuka dokumen Kebijakan Privasi...');
+                  final email = authService.currentUser?.email ?? '';
+                  if (email.isEmpty) return;
+                  try {
+                    await authService.requestPasswordReset(email);
+                    if (!mounted) return;
+                    _showSnackBar('Tautan ubah kata sandi dikirim ke $email.');
+                  } catch (_) {
+                    if (!mounted) return;
+                    _showSnackBar('Gagal mengirim tautan ubah kata sandi.');
+                  }
                 },
               ),
             ],
@@ -596,7 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Premium Member',
+                              authService.currentUser?.email ?? '',
                               style: TextStyle(
                                 fontSize: 11,
                                 height: 15 / 11,
@@ -609,18 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 28),
 
-                    // --- SECTION 1: PERSONALIZATION ---
-                    _sectionTitle(palette, 'PERSONALIZATION'),
-                    const SizedBox(height: 12),
-                    _settingsTile(
-                      palette,
-                      icon: Icons.tune,
-                      title: 'Preferences',
-                      onTap: () => _showPreferencesBottomSheet(palette),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // --- SECTION 2: GENERAL ---
+                    // --- SECTION: GENERAL ---
                     _sectionTitle(palette, 'GENERAL'),
                     const SizedBox(height: 12),
                     _settingsTile(
@@ -628,20 +392,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.person_outline,
                       title: 'Account',
                       onTap: () => _showAccountBottomSheet(palette),
-                    ),
-                    const SizedBox(height: 12),
-                    _settingsTile(
-                      palette,
-                      icon: Icons.notifications_none_outlined,
-                      title: 'Notifications',
-                      onTap: () => _showNotificationsBottomSheet(palette),
-                    ),
-                    const SizedBox(height: 12),
-                    _settingsTile(
-                      palette,
-                      icon: Icons.lock_outline,
-                      title: 'Data & Privacy',
-                      onTap: () => _showPrivacyBottomSheet(palette),
                     ),
                     const SizedBox(height: 36),
 
