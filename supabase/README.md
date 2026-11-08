@@ -1,13 +1,16 @@
 # Supabase backend
 
-Auth, profiles, wardrobe items and their images for GAYAKU. Saved looks and
-the weekly planner are still in memory in the app.
+Auth, profiles, wardrobe items, the combinations built from them and the weekly
+planner for GAYAKU. Every screen reads from here; the device only caches.
 
 ```
 supabase/
   migrations/20261024120000_profiles.sql        profiles table, RLS, sign-up trigger
   migrations/20261024120100_avatars_bucket.sql  private avatars bucket, per-user rules
   migrations/20261103090000_wardrobe_items.sql  scanned garments + private cutouts bucket
+  migrations/20261103091500_wardrobe_local_images.sql  metadata only, cutout PNG stays local
+  migrations/20261108120000_wardrobe_align_model.sql   subcategory, brand, occasions
+  migrations/20261108160000_outfits_and_planner.sql    outfit_looks + planner_entries
 ```
 
 ## Diagram
@@ -20,8 +23,7 @@ erDiagram
   auth_users ||--|| profiles : "trigger on_auth_user_created"
   auth_users ||--o{ wardrobe_items : "owner_id, cascade"
   profiles ||--o{ avatars : "avatars/<uid>/"
-  wardrobe_items ||--o{ outfit_looks : "item_ids (planned)"
-  outfit_looks ||--o{ planner_entries : "look_id (planned)"
+  outfit_looks ||--o{ planner_entries : "outfit_id, one row per day"
 
   profiles {
     uuid id PK
@@ -48,14 +50,38 @@ erDiagram
     timestamptz created_at
     timestamptz updated_at
   }
+  outfit_looks {
+    uuid id PK
+    uuid owner_id FK
+    text name "1..80 chars"
+    uuid[] item_ids "wardrobe_items.id, never names"
+    real threshold "0..1"
+    boolean favorite
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  planner_entries {
+    uuid owner_id PK "one row per day per owner"
+    date day PK
+    uuid outfit_id FK "outfit_looks.id"
+    text occasion
+    timestamptz created_at
+    timestamptz updated_at
+  }
 ```
+
+A combination stores `wardrobe_items.id` values, never names, so renaming a
+garment keeps every look intact. `planner_entries` is keyed by `(owner_id, day)`,
+so planning the same day twice updates the row instead of stacking duplicates.
+Empty tables mean empty screens: nothing in the app invents a garment, a look or
+a plan.
 
 `auth.users` dan bucket `avatars` dikelola Supabase; `cutouts` sudah pensiun
 (lihat `migrations/20261103091500_wardrobe_local_images.sql`).
 
 ## What the app talks to
 
-Two services import the Supabase SDK, one per concern; screens never import
+Three services import the Supabase SDK, one per concern; screens never import
 it and never see a Supabase type:
 
 - `flutter_app/lib/services/auth_service.dart` — `AuthService`, with
@@ -79,6 +105,10 @@ it and never see a Supabase type:
 | `profile_screen.dart` | `authService.currentUser`, `authService.signOut()` |
 | `wardrobe_screen.dart` | reads `wardrobeItems` (filled by `loadWardrobeFromBackend`) |
 | `scan_screen.dart` | `saveWardrobeItem(item)` → `wardrobeService.save` + SQLite cache |
+| `outfit_builder_screen.dart` | `saveOutfit(SavedOutfit)` → `outfit_looks` |
+| `favorites_screen.dart` | `savedOutfits` filtered on `favorite` |
+| `weekly_planner.dart` | `savePlannerEntry` / `deletePlannerEntry` → `planner_entries` |
+| `home_screen.dart` | `TodaysLookSection` reads today's `plannerEntries` row |
 
 `AuthException.message` / `WardrobeException.message` are shown in a SnackBar
 as-is, so the mapping from Supabase's English errors to Indonesian copy lives in
@@ -115,7 +145,7 @@ uuid v4 generated on the device (`logic/ids.dart`), so the id in SQLite equals
    API keys* (older projects call it the **anon** key — same slot, same
    behaviour). That key is public by design; RLS is what protects the data.
    Never ship the `secret` / `service_role` key.
-2. Apply the migrations. Either paste all five files from `migrations/` into the
+2. Apply the migrations. Either paste all six files from `migrations/` into the
    dashboard SQL editor in filename order, or use the CLI:
 
    ```bash
