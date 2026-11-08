@@ -10,6 +10,46 @@ supabase/
   migrations/20261103090000_wardrobe_items.sql  scanned garments + private cutouts bucket
 ```
 
+## Diagram
+
+`erd.drawio` (buka di draw.io / app.diagrams.net) dan `erd.html` (browser, tanpa dependensi)
+menggambarkan skema setelah keempat migrasi. Versi ringkasnya untuk GitHub:
+
+```mermaid
+erDiagram
+  auth_users ||--|| profiles : "trigger on_auth_user_created"
+  auth_users ||--o{ wardrobe_items : "owner_id, cascade"
+  profiles ||--o{ avatars : "avatars/<uid>/"
+  wardrobe_items ||--o{ outfit_looks : "item_ids (planned)"
+  outfit_looks ||--o{ planner_entries : "look_id (planned)"
+
+  profiles {
+    uuid id PK
+    text email
+    text display_name
+    text photo_url
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  wardrobe_items {
+    uuid id PK
+    uuid owner_id FK
+    text name "1..80 chars"
+    text label "18 YOLO labels"
+    text category "Tops|Bottoms|Outerwear|Shoes|Accessories"
+    text color_name
+    text dominant_color "#RRGGBB"
+    smallint formality "1..5"
+    real confidence "0..1"
+    text image_file "local file name"
+    timestamptz created_at
+    timestamptz updated_at
+  }
+```
+
+`auth.users` dan bucket `avatars` dikelola Supabase; `cutouts` sudah pensiun
+(lihat `migrations/20261103091500_wardrobe_local_images.sql`).
+
 ## What the app talks to
 
 Two files import the Supabase SDK, one per concern; screens never import it:
