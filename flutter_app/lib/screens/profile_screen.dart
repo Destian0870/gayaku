@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../navigation.dart';
 import '../services/auth_service.dart';
@@ -16,21 +19,141 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = '';
+  String? _photoUrl;
+  bool _isUploadingPhoto = false;
 
   @override
   void initState() {
     super.initState();
-    // A signed-in user's name comes from the auth backend; the mockup name is
-    // only a fallback for the demo backend.
+    _loadUserProfile();
+  }
+
+  // --- AMBIL DATA PROFIL DARI SUPABASE ---
+  Future<void> _loadUserProfile() async {
     final user = authService.currentUser;
-    _userName = (user?.displayName ?? '').trim().isNotEmpty
-        ? user!.displayName.trim()
-        : (user?.email ?? '').split('@').first;
+    if (user == null) return;
+
+    setState(() {
+      _userName = (user.displayName ?? '').trim().isNotEmpty
+          ? user.displayName!.trim()
+          : (user.email ?? '').split('@').first;
+    });
+
+    try {
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select('display_name, photo_url')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (data != null && mounted) {
+        setState(() {
+          if ((data['display_name'] as String?)?.isNotEmpty ?? false) {
+            _userName = data['display_name'];
+          }
+          _photoUrl = data['photo_url'] as String?;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+    }
+  }
+
+  // --- FUNGSI UNGGAH FOTO DARI GALERI KE SUPABASE STORAGE ---
+  Future<void> _pickAndUploadPhoto() async {
+    final user = authService.currentUser;
+    if (user == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery, // Mengambil foto dari Galeri HP
+        imageQuality: 80,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+      _showSnackBar('Mengunggah foto profil...');
+
+      final file = File(pickedFile.path);
+      final fileExt = pickedFile.path.split('.').last;
+      final filePath = '${user.id}/avatar.$fileExt';
+
+      final supabase = Supabase.instance.client;
+
+      // 1. Upload ke Storage Bucket 'avatars'
+      await supabase.storage.from('avatars').upload(
+            filePath,
+            file,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      // 2. Ambil Public URL
+      final imageUrl = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      // 3. Simpan URL ke Tabel Profiles
+      await supabase.from('profiles').update({
+        'photo_url': imageUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', user.id);
+
+      if (mounted) {
+        setState(() {
+          _photoUrl = imageUrl;
+          _isUploadingPhoto = false;
+        });
+        _showSnackBar('Foto profil berhasil diperbarui!');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+        _showSnackBar('Gagal mengunggah foto profil.');
+      }
+    }
   }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
+  }
+
+  // Widget Tampilan Avatar (Foto Profil / Inisial Nama)
+  Widget _buildAvatarWidget(AppPalette palette, {double size = 72, double fontSize = 32}) {
+    if (_isUploadingPhoto) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: palette.surface,
+        image: (_photoUrl != null && _photoUrl!.isNotEmpty)
+            ? DecorationImage(
+                image: NetworkImage(_photoUrl!),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: (_photoUrl == null || _photoUrl!.isEmpty)
+          ? Center(
+              child: Text(
+                _userName.isNotEmpty ? _userName[0].toUpperCase() : 'I',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: fontSize,
+                  color: palette.accentInk,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -71,33 +194,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Center(
                 child: Stack(
                   children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: palette.surface,
-                      ),
-                      child: Center(
-                        child: Text(
-                          _userName.isNotEmpty
-                              ? _userName[0].toUpperCase()
-                              : 'I',
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 36,
-                            color: palette.accentInk,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildAvatarWidget(palette, size: 80, fontSize: 36),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           Navigator.pop(modalContext);
-                          _showSnackBar('Pilih foto dari galeri...');
+                          await _pickAndUploadPhoto();
                         },
                         child: Container(
                           padding: const EdgeInsets.all(6),
@@ -309,27 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Stack(
                           children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: palette.surface,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  _userName.isNotEmpty
-                                      ? _userName[0].toUpperCase()
-                                      : 'I',
-                                  style: GoogleFonts.bricolageGrotesque(
-                                    fontSize: 32,
-                                    height: 38 / 32,
-                                    color: palette.accentInk,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            _buildAvatarWidget(palette, size: 72, fontSize: 32),
                             Positioned(
                               bottom: 0,
                               right: 0,
@@ -407,10 +491,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 'Apakah Anda yakin ingin keluar dari akun?',
                               ),
                               actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialogContext),
-                                  child: const Text('Batal'),
-                                ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(dialogContext),
                                   child: const Text('Batal'),
