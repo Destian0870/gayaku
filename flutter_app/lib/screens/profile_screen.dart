@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,9 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) return;
 
     setState(() {
-      _userName = (user.displayName ?? '').trim().isNotEmpty
-          ? user.displayName!.trim()
-          : (user.email ?? '').split('@').first;
+      _userName = user.displayName.trim().isNotEmpty
+          ? user.displayName.trim()
+          : user.email.split('@').first;
     });
 
     try {
@@ -83,20 +84,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final supabase = Supabase.instance.client;
 
       // 1. Upload ke Storage Bucket 'avatars'
-      await supabase.storage.from('avatars').upload(
-            filePath,
-            file,
-            fileOptions: const FileOptions(upsert: true),
-          );
+      await supabase.storage
+          .from('avatars')
+          .upload(filePath, file, fileOptions: const FileOptions(upsert: true));
 
       // 2. Ambil Public URL
       final imageUrl = supabase.storage.from('avatars').getPublicUrl(filePath);
 
       // 3. Simpan URL ke Tabel Profiles
-      await supabase.from('profiles').update({
-        'photo_url': imageUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', user.id);
+      await supabase
+          .from('profiles')
+          .update({
+            'photo_url': imageUrl,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', user.id);
 
       if (mounted) {
         setState(() {
@@ -120,7 +122,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Widget Tampilan Avatar (Foto Profil / Inisial Nama)
-  Widget _buildAvatarWidget(AppPalette palette, {double size = 72, double fontSize = 32}) {
+  Widget _buildAvatarWidget(
+    AppPalette palette, {
+    double size = 72,
+    double fontSize = 32,
+  }) {
     if (_isUploadingPhoto) {
       return SizedBox(
         width: size,
