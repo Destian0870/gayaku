@@ -11,7 +11,7 @@ tanpa bisa menunjukkannya.
 Smart Scanner bukan lagi purwarupa: pemisahan latar, klasifikasi pakaian, dan
 pembacaan warna dominan berjalan **di dalam aplikasi (on-device)**. Foto pakaian
 tidak pernah dikirim ke server — aplikasi tidak punya klien HTTP dan manifes
-rilis tidak meminta izin `INTERNET`.
+inferensi tidak butuh jaringan. Izin `INTERNET` tetap ada di manifes rilis, tapi hanya untuk sinkronisasi baris lemari ke Supabase.
 
 ## 2. Alur pipeline (satu slide diagram)
 
@@ -140,7 +140,7 @@ Sampaikan sebelum ditanya:
 |---|---|
 | Kenapa tidak YOLOv8/MediaPipe seperti proposal? | lisensi dan belum ada binding Flutter; ADR-0002 mencatat alternatif yang ditolak |
 | Ini ML asli atau aturan? | pengklasifikasi dilatih sendiri, matting pra-latih, K-Means algoritma klasik |
-| Butuh internet? | tidak; manifes rilis tanpa izin INTERNET |
+| Butuh internet untuk inferensi? | tidak; model jalan di perangkat |
 | Berapa ukuran dan kecepatannya? | 10,7 MB model; latensi belum diukur — sebutkan apa adanya |
 | Bagaimana dievaluasi? | split held-out + confusion matrix + sapuan 16 foto aset + uji di perangkat |
 | Kenapa aksesori salah? | daftar kelas model bootstrap belum memuatnya; katalog menambahkannya |
