@@ -9,6 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:flutter_app/logic/garment_defaults.dart';
 import 'package:flutter_app/logic/scan_pipeline.dart';
+import 'package:flutter_app/navigation.dart';
 import 'package:flutter_app/screens/scan_screen.dart';
 import 'package:flutter_app/state/wardrobe_store.dart';
 
@@ -168,6 +169,48 @@ void main() {
     expect(
       wardrobeItems.value.where((item) => item.subcategory != null),
       isEmpty,
+    );
+  });
+
+  testWidgets('inside the shell, saving returns to the wardrobe instead of '
+      'popping the only route', (tester) async {
+    final went = <int>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: NavScope(
+          go: (index, {initialTab = 0, initialFavoritesOnly = false}) =>
+              went.add(index),
+          child: Scaffold(
+            body: ScanScreen(
+              scanner: (_) async => detectedGarment(),
+              picker: (_) async => onePixelPng,
+              documentsDirectory: () async => temp,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byTooltip('Pilih dari galeri'));
+    await tester.pumpAndSettle();
+
+    final saveButton = find.widgetWithText(FilledButton, 'Simpan ke Wardrobe');
+    await tester.ensureVisible(saveButton);
+    await tester.runAsync(() async {
+      await tester.tap(saveButton);
+      final deadline = DateTime.now().add(const Duration(seconds: 10));
+      while (wardrobeItems.value.every((item) => item.name != 'Kemeja') &&
+          DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+    });
+    await tester.pumpAndSettle();
+
+    expect(
+      went,
+      [1],
+      reason:
+          'a saved scan lands on the wardrobe page, it does not pop the shell',
     );
   });
 }

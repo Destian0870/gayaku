@@ -28,51 +28,46 @@ class WardrobeItemCard extends StatelessWidget {
           ),
         ),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: AppRadius.panel,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: AppRadius.field,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: PlaceholderImage(
-                    imagePath: item.imagePath,
-                    icon: Icons.checkroom_outlined,
-                  ),
+      // Flat tile, same shape as the Recently Added strip on Home: the photo
+      // carries the card, the caption sits on the canvas under it.
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: AppRadius.field,
+              child: SizedBox(
+                width: double.infinity,
+                child: PlaceholderImage(
+                  imagePath: item.imagePath,
+                  icon: Icons.checkroom_outlined,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              item.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.w600,
-                color: palette.ink,
-              ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.w600,
+              color: palette.ink,
             ),
-            const SizedBox(height: 4),
-            Text(
-              item.brand.isEmpty
-                  ? item.category
-                  : '${item.category} • ${item.brand}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.labelMedium!.copyWith(
-                fontWeight: FontWeight.w400,
-                color: palette.inkMuted,
-              ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            item.brand.isEmpty
+                ? item.category
+                : '${item.category} • ${item.brand}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.labelMedium!.copyWith(
+              fontWeight: FontWeight.w400,
+              color: palette.inkMuted,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

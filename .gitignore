@@ -6,3 +6,6 @@ Clothes_Dataset/
 # the repository root (ml_workspace/yolo/.gitignore already covers the ones inside yolo/).
 yolov8*.pt
 /runs/
+# Supabase personal access token. Never commit: it bypasses RLS like the secret key does.
+supabase/.env
+.env

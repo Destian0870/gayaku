@@ -12,7 +12,10 @@ import '../widgets/home_bottom_nav.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.showNav = true});
+
+  /// False inside `NavShell`, which draws the one shared bar.
+  final bool showNav;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -398,7 +401,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             size: 22,
                             color: palette.ink,
                           ),
-                          onPressed: () => Navigator.maybePop(context),
+                          // Inside the shell there is no route to pop:
+                          // the arrow is the way back to home.
+                          onPressed: () => navEmbedded(context)
+                              ? openNavDestination(context, 0)
+                              : Navigator.maybePop(context),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -540,13 +547,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 4,
-                onTap: (index) => openNavDestination(context, index),
+            if (widget.showNav)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: HomeBottomNav(
+                  currentIndex: 4,
+                  onTap: (index) => openNavDestination(context, index),
+                ),
               ),
-            ),
           ],
         ),
       ),
