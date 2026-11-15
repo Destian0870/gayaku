@@ -54,7 +54,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(WardrobeScreen), findsOneWidget);
-    expect(find.text('Kombinasi (0)'), findsOneWidget);
+    expect(find.text('Kombinasi'), findsOneWidget);
     expect(find.text('Favorit'), findsOneWidget);
     expect(find.text('Belum ada favorit tersimpan.'), findsOneWidget);
     expect(

@@ -19,7 +19,10 @@ DateTime _mondayOf(DateTime date) {
 }
 
 class WeeklyPlanner extends StatefulWidget {
-  const WeeklyPlanner({super.key});
+  const WeeklyPlanner({super.key, this.showNav = true});
+
+  /// False inside `NavShell`, which draws the one shared bar.
+  final bool showNav;
 
   @override
   State<WeeklyPlanner> createState() => _WeeklyPlannerState();
@@ -309,13 +312,14 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 3,
-                onTap: (index) => openNavDestination(context, index),
+            if (widget.showNav)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: HomeBottomNav(
+                  currentIndex: 3,
+                  onTap: (index) => openNavDestination(context, index),
+                ),
               ),
-            ),
           ],
         ),
       ),

@@ -21,6 +21,7 @@ class WardrobeScreen extends StatefulWidget {
     this.items,
     this.initialTab = 0,
     this.initialFavoritesOnly = false,
+    this.showNav = true,
   });
 
   /// Overrides the store with a fixed catalog, for tests. Null — the app's
@@ -29,6 +30,9 @@ class WardrobeScreen extends StatefulWidget {
   final List<WardrobeItem>? items;
   final int initialTab;
   final bool initialFavoritesOnly;
+
+  /// False inside `NavShell`, which draws the one shared bar.
+  final bool showNav;
 
   @override
   State<WardrobeScreen> createState() => _WardrobeScreenState();
@@ -51,12 +55,46 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant WardrobeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab) {
+      _tab = widget.initialTab;
+    }
+    if (widget.initialFavoritesOnly != oldWidget.initialFavoritesOnly) {
+      _favoritesOnly = widget.initialFavoritesOnly;
+    }
+  }
+
+  @override
   void dispose() {
     _search.dispose();
     super.dispose();
   }
 
-  bool get _filtering => _occasions.isNotEmpty || _minFormality > 1;
+  bool get _filtering =>
+      _occasions.isNotEmpty ||
+      _minFormality > 1 ||
+      _category != wardrobeCategories.first;
+
+  /// The line under the title: what the list below actually holds, plus the
+  /// filters that are on — a count alone looks wrong once two are active.
+  String _subtitle(List<SavedOutfit> outfits) {
+    if (_tab == 1) {
+      final count = _favoritesOnly
+          ? outfits.where((outfit) => outfit.favorite).length
+          : outfits.length;
+      return 'Total $count kombinasi${_favoritesOnly ? ' favorit' : ''}';
+    }
+    final noun = _category == wardrobeCategories.first
+        ? 'items'
+        : _category.toLowerCase();
+    final filters = <String>[
+      ...(_occasions.toList()..sort()).map((occasion) => occasion.toLowerCase()),
+      if (_minFormality > 1) 'formalitas $_minFormality',
+    ];
+    final suffix = filters.isEmpty ? '' : ' ${filters.join(' ')}';
+    return 'Total ${_visible.length} $noun$suffix';
+  }
 
   Future<void> _openBuilder({SavedOutfit? existing}) async {
     await Navigator.of(context).push(
@@ -75,21 +113,23 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       {for (final item in _catalog) ...item.occasions}.toList()..sort();
 
   Future<void> _openFilters() async {
-    final result =
-        await showModalBottomSheet<({Set<String> occasions, int minFormality})>(
-          context: context,
-          backgroundColor: AppColors.of(context).sheet,
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
-          builder: (context) => _FilterSheet(
-            occasions: _availableOccasions,
-            selected: _occasions,
-            minFormality: _minFormality,
-          ),
-        );
+    final result = await showModalBottomSheet<
+        ({Set<String> occasions, int minFormality, String category})>(
+      context: context,
+      backgroundColor: AppColors.of(context).sheet,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+      builder: (context) => _FilterSheet(
+        occasions: _availableOccasions,
+        selected: _occasions,
+        minFormality: _minFormality,
+        category: _category,
+      ),
+    );
     if (result == null) return;
     setState(() {
       _occasions = result.occasions;
       _minFormality = result.minFormality;
+      _category = result.category;
     });
   }
 
@@ -200,15 +240,22 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _Header(itemCount: _catalog.length),
-                    const SizedBox(height: 16),
-                    ValueListenableBuilder(
+                    ValueListenableBuilder<List<SavedOutfit>>(
                       valueListenable: savedOutfits,
-                      builder: (context, outfits, _) => _TabToggle(
-                        tab: _tab,
-                        outfitCount: outfits.length,
-                        onChanged: (t) => setState(() => _tab = t),
+                      builder: (context, outfits, _) => _Header(
+                        subtitle: _subtitle(outfits),
+                        // One + for both tabs: scan a garment on the catalog,
+                        // build a combination on the saved ones.
+                        onAdd: _tab == 0
+                            ? () => openNavDestination(context, 2)
+                            : () => _openBuilder(),
+                        addTooltip: _tab == 0 ? 'Add item' : 'Buat Kombinasi',
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    _TabToggle(
+                      tab: _tab,
+                      onChanged: (t) => setState(() => _tab = t),
                     ),
                     const SizedBox(height: 16),
                     if (_tab == 0) ..._catalogTab() else ..._outfitTab(),
@@ -216,13 +263,14 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 1,
-                onTap: (index) => openNavDestination(context, index),
+            if (widget.showNav)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: HomeBottomNav(
+                  currentIndex: 1,
+                  onTap: (index) => openNavDestination(context, index),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -239,11 +287,6 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         filtering: _filtering,
         onQuery: (value) => setState(() => _query = value),
         onFilter: _openFilters,
-      ),
-      const SizedBox(height: 16),
-      _CategoryChips(
-        selected: _category,
-        onSelected: (c) => setState(() => _category = c),
       ),
       const SizedBox(height: 16),
       if (items.isEmpty)
@@ -277,24 +320,6 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
     return [
-      SizedBox(
-        width: double.infinity,
-        child: FilledButton.icon(
-          onPressed: () => _openBuilder(),
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(
-            'Buat Kombinasi',
-            style: textTheme.labelLarge!.copyWith(fontWeight: FontWeight.w600),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: palette.action,
-            foregroundColor: palette.onAction,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: const RoundedRectangleBorder(borderRadius: AppRadius.panel),
-          ),
-        ),
-      ),
-      const SizedBox(height: 16),
       _SavedOutfitFilters(
         favoritesOnly: _favoritesOnly,
         onFavoritesOnlyChanged: (value) =>
@@ -381,9 +406,15 @@ class _SavedOutfitFilters extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.itemCount});
+  const _Header({
+    required this.subtitle,
+    required this.onAdd,
+    required this.addTooltip,
+  });
 
-  final int itemCount;
+  final String subtitle;
+  final VoidCallback onAdd;
+  final String addTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +435,7 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Total $itemCount items',
+                subtitle,
                 style: textTheme.labelLarge!.copyWith(
                   fontWeight: FontWeight.w500,
                   color: palette.inkMuted,
@@ -414,8 +445,8 @@ class _Header extends StatelessWidget {
           ),
         ),
         IconButton(
-          tooltip: 'Add item',
-          onPressed: () => openNavDestination(context, 2),
+          tooltip: addTooltip,
+          onPressed: onAdd,
           icon: const Icon(Icons.add, size: 22),
           color: palette.ink,
           style: IconButton.styleFrom(
@@ -430,14 +461,9 @@ class _Header extends StatelessWidget {
 
 /// Segmented switch between the catalog and the saved combinations.
 class _TabToggle extends StatelessWidget {
-  const _TabToggle({
-    required this.tab,
-    required this.outfitCount,
-    required this.onChanged,
-  });
+  const _TabToggle({required this.tab, required this.onChanged});
 
   final int tab;
-  final int outfitCount;
   final ValueChanged<int> onChanged;
 
   @override
@@ -445,15 +471,37 @@ class _TabToggle extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final palette = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.all(4),
+      height: 40,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: palette.sheet,
         borderRadius: AppRadius.panel,
       ),
-      child: Row(
+      // One indicator slides between the halves instead of two segments
+      // repainting their own fill, so the switch reads as one control.
+      child: Stack(
         children: [
-          _segment(palette, textTheme, 'Katalog', 0),
-          _segment(palette, textTheme, 'Kombinasi ($outfitCount)', 1),
+          AnimatedAlign(
+            alignment: tab == 0 ? Alignment.centerLeft : Alignment.centerRight,
+            duration: AppMotion.route,
+            curve: Curves.easeOutCubic,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              heightFactor: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: palette.action,
+                  borderRadius: AppRadius.chip,
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              _segment(palette, textTheme, 'Katalog', 0),
+              _segment(palette, textTheme, 'Kombinasi', 1),
+            ],
+          ),
         ],
       ),
     );
@@ -469,21 +517,15 @@ class _TabToggle extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () => onChanged(index),
-        child: AnimatedContainer(
-          duration: AppMotion.state,
-          curve: Curves.easeInOut,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: active ? palette.action : palette.canvas,
-            borderRadius: AppRadius.chip,
-          ),
-          child: Text(
-            label,
-            style: textTheme.labelLarge!.copyWith(
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: AppMotion.state,
+            style: textTheme.labelMedium!.copyWith(
               fontWeight: FontWeight.w600,
               color: active ? palette.onAction : palette.inkMuted,
             ),
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ),
       ),
@@ -620,18 +662,42 @@ class _SavedOutfitCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  meets
-                      ? 'Memenuhi batas $threshold%'
-                      : 'Di bawah batas $threshold%',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.labelMedium!.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: palette.inkMuted,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Same number as before, now with a bar so the gap to the
+                    // threshold is visible instead of being mental arithmetic.
+                    ClipRRect(
+                      borderRadius: AppRadius.pill,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0, end: percent / 100),
+                        duration: AppMotion.hero,
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) => LinearProgressIndicator(
+                          value: value,
+                          minHeight: 6,
+                          backgroundColor: palette.surfaceMuted,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            meets ? palette.action : palette.accentInk,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      meets
+                          ? 'Memenuhi batas $threshold%'
+                          : 'Di bawah batas $threshold%',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.labelMedium!.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: palette.inkMuted,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -642,7 +708,7 @@ class _SavedOutfitCard extends StatelessWidget {
   }
 }
 
-class _SearchRow extends StatelessWidget {
+class _SearchRow extends StatefulWidget {
   const _SearchRow({
     required this.controller,
     required this.filtering,
@@ -656,18 +722,45 @@ class _SearchRow extends StatelessWidget {
   final VoidCallback onFilter;
 
   @override
+  State<_SearchRow> createState() => _SearchRowState();
+}
+
+class _SearchRowState extends State<_SearchRow> {
+  // The ring is the only cue that the field has the keyboard, so it has to
+  // follow focus rather than a tap.
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChanged() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
     return Row(
       children: [
         Expanded(
-          child: Container(
+          child: AnimatedContainer(
+            duration: AppMotion.state,
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: palette.sheet,
               borderRadius: AppRadius.hero,
+              border: Border.all(
+                color: _focus.hasFocus ? palette.accentInk : palette.sheet,
+              ),
             ),
             child: Row(
               children: [
@@ -675,9 +768,10 @@ class _SearchRow extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    controller: controller,
+                    controller: widget.controller,
+                    focusNode: _focus,
                     textInputAction: TextInputAction.search,
-                    onChanged: onQuery,
+                    onChanged: widget.onQuery,
                     style: textTheme.labelLarge!.copyWith(
                       fontWeight: FontWeight.w500,
                       color: palette.ink,
@@ -693,16 +787,22 @@ class _SearchRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (controller.text.isNotEmpty)
-                  IconButton(
-                    tooltip: 'Clear search',
-                    onPressed: () {
-                      controller.clear();
-                      onQuery('');
-                    },
-                    icon: const Icon(Icons.close, size: 18),
-                    color: palette.inkMuted,
-                  ),
+                // Fades in only when there is something to clear.
+                AnimatedSwitcher(
+                  duration: AppMotion.state,
+                  child: widget.controller.text.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          key: const ValueKey('clear'),
+                          tooltip: 'Clear search',
+                          onPressed: () {
+                            widget.controller.clear();
+                            widget.onQuery('');
+                          },
+                          icon: const Icon(Icons.close, size: 18),
+                          color: palette.inkMuted,
+                        ),
+                ),
               ],
             ),
           ),
@@ -710,11 +810,11 @@ class _SearchRow extends StatelessWidget {
         const SizedBox(width: 12),
         IconButton(
           tooltip: 'Filter',
-          onPressed: onFilter,
+          onPressed: widget.onFilter,
           icon: const Icon(Icons.tune, size: 22),
-          color: filtering ? palette.onAction : palette.ink,
+          color: widget.filtering ? palette.onAction : palette.ink,
           style: IconButton.styleFrom(
-            backgroundColor: filtering ? palette.action : palette.sheet,
+            backgroundColor: widget.filtering ? palette.action : palette.sheet,
             minimumSize: const Size(52, 52),
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.pill),
           ),
@@ -730,11 +830,13 @@ class _FilterSheet extends StatefulWidget {
     required this.occasions,
     required this.selected,
     required this.minFormality,
+    required this.category,
   });
 
   final List<String> occasions;
   final Set<String> selected;
   final int minFormality;
+  final String category;
 
   @override
   State<_FilterSheet> createState() => _FilterSheetState();
@@ -743,13 +845,16 @@ class _FilterSheet extends StatefulWidget {
 class _FilterSheetState extends State<_FilterSheet> {
   late Set<String> _selected = {...widget.selected};
   late int _minFormality = widget.minFormality;
+  late String _category = widget.category;
 
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
     return SafeArea(
-      child: Padding(
+      // Category + occasions + formality outgrew a short screen, so the
+      // sheet scrolls instead of clipping its own buttons.
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -772,6 +877,27 @@ class _FilterSheetState extends State<_FilterSheet> {
                 fontWeight: FontWeight.w700,
                 color: palette.ink,
               ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Kategori',
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w500,
+                color: palette.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final category in wardrobeCategories)
+                  _Chip(
+                    label: category,
+                    selected: _category == category,
+                    onTap: () => setState(() => _category = category),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
             Text(
@@ -839,6 +965,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                     onPressed: () => setState(() {
                       _selected = {};
                       _minFormality = 1;
+                      _category = wardrobeCategories.first;
                     }),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: palette.ink,
@@ -861,7 +988,11 @@ class _FilterSheetState extends State<_FilterSheet> {
                   child: FilledButton(
                     onPressed: () => Navigator.of(
                       context,
-                    ).pop((occasions: _selected, minFormality: _minFormality)),
+                    ).pop((
+                      occasions: _selected,
+                      minFormality: _minFormality,
+                      category: _category,
+                    )),
                     style: FilledButton.styleFrom(
                       backgroundColor: palette.action,
                       foregroundColor: palette.onAction,
@@ -910,7 +1041,7 @@ class _Chip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? palette.action : palette.surfaceMuted,
-          borderRadius: AppRadius.chip,
+          borderRadius: AppRadius.pill,
         ),
         child: Text(
           label,
@@ -919,61 +1050,6 @@ class _Chip extends StatelessWidget {
             color: selected ? palette.onAction : palette.inkMuted,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({required this.selected, required this.onSelected});
-
-  final String selected;
-  final ValueChanged<String> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AppColors.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: wardrobeCategories.length,
-        // Trailing room so the last chip is not flush against the edge when
-        // the row is scrolled all the way right.
-        padding: const EdgeInsets.only(right: 4),
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final label = wardrobeCategories[index];
-          final active = label == selected;
-          return GestureDetector(
-            onTap: () => onSelected(label),
-            child: AnimatedContainer(
-              duration: AppMotion.state,
-              curve: Curves.easeInOut,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: active ? palette.action : palette.surfaceMuted,
-                borderRadius: AppRadius.chip,
-              ),
-              child: Text(
-                label,
-                style:
-                    (active
-                            ? textTheme.labelLarge!.copyWith(
-                                fontWeight: FontWeight.w600,
-                              )
-                            : textTheme.labelLarge!.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ))
-                        .copyWith(
-                          color: active ? palette.onAction : palette.inkMuted,
-                        ),
-              ),
-            ),
-          );
-        },
       ),
     );
   }

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import '../navigation.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -42,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
