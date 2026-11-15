@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/wardrobe.dart';
 import '../navigation.dart';
@@ -22,18 +23,90 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   var selectedFilter = 'All';
   var selectedSort = LookSortOption.newest;
 
-  /// The combinations the user starred, rendered with the look cards. Empty
-  /// until something is saved: there is no demo shelf any more.
-  List<Look> get savedLooks => [
-    for (final outfit in savedOutfits.value)
-      if (outfit.favorite) lookFromOutfit(outfit, wardrobeItems.value),
-  ];
+  List<Look>? _remoteLooks;
+  bool _isLoading = false;
+
+  List<Look> get savedLooks {
+    if (_remoteLooks != null && _remoteLooks!.isNotEmpty) {
+      return _remoteLooks!;
+    }
+    return [
+      for (final outfit in savedOutfits.value)
+        if (outfit.favorite) lookFromOutfit(outfit, wardrobeItems.value),
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
     savedOutfits.addListener(_refresh);
     wardrobeItems.addListener(_refresh);
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    setState(() => _isLoading = true);
+    try {
+      final list = await outfitService.outfits();
+      if (list.isNotEmpty) {
+        savedOutfits.value = list;
+        final favs = list
+            .where((o) => o.favorite)
+            .map((o) => lookFromOutfit(o, wardrobeItems.value))
+            .toList();
+        if (mounted && favs.isNotEmpty) {
+          setState(() {
+            _remoteLooks = favs;
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user != null) {
+        final rows = await client
+            .from('outfit_looks')
+            .select()
+            .eq('owner_id', user.id)
+            .eq('favorite', true)
+            .order('created_at', ascending: false);
+        if (rows.isNotEmpty) {
+          final loaded = rows
+              .map((r) => _mapToLook(r))
+              .toList();
+          if (mounted) {
+            setState(() {
+              _remoteLooks = loaded;
+              _isLoading = false;
+            });
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Look _mapToLook(Map<String, dynamic> map) {
+    final itemIds = [
+      for (final id in (map['item_ids'] as List? ?? const [])) id.toString(),
+    ];
+    final outfit = SavedOutfit(
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? 'Outfit Favorit',
+      itemIds: itemIds,
+      threshold: (map['threshold'] as num?)?.toDouble() ?? 0.6,
+      favorite: true,
+      createdAt: DateTime.tryParse(map['created_at']?.toString() ?? ''),
+    );
+    return lookFromOutfit(outfit, wardrobeItems.value);
   }
 
   void _refresh() {
@@ -85,6 +158,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
     );
     try {
+      if (_remoteLooks != null) {
+        setState(() {
+          _remoteLooks = _remoteLooks!.where((l) => l.id != look.id).toList();
+        });
+      }
+      try {
+        final client = Supabase.instance.client;
+        final user = client.auth.currentUser;
+        if (user != null) {
+          await client
+              .from('outfit_looks')
+              .update({'favorite': false})
+              .eq('id', look.id);
+        }
+      } catch (_) {}
+
       await toggleOutfitFavorite(look.id);
     } on OutfitException catch (e) {
       if (!mounted) return;
@@ -226,7 +315,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       ),
                     ),
                   ),
-                  if (looks.isEmpty)
+                  if (_isLoading && looks.isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (looks.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
                       child: _EmptyLooks(),
@@ -554,7 +650,7 @@ class _EmptyLooks extends StatelessWidget {
             Icon(Icons.favorite_border, size: 28, color: palette.accentInk),
             const SizedBox(height: 14),
             Text(
-              'No favorite looks yet',
+              'Belum ada favorit tersimpan',
               style: GoogleFonts.bricolageGrotesque(
                 fontSize: 20,
                 height: 26 / 20,
@@ -564,7 +660,7 @@ class _EmptyLooks extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Save a complete outfit recommendation to see it here.',
+              'Simpan rekomendasi outfit favorit Anda untuk melihatnya di sini.',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
