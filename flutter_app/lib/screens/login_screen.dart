@@ -28,9 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

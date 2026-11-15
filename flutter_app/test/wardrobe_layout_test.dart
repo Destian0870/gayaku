@@ -60,9 +60,14 @@ void main() {
     expect(nav.width, 320);
 
     debugPrint('nav=$nav search=${tester.getRect(find.byType(TextField))}');
-    debugPrint('firstTile=${tester.getRect(find.byType(WardrobeItemCard).first)}');
+    debugPrint(
+      'firstTile=${tester.getRect(find.byType(WardrobeItemCard).first)}',
+    );
 
-    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -400),
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);

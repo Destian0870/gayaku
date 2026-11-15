@@ -69,9 +69,7 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
   });
 
-  testWidgets('tapping the wardrobe item lands on the catalog', (
-    tester,
-  ) async {
+  testWidgets('tapping the wardrobe item lands on the catalog', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: NavShell()));
     await tester.pumpAndSettle();
 
@@ -79,15 +77,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Katalog'), findsOneWidget);
-    expect(
-      find.text('Total ${wardrobeFixture.length} items'),
-      findsOneWidget,
-    );
+    expect(find.text('Total ${wardrobeFixture.length} items'), findsOneWidget);
   });
 
-  testWidgets('holding the handle drops a menu out of the bar', (
-    tester,
-  ) async {
+  testWidgets('holding the handle drops a menu out of the bar', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: NavShell()));
     await tester.pumpAndSettle();
 
@@ -131,9 +124,6 @@ void main() {
     // The menu is gone and the tap intent won: the catalog, not combinations.
     expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('Katalog'), findsOneWidget);
-    expect(
-      find.text('Total ${wardrobeFixture.length} items'),
-      findsOneWidget,
-    );
+    expect(find.text('Total ${wardrobeFixture.length} items'), findsOneWidget);
   });
 }

@@ -89,7 +89,9 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         ? 'items'
         : _category.toLowerCase();
     final filters = <String>[
-      ...(_occasions.toList()..sort()).map((occasion) => occasion.toLowerCase()),
+      ...(_occasions.toList()..sort()).map(
+        (occasion) => occasion.toLowerCase(),
+      ),
       if (_minFormality > 1) 'formalitas $_minFormality',
     ];
     final suffix = filters.isEmpty ? '' : ' ${filters.join(' ')}';
@@ -113,18 +115,20 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       {for (final item in _catalog) ...item.occasions}.toList()..sort();
 
   Future<void> _openFilters() async {
-    final result = await showModalBottomSheet<
-        ({Set<String> occasions, int minFormality, String category})>(
-      context: context,
-      backgroundColor: AppColors.of(context).sheet,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
-      builder: (context) => _FilterSheet(
-        occasions: _availableOccasions,
-        selected: _occasions,
-        minFormality: _minFormality,
-        category: _category,
-      ),
-    );
+    final result =
+        await showModalBottomSheet<
+          ({Set<String> occasions, int minFormality, String category})
+        >(
+          context: context,
+          backgroundColor: AppColors.of(context).sheet,
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+          builder: (context) => _FilterSheet(
+            occasions: _availableOccasions,
+            selected: _occasions,
+            minFormality: _minFormality,
+            category: _category,
+          ),
+        );
     if (result == null) return;
     setState(() {
       _occasions = result.occasions;
@@ -986,9 +990,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: () => Navigator.of(
-                      context,
-                    ).pop((
+                    onPressed: () => Navigator.of(context).pop((
                       occasions: _selected,
                       minFormality: _minFormality,
                       category: _category,

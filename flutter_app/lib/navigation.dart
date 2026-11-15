@@ -101,10 +101,7 @@ class _NavShellState extends State<NavShell> {
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: _slide,
-                child: KeyedSubtree(
-                  key: ValueKey<int>(_index),
-                  child: _page(),
-                ),
+                child: KeyedSubtree(key: ValueKey<int>(_index), child: _page()),
               ),
             ),
             SafeArea(

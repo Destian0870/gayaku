@@ -40,9 +40,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.of(context).pop();
         return;
       }
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

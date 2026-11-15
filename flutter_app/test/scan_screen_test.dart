@@ -209,7 +209,8 @@ void main() {
     expect(
       went,
       [1],
-      reason: 'a saved scan lands on the wardrobe page, it does not pop the shell',
+      reason:
+          'a saved scan lands on the wardrobe page, it does not pop the shell',
     );
   });
 }
