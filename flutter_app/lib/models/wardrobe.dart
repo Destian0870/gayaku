@@ -105,7 +105,7 @@ class WardrobeItem {
   /// Softmax score the scanner reported, 0..1; null when not scanned.
   final double? confidence;
 
-  /// Short-lived signed URL of the cutout in the private `cutouts` bucket.
+  /// Complete Supabase Storage URL of the cutout, or a local path before upload.
 }
 
 /// Category slots a combination is built from.

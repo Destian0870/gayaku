@@ -178,6 +178,12 @@ class _ScanScreenState extends State<ScanScreen> {
     } on WardrobeException catch (e) {
       // Backend menolak (RLS, sesi habis): jangan pura-pura tersimpan.
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } on Object catch (error, stack) {
+      debugPrint('Wardrobe save failed: $error');
+      debugPrint('$stack');
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Gagal mengunggah dan menyimpan item.')),
+      );
     }
   }
 

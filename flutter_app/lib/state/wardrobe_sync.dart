@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/wardrobe.dart';
 import '../services/wardrobe_service.dart';
 import 'wardrobe_store.dart';
@@ -20,8 +22,9 @@ Future<void> loadWardrobeFromBackend() async {
   if (wardrobeService is DemoWardrobeService) return;
   try {
     wardrobeItems.value = await wardrobeService.items();
-  } catch (_) {
-    // Offline or signed out: keep what the file already holds.
+  } catch (error, stack) {
+    debugPrint('Wardrobe sync failed; keeping local cache: $error');
+    debugPrint('$stack');
   }
 }
 

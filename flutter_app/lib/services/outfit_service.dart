@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../logic/ids.dart';
@@ -63,8 +64,8 @@ class DemoPlannerService implements PlannerService {
 
   @override
   Future<List<PlannerEntry>> entries() async => List.unmodifiable(
-        _entries.values.toList()..sort((a, b) => a.day.compareTo(b.day)),
-      );
+    _entries.values.toList()..sort((a, b) => a.day.compareTo(b.day)),
+  );
 
   @override
   Future<PlannerEntry> save(PlannerEntry entry) async {
@@ -111,12 +112,20 @@ class SupabaseOutfitService implements OutfitService {
 
   @override
   Future<SavedOutfit> save(SavedOutfit outfit) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const OutfitException(
+        'Sesi login tidak ditemukan. Silakan masuk ulang.',
+      );
+    }
+
     final id = outfit.id.isNotEmpty ? outfit.id : newWardrobeItemId();
     final row = await _guard(
       () => _client
           .from(_table)
           .upsert({
             'id': id,
+            'owner_id': userId,
             'name': outfit.name,
             'item_ids': outfit.itemIds,
             'threshold': outfit.threshold,
@@ -129,8 +138,8 @@ class SupabaseOutfitService implements OutfitService {
   }
 
   Future<void> setFavorite(String id, bool favorite) => _guard(
-        () => _client.from(_table).update({'favorite': favorite}).eq('id', id),
-      );
+    () => _client.from(_table).update({'favorite': favorite}).eq('id', id),
+  );
 
   @override
   Future<void> remove(String id) =>
@@ -161,11 +170,19 @@ class SupabasePlannerService implements PlannerService {
 
   @override
   Future<PlannerEntry> save(PlannerEntry entry) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const OutfitException(
+        'Sesi login tidak ditemukan. Silakan masuk ulang.',
+      );
+    }
+
     final row = await _guard(
       () => _client
           .from(_table)
           .upsert({
             'id': newWardrobeItemId(),
+            'owner_id': userId,
             'day': _isoDay(entry.day),
             'outfit_id': entry.outfitId,
             'occasion': entry.occasion,
@@ -178,11 +195,11 @@ class SupabasePlannerService implements PlannerService {
   }
 
   Future<void> setComplete(DateTime day, bool complete) => _guard(
-        () => _client
-            .from(_table)
-            .update({'complete': complete})
-            .eq('day', _isoDay(day)),
-      );
+    () => _client
+        .from(_table)
+        .update({'complete': complete})
+        .eq('day', _isoDay(day)),
+  );
 
   @override
   Future<void> remove(DateTime day) =>
@@ -190,22 +207,22 @@ class SupabasePlannerService implements PlannerService {
 }
 
 SavedOutfit _toOutfit(Map<String, dynamic> row) => SavedOutfit(
-      id: row['id'] as String,
-      name: row['name'] as String? ?? '',
-      itemIds: [
-        for (final id in (row['item_ids'] as List? ?? const [])) id as String,
-      ],
-      threshold: (row['threshold'] as num?)?.toDouble() ?? 0.6,
-      favorite: row['favorite'] as bool? ?? false,
-      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '')?.toLocal(),
-    );
+  id: row['id'] as String,
+  name: row['name'] as String? ?? '',
+  itemIds: [
+    for (final id in (row['item_ids'] as List? ?? const [])) id as String,
+  ],
+  threshold: (row['threshold'] as num?)?.toDouble() ?? 0.6,
+  favorite: row['favorite'] as bool? ?? false,
+  createdAt: DateTime.tryParse(row['created_at'] as String? ?? '')?.toLocal(),
+);
 
 PlannerEntry _toEntry(Map<String, dynamic> row) => PlannerEntry(
-      day: DateTime.parse(row['day'] as String),
-      outfitId: row['outfit_id'] as String,
-      occasion: row['occasion'] as String? ?? '',
-      complete: row['complete'] as bool? ?? false,
-    );
+  day: DateTime.parse(row['day'] as String),
+  outfitId: row['outfit_id'] as String,
+  occasion: row['occasion'] as String? ?? '',
+  complete: row['complete'] as bool? ?? false,
+);
 
 String _isoDay(DateTime day) =>
     '${day.year.toString().padLeft(4, '0')}-'
@@ -244,7 +261,11 @@ OutfitService get outfitService {
     try {
       final client = sb.Supabase.instance.client;
       _outfits = SupabaseOutfitService(client);
-    } catch (_) {}
+    } catch (error, stack) {
+      // Supabase was not initialized, so keep the explicit demo backend.
+      debugPrint('Supabase outfit service unavailable: $error');
+      debugPrint('$stack');
+    }
   }
   return _outfits;
 }

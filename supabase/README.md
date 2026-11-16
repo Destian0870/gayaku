@@ -46,7 +46,7 @@ erDiagram
     text dominant_color "#RRGGBB"
     smallint formality "1..5"
     real confidence "0..1"
-    text image_file "local file name"
+    text image_url "public Supabase Storage URL"
     timestamptz created_at
     timestamptz updated_at
   }
@@ -76,8 +76,8 @@ so planning the same day twice updates the row instead of stacking duplicates.
 Empty tables mean empty screens: nothing in the app invents a garment, a look or
 a plan.
 
-`auth.users` dan bucket `avatars` dikelola Supabase; `cutouts` sudah pensiun
-(lihat `migrations/20261103091500_wardrobe_local_images.sql`).
+`auth.users` dan bucket `avatars` dikelola Supabase. Bucket `cutouts` menyimpan
+PNG hasil scan di bawah folder UID pemilik.
 
 ## What the app talks to
 
@@ -90,9 +90,9 @@ it and never see a Supabase type:
   compiled in. `main()` installs it before the first frame.
 - `flutter_app/lib/services/wardrobe_service.dart` — `WardrobeService`
   (`items()`, `save(WardrobeItem)`, `add(ScanResult)`, `remove(id)`), with the
-  same Demo/Supabase pair. `SupabaseWardrobeService` writes the cutout PNG to
-  the app's documents folder (`cutouts/`, migration `20261103091500`) and
-  inserts only the file name into `image_file`.
+  same Demo/Supabase pair. `SupabaseWardrobeService` uploads the cutout PNG to
+  `cutouts/<uid>/<filename>.png`, calls `getPublicUrl`, and stores the complete
+  URL in `image_url`.
 - `flutter_app/lib/state/wardrobe_sync.dart` — the seam between the two
   backends: `loadWardrobeFromBackend()`, called from `main()`, fills the
   `wardrobeItems` notifier from Supabase, and `saveWardrobeItem(item)` writes
@@ -175,9 +175,9 @@ uuid v4 generated on the device (`logic/ids.dart`), so the id in SQLite equals
 - In the SQL editor, `select * from profiles;` as the `anon` role returns
   nothing — that is RLS working, not a bug.
 - A scan shows up in *Table Editor → wardrobe_items* with `label`,
-  `category`, `subcategory`, `occasions`, `dominant_color` and `confidence`
-  filled. The PNG stays on the phone: `image_file` is a bare file name and the
-  bucket `cutouts` no longer exists.
+  `category`, `subcategory`, `occasions`, `dominant_color`, `confidence`, and
+  an `image_url` beginning with `https://`. The matching PNG is visible under
+  the owner's UID in *Storage → cutouts*.
 
 ## Not covered yet
 

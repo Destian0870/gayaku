@@ -42,14 +42,19 @@ Future<void> main() async {
         url: _supabaseUrl,
         publishableKey: _supabaseKey,
       );
+
+      debugPrint(
+        'Supabase user at startup: ${Supabase.instance.client.auth.currentUser?.id}',
+      );
+
       final client = Supabase.instance.client;
       useAuthService(SupabaseAuthService(client));
       useWardrobeService(SupabaseWardrobeService(client));
       useOutfitService(SupabaseOutfitService(client));
       usePlannerService(SupabasePlannerService(client));
-    } catch (_) {
-      // Wrong URL or no network at launch: demo services keep the UI usable
-      // instead of leaving the splash screen up forever.
+    } catch (error, stack) {
+      debugPrint('Supabase initialization failed; using demo services: $error');
+      debugPrint('$stack');
     }
   }
 

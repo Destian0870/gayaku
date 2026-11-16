@@ -24,8 +24,7 @@ abstract class WardrobeService {
   /// Owner's items, newest scan first.
   Future<List<WardrobeItem>> items();
 
-  /// Stores what the scanner review screen built. The cutout PNG is already on
-  /// the device; only its file name reaches Postgres.
+  /// Stores what the scanner review screen built, including its cutout image.
   Future<WardrobeItem> save(WardrobeItem item);
 
   /// Stores a bare [ScanResult], writing its PNG first. Kept for callers that
@@ -75,8 +74,8 @@ class DemoWardrobeService implements WardrobeService {
       _items.removeWhere((item) => item.id == id);
 }
 
-/// Postgres only. `wardrobe_items` holds the scan metadata plus the file name
-/// of the cutout, which lives in this device's documents dir.
+/// Postgres and Supabase Storage. `wardrobe_items.image_url` is always the
+/// complete public URL of the corresponding object in `cutouts`.
 class SupabaseWardrobeService implements WardrobeService {
   SupabaseWardrobeService(this._client);
 
@@ -90,12 +89,23 @@ class SupabaseWardrobeService implements WardrobeService {
     final rows = await _guard(
       () => _client.from(_table).select().order('created_at', ascending: false),
     );
-    final dir = await _cutoutDir();
-    return rows.map((row) => _toItem(row, dir)).toList();
+    final userId = _client.auth.currentUser?.id;
+    return Future.wait(
+      rows.map(
+        (row) => _restoreLegacyImage(Map<String, dynamic>.from(row), userId),
+      ),
+    );
   }
 
   @override
   Future<WardrobeItem> save(WardrobeItem item) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const WardrobeException(
+        'Sesi login tidak ditemukan. Silakan masuk ulang.',
+      );
+    }
+    final imageUrl = await _uploadImage(item.imagePath, userId);
     final row = await _guard(
       () => _client
           .from(_table)
@@ -115,12 +125,12 @@ class SupabaseWardrobeService implements WardrobeService {
                 ? defaultOccasions(item.category)
                 : item.occasions,
             'confidence': item.confidence,
-            'image_file': _basename(item.imagePath),
+            'image_url': imageUrl,
           })
           .select()
           .single(),
     );
-    return _toItem(row, await _cutoutDir());
+    return _toItem(row);
   }
 
   @override
@@ -156,18 +166,61 @@ class SupabaseWardrobeService implements WardrobeService {
   @override
   Future<void> remove(String id) async {
     final row = await _guard(
-      () =>
-          _client.from(_table).select('image_file').eq('id', id).maybeSingle(),
+      () => _client.from(_table).select('image_url').eq('id', id).maybeSingle(),
     );
     await _guard(() => _client.from(_table).delete().eq('id', id));
 
-    final file = row?['image_file'] as String?;
-    if (file != null && file.isNotEmpty) {
-      File('${await _cutoutDir()}/$file').delete().ignore();
+    final imageUrl = row?['image_url'] as String?;
+    final storagePath = _storagePathFromUrl(imageUrl);
+    if (storagePath != null) {
+      await _storageGuard(
+        () => _client.storage.from(_bucket).remove([storagePath]),
+      );
     }
   }
 
-  /// Absolute path of a stored cutout; empty when the row has no file.
+  static const _bucket = 'cutouts';
+
+  Future<String> _uploadImage(String imagePath, String userId) async {
+    final uri = Uri.tryParse(imagePath);
+    final isUrl =
+        uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+    if (imagePath.isEmpty || isUrl) {
+      return imagePath;
+    }
+    final file = File(imagePath);
+    if (!await file.exists()) {
+      throw WardrobeException('File hasil scan tidak ditemukan: $imagePath');
+    }
+    final fileName = _basename(imagePath);
+    final storagePath = '$userId/$fileName';
+    try {
+      await _client.storage
+          .from(_bucket)
+          .upload(
+            storagePath,
+            file,
+            fileOptions: const sb.FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+              contentType: 'image/png',
+            ),
+          );
+      final publicUrl = _client.storage.from(_bucket).getPublicUrl(storagePath);
+      if (!publicUrl.startsWith('https://')) {
+        throw const WardrobeException(
+          'Supabase mengembalikan URL gambar yang tidak valid.',
+        );
+      }
+      return publicUrl;
+    } on sb.StorageException catch (e, stack) {
+      debugPrint('Supabase Storage upload failed ($storagePath): ${e.message}');
+      debugPrint('$stack');
+      throw WardrobeException(_friendly(e.message));
+    }
+  }
+
+  /// Absolute path of a temporary cutout; used only before upload.
   Future<String> _cutoutDir() async {
     final docs = await getApplicationDocumentsDirectory();
     final dir = Directory('${docs.path}/$_dir');
@@ -175,8 +228,56 @@ class SupabaseWardrobeService implements WardrobeService {
     return dir.path;
   }
 
-  WardrobeItem _toItem(Map<String, dynamic> row, String dir) {
-    final file = row['image_file'] as String? ?? '';
+  Future<WardrobeItem> _restoreLegacyImage(
+    Map<String, dynamic> row,
+    String? userId,
+  ) async {
+    final imageUrl = row['image_url'] as String? ?? '';
+    if (imageUrl.isNotEmpty) return _toItem(row);
+
+    final legacyName = row['image_file'] as String? ?? '';
+    if (legacyName.isEmpty) {
+      debugPrint('Wardrobe item ${row['id']} has no image_url.');
+      return _toItem(row);
+    }
+
+    final docs = await getApplicationDocumentsDirectory();
+    final candidates = [
+      '${docs.path}/cutouts/$legacyName',
+      '${docs.path}/garments/$legacyName',
+    ];
+    for (final path in candidates) {
+      if (!await File(path).exists()) continue;
+      if (userId == null) {
+        row['image_url'] = path;
+        return _toItem(row);
+      }
+      try {
+        final restoredUrl = await _uploadImage(path, userId);
+        await _guard(
+          () => _client
+              .from(_table)
+              .update({'image_url': restoredUrl})
+              .eq('id', row['id']),
+        );
+        row['image_url'] = restoredUrl;
+        debugPrint('Restored legacy wardrobe image ${row['id']} from $path');
+      } catch (error, stack) {
+        debugPrint('Could not restore wardrobe image ${row['id']}: $error');
+        debugPrint('$stack');
+        row['image_url'] = path;
+      }
+      return _toItem(row);
+    }
+
+    debugPrint(
+      'Wardrobe item ${row['id']} references missing local image $legacyName.',
+    );
+    return _toItem(row);
+  }
+
+  WardrobeItem _toItem(Map<String, dynamic> row) {
+    final imageUrl = row['image_url'] as String? ?? '';
     final category = row['category'] as String;
     final subcategory = row['subcategory'] as String? ?? '';
     final occasions = (row['occasions'] as List?)?.cast<String>() ?? const [];
@@ -187,7 +288,7 @@ class SupabaseWardrobeService implements WardrobeService {
       category: category,
       subcategory: subcategory.isEmpty ? null : subcategory,
       brand: row['brand'] as String? ?? '',
-      imagePath: file.isEmpty ? '' : '$dir/$file',
+      imagePath: imageUrl,
       colorName: row['color_name'] as String? ?? '',
       color: _hexColor(row['dominant_color'] as String?),
       formality: (row['formality'] as num?)?.toInt() ?? 3,
@@ -202,6 +303,17 @@ class SupabaseWardrobeService implements WardrobeService {
     try {
       return await call();
     } on sb.PostgrestException catch (e) {
+      debugPrint('Supabase database request failed: ${e.message}');
+      throw WardrobeException(_friendly(e.message));
+    }
+  }
+
+  Future<T> _storageGuard<T>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } on sb.StorageException catch (e, stack) {
+      debugPrint('Supabase Storage request failed: ${e.message}');
+      debugPrint('$stack');
       throw WardrobeException(_friendly(e.message));
     }
   }
@@ -211,11 +323,22 @@ class SupabaseWardrobeService implements WardrobeService {
     if (lower.contains('row-level security') || lower.contains('violates')) {
       return 'Tidak diizinkan menyimpan item ini.';
     }
+
     if (lower.contains('jwt') || lower.contains('expired')) {
       return 'Sesi habis, masuk ulang.';
     }
     return message;
   }
+}
+
+String? _storagePathFromUrl(String? value) {
+  if (value == null || value.isEmpty) return null;
+  final uri = Uri.tryParse(value);
+  if (uri == null) return null;
+  final segments = uri.pathSegments;
+  final bucketIndex = segments.indexOf('cutouts');
+  if (bucketIndex == -1 || bucketIndex == segments.length - 1) return null;
+  return segments.sublist(bucketIndex + 1).join('/');
 }
 
 String _name(ScanResult scan, String? override) {
