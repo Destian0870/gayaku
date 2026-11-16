@@ -75,9 +75,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             .eq('favorite', true)
             .order('created_at', ascending: false);
         if (rows.isNotEmpty) {
-          final loaded = rows
-              .map((r) => _mapToLook(r))
-              .toList();
+          final loaded = rows.map((r) => _mapToLook(r)).toList();
           if (mounted) {
             setState(() {
               _remoteLooks = loaded;
@@ -318,9 +316,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   if (_isLoading && looks.isEmpty)
                     const SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     )
                   else if (looks.isEmpty)
                     const SliverFillRemaining(
