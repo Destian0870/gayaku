@@ -808,8 +808,9 @@ Float32List garmentMask(Float32List mask) {
   for (final value in mask) {
     if (value >= 0.5) covered++;
   }
-  if (mask.isEmpty || covered / mask.length >= mattingCoverageFloor)
+  if (mask.isEmpty || covered / mask.length >= mattingCoverageFloor) {
     return mask;
+  }
   return Float32List(mask.length)..fillRange(0, mask.length, 1);
 }
 

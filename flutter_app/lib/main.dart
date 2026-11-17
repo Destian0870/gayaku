@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'screens/home_screen.dart';
+import 'navigation.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/outfit_service.dart';
@@ -85,7 +85,7 @@ class GayakuApp extends StatelessWidget {
               // form while the token is alive made every relaunch look like a logout.
               home: authService.currentUser == null
                   ? const LoginScreen()
-                  : const HomeScreen(),
+                  : const NavShell(),
             );
           },
         );

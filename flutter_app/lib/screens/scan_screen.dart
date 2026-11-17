@@ -14,6 +14,7 @@ import '../models/wardrobe.dart';
 import '../services/wardrobe_service.dart';
 import '../state/wardrobe_store.dart';
 import '../state/wardrobe_sync.dart';
+import '../navigation.dart';
 import '../theme/app_theme.dart';
 
 /// Runs the models over one photo. Injectable so widget tests can drive the
@@ -201,7 +202,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final directory =
           await (widget.documentsDirectory ??
               getApplicationDocumentsDirectory)();
-      final folder = Directory('${directory.path}/garments');
+      final folder = Directory('${directory.path}/$wardrobeCutoutDirName');
       await folder.create(recursive: true);
       for (final draft in _drafts) {
         final id = newWardrobeItemId();
@@ -222,7 +223,14 @@ class _ScanScreenState extends State<ScanScreen> {
           ),
         );
       }
-      navigator.pop();
+      // Inside the shell the scanner is a page, not a pushed route: popping it
+      // would tear down the only route (black screen, and the next back press
+      // leaves the app). Hand the user back to the wardrobe instead.
+      if (navigator.canPop()) {
+        navigator.pop();
+      } else if (mounted) {
+        openNavDestination(context, 1);
+      }
       messenger.showSnackBar(
         SnackBar(content: Text('$label tersimpan di Wardrobe')),
       );
@@ -483,7 +491,10 @@ class _TopBar extends StatelessWidget {
       children: [
         IconButton(
           tooltip: 'Kembali',
-          onPressed: () => Navigator.of(context).pop(),
+          // Inside the shell there is no route to pop: back means home.
+          onPressed: () => navEmbedded(context)
+              ? openNavDestination(context, 0)
+              : Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back, size: 22),
           color: palette.ink,
           style: IconButton.styleFrom(

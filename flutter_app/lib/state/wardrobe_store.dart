@@ -60,6 +60,31 @@ Future<void> addWardrobeItem(WardrobeItem item) async {
   wardrobeItems.value = await _readAll(db);
 }
 
+/// Rewrites the cache to match [remote] exactly: rows the backend no longer
+/// has are dropped, everything else is re-written from the server rows. Without
+/// the delete half an account that once held seeded demo garments keeps showing
+/// them forever — those rows are not on the server.
+Future<void> mirrorWardrobeCache(List<WardrobeItem> remote) async {
+  final db = _requireDb();
+  final ids = [for (final item in remote) item.id];
+  await db.transaction((txn) async {
+    if (ids.isEmpty) {
+      await txn.delete(_table);
+    } else {
+      final marks = List.filled(ids.length, '?').join(',');
+      await txn.delete(_table, where: 'id NOT IN ($marks)', whereArgs: ids);
+    }
+    for (final item in remote) {
+      await txn.insert(
+        _table,
+        _toRow(item),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  });
+  wardrobeItems.value = await _readAll(db);
+}
+
 /// Removes the row with [id]; a missing id is a no-op.
 Future<void> deleteWardrobeItem(String id) async {
   final db = _requireDb();

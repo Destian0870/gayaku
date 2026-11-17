@@ -9,7 +9,7 @@ ADR-0001 keeps inference on-device and ships the models inside the APK. It also 
 The permission buys a shared database, not a server-side model. Nothing in the scan path uploads a photo or asks a server for a label:
 
 - background removal and classification run through `tflite_flutter` on the device;
-- cutouts are written to `<app documents>/cutouts/<uuid>.png`, and only the file name goes into the row;
+- cutouts are written to `<app documents>/garments/<uuid>.png`, and only the file name goes into the row;
 - the only network calls are GoTrue (`/auth/v1`) and PostgREST (`/rest/v1`).
 
 ADR-0001's rule — no model is served over the network — still holds.

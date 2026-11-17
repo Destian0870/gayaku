@@ -105,8 +105,36 @@ class WardrobeItem {
   /// Softmax score the scanner reported, 0..1; null when not scanned.
   final double? confidence;
 
-  /// Short-lived signed URL of the cutout in the private `cutouts` bucket.
+  /// The same garment with some fields replaced; used by the edit sheet.
+  WardrobeItem copyWith({
+    String? name,
+    String? category,
+    String? brand,
+    String? colorName,
+    Color? color,
+    int? formality,
+    List<String>? occasions,
+  }) => WardrobeItem(
+    id: id,
+    name: name ?? this.name,
+    category: category ?? this.category,
+    subcategory: subcategory,
+    imagePath: imagePath,
+    label: label,
+    brand: brand ?? this.brand,
+    colorName: colorName ?? this.colorName,
+    color: color ?? this.color,
+    formality: formality ?? this.formality,
+    occasions: occasions ?? this.occasions,
+    confidence: confidence,
+  );
 }
+
+/// Folder under the app documents dir that holds a scanned garment's cutout
+/// PNG. The scanner writes here and the wardrobe service reads from here; when
+/// they disagreed (`garments` vs `cutouts`) every saved item pointed at a file
+/// that did not exist and the wardrobe showed only its attributes.
+const wardrobeCutoutDirName = 'garments';
 
 /// Category slots a combination is built from.
 const wardrobeSlots = <String>[

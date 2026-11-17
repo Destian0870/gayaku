@@ -15,7 +15,10 @@ import '../widgets/todays_look_card.dart';
 /// Every nav destination opens its own route with a back button, so the whole
 /// bar behaves one way rather than mixing pushed routes with in-place swaps.
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.showNav = true});
+
+  /// False inside `NavShell`, which draws the one shared bar.
+  final bool showNav;
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +63,14 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 0,
-                onTap: (index) => openNavDestination(context, index),
+            if (showNav)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: HomeBottomNav(
+                  currentIndex: 0,
+                  onTap: (index) => openNavDestination(context, index),
+                ),
               ),
-            ),
           ],
         ),
       ),

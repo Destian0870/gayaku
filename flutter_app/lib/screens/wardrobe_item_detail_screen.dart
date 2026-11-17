@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
+import '../services/wardrobe_service.dart';
 import '../state/outfit_store.dart';
 import '../state/wardrobe_store.dart';
+import '../state/wardrobe_sync.dart';
 import '../theme/app_theme.dart';
 import '../widgets/placeholder_image.dart';
 import '../widgets/note.dart';
@@ -11,8 +13,9 @@ import '../widgets/note.dart';
 /// Detail of one wardrobe item plus the pieces it pairs with.
 ///
 /// The ranking comes from [outfitFor] (color harmony, formality, occasion);
-/// saving the suggestion writes a row through the outfit backend.
-class WardrobeItemDetailScreen extends StatelessWidget {
+/// saving the suggestion writes a row through the outfit backend. Editing
+/// upserts the same id; deleting is refused while a combination still lists it.
+class WardrobeItemDetailScreen extends StatefulWidget {
   const WardrobeItemDetailScreen({super.key, required this.item, this.catalog});
 
   final WardrobeItem item;
@@ -21,13 +24,26 @@ class WardrobeItemDetailScreen extends StatelessWidget {
   final List<WardrobeItem>? catalog;
 
   @override
+  State<WardrobeItemDetailScreen> createState() =>
+      _WardrobeItemDetailScreenState();
+}
+
+class _WardrobeItemDetailScreenState extends State<WardrobeItemDetailScreen> {
+  /// The row as it stands now; edits replace it without a round trip.
+  late WardrobeItem _item = widget.item;
+
+  @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final catalog = this.catalog ?? wardrobeItems.value;
-    final matches = outfitFor(item, catalog);
+    final catalog = widget.catalog ?? wardrobeItems.value;
+    final matches = outfitFor(_item, catalog);
     final alternatives =
-        recommendMatches(item, catalog).length - matches.length;
+        recommendMatches(_item, catalog).length - matches.length;
+    final uses = [
+      for (final outfit in savedOutfits.value)
+        if (outfit.itemIds.contains(_item.id)) outfit,
+    ].length;
 
     return Scaffold(
       backgroundColor: palette.canvas,
@@ -37,11 +53,11 @@ class WardrobeItemDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _TopBar(name: item.name),
+              _TopBar(item: _item, onEdit: _edit, onDelete: _delete),
               const SizedBox(height: 16),
-              _Hero(item: item),
+              _Hero(item: _item),
               const SizedBox(height: 16),
-              _AttributeRow(item: item),
+              _AttributeRow(item: _item, uses: uses),
               const SizedBox(height: 24),
               _SectionTitle(
                 title: 'Cocok Dipadukan Dengan',
@@ -66,19 +82,84 @@ class WardrobeItemDetailScreen extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 20),
-              _CombineButton(item: item, matches: matches),
+              _CombineButton(item: _item, matches: matches),
             ],
           ),
         ),
       ),
     );
   }
+
+  Future<void> _edit() async {
+    final edited = await showModalBottomSheet<WardrobeItem>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.of(context).sheet,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+      builder: (_) => _EditSheet(item: _item),
+    );
+    if (edited == null || !mounted) return;
+    try {
+      await saveWardrobeItem(edited);
+      if (!mounted) return;
+      setState(() => _item = edited);
+      showNote(context, 'Perubahan tersimpan');
+    } on WardrobeException catch (e) {
+      if (mounted) showNote(context, e.message);
+    }
+  }
+
+  Future<void> _delete() async {
+    final used = [
+      for (final outfit in savedOutfits.value)
+        if (outfit.itemIds.contains(_item.id)) outfit,
+    ];
+    if (used.isNotEmpty) {
+      showNote(
+        context,
+        'Masih dipakai di ${used.length} kombinasi. Hapus kombinasinya dulu.',
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus baju?'),
+        content: Text('${_item.name} akan dihapus dari lemarimu.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await removeWardrobeItem(_item.id);
+      if (mounted) Navigator.of(context).pop();
+    } on WardrobeException catch (e) {
+      if (mounted) showNote(context, e.message);
+    }
+  }
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.name});
+  const _TopBar({
+    required this.item,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  final String name;
+  final WardrobeItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +180,7 @@ class _TopBar extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            name,
+            item.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleLarge!.copyWith(
@@ -108,7 +189,146 @@ class _TopBar extends StatelessWidget {
             ),
           ),
         ),
+        IconButton(
+          tooltip: 'Edit baju',
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_outlined, size: 20),
+          color: palette.ink,
+          style: IconButton.styleFrom(
+            backgroundColor: palette.sheet,
+            minimumSize: const Size(44, 44),
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          tooltip: 'Hapus baju',
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline, size: 20),
+          color: palette.ink,
+          style: IconButton.styleFrom(
+            backgroundColor: palette.sheet,
+            minimumSize: const Size(44, 44),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// Name, brand and category of one garment. Pops the edited copy.
+class _EditSheet extends StatefulWidget {
+  const _EditSheet({required this.item});
+
+  final WardrobeItem item;
+
+  @override
+  State<_EditSheet> createState() => _EditSheetState();
+}
+
+class _EditSheetState extends State<_EditSheet> {
+  late final TextEditingController _name = TextEditingController(
+    text: widget.item.name,
+  );
+  late final TextEditingController _brand = TextEditingController(
+    text: widget.item.brand,
+  );
+  late String _category = widget.item.category;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _brand.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        20 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Edit baju',
+            style: textTheme.titleLarge!.copyWith(
+              fontWeight: FontWeight.w700,
+              color: palette.ink,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _name,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Nama'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _brand,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Brand (opsional)'),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Kategori',
+            style: textTheme.labelLarge!.copyWith(
+              fontWeight: FontWeight.w500,
+              color: palette.inkMuted,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final slot in wardrobeSlots)
+                ChoiceChip(
+                  label: Text(slot),
+                  selected: _category == slot,
+                  onSelected: (_) => setState(() => _category = slot),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.action,
+                foregroundColor: palette.onAction,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppRadius.panel,
+                ),
+              ),
+              child: const Text('Simpan Perubahan'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _save() {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      showNote(context, 'Nama baju tidak boleh kosong');
+      return;
+    }
+    Navigator.of(context).pop(
+      widget.item.copyWith(
+        name: name,
+        brand: _brand.text.trim(),
+        category: _category,
+      ),
     );
   }
 }
@@ -177,9 +397,12 @@ class _Hero extends StatelessWidget {
 
 /// Color swatch, formality dots and occasion pills for the selected item.
 class _AttributeRow extends StatelessWidget {
-  const _AttributeRow({required this.item});
+  const _AttributeRow({required this.item, this.uses = 0});
 
   final WardrobeItem item;
+
+  /// How many saved combinations list this garment.
+  final int uses;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +444,14 @@ class _AttributeRow extends StatelessWidget {
           label: 'Formalitas ${item.formality}/5',
         ),
         for (final occasion in item.occasions) _Pill(label: occasion),
+        _Pill(
+          leading: Icon(
+            uses == 0 ? Icons.bookmark_border : Icons.bookmark,
+            size: 14,
+            color: palette.inkMuted,
+          ),
+          label: uses == 0 ? 'Belum dikombinasi' : 'Dipakai di $uses kombinasi',
+        ),
       ],
     );
   }
