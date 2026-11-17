@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,11 +34,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = authService.currentUser;
     if (user == null) return;
 
+    final initialName = user.displayName.trim().isNotEmpty
+        ? user.displayName.trim()
+        : user.email.split('@').first;
+
     setState(() {
-      _userName = user.displayName.trim().isNotEmpty
-          ? user.displayName.trim()
-          : user.email.split('@').first;
+      _userName = initialName;
     });
+    globalUserName.value = initialName; // Sinkronisasi awal state reaktif
 
     try {
       final data = await Supabase.instance.client
@@ -48,16 +51,146 @@ class _ProfileScreenState extends State<ProfileScreen> {
           .maybeSingle();
 
       if (data != null && mounted) {
+        final dbName = data['display_name'] as String?;
+        final fetchedName = (dbName != null && dbName.trim().isNotEmpty)
+            ? dbName.trim()
+            : _userName;
+
         setState(() {
-          if ((data['display_name'] as String?)?.isNotEmpty ?? false) {
-            _userName = data['display_name'];
-          }
+          _userName = fetchedName;
           _photoUrl = data['photo_url'] as String?;
         });
+
+        // Update juga nilai global agar Home langsung mengikuti data dari database
+        globalUserName.value = fetchedName;
       }
     } catch (e) {
       debugPrint('Error loading profile: $e');
     }
+  }
+
+  void _showNotificationsBottomSheet(AppPalette palette, bool isId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: palette.sheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: globalNotificationsEnabled,
+          builder: (context, isEnabled, _) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isId ? 'Pengaturan Notifikasi' : 'Notification Settings',
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: palette.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isId
+                        ? 'Terima pengingat harian untuk mengecek atau merencanakan outfit.'
+                        : 'Receive daily reminders to check or plan your outfits.',
+                    style: TextStyle(fontSize: 13, color: palette.inkMuted),
+                  ),
+                  const SizedBox(height: 24),
+                  SwitchListTile(
+                    title: Text(
+                      isId ? 'Pengingat Harian' : 'Daily Reminder',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: palette.ink,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isId
+                          ? 'Notifikasi pukul 07:00 pagi'
+                          : 'Notification at 07:00 AM',
+                      style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                    ),
+                    value: isEnabled,
+                    activeThumbColor: palette.accent,
+                    onChanged: (val) {
+                      globalNotificationsEnabled.value = val;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDataPrivacyBottomSheet(AppPalette palette, bool isId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: palette.sheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isId ? 'Data & Kebijakan Privasi' : 'Data & Privacy Policy',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: palette.ink,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isId
+                    ? 'Aplikasi ini menjaga kerahasiaan data lemari pakaian dan profil Anda. Seluruh data disimpan secara aman menggunakan sistem penyimpanan lokal dan *cloud*, serta hanya digunakan untuk mendukung fitur rekomendasi OOTD Anda.'
+                    : 'This app protects the confidentiality of your wardrobe and profile data. All data is securely stored using local and cloud storage, and is used solely to support your OOTD recommendation features.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: palette.inkMuted,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: palette.accent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    isId ? 'Mengerti' : 'Got It',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // --- FUNGSI UNGGAH FOTO DARI GALERI KE SUPABASE STORAGE ---
@@ -68,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
-        source: ImageSource.gallery, // Mengambil foto dari Galeri HP
+        source: ImageSource.gallery,
         imageQuality: 80,
       );
 
@@ -275,7 +408,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     try {
                       final updated = await authService.updateDisplayName(name);
                       if (!mounted || !modalContext.mounted) return;
+
                       setState(() => _userName = updated.displayName);
+
+                      // [PENTING] Update nilai global agar Home langsung ikut berubah reaktif!
+                      globalUserName.value = updated.displayName;
+
                       Navigator.pop(modalContext);
                       _showSnackBar('Profil berhasil diperbarui!');
                     } catch (_) {
@@ -296,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // --- MODAL 2: ACCOUNT ---
+  // --- MODAL 2: ACCOUNT & UBAH PASSWORD ---
   void _showAccountBottomSheet(AppPalette palette) {
     showModalBottomSheet(
       context: context,
@@ -350,18 +488,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  Navigator.pop(modalContext);
-                  final email = authService.currentUser?.email ?? '';
-                  if (email.isEmpty) return;
-                  try {
-                    await authService.requestPasswordReset(email);
-                    if (!mounted) return;
-                    _showSnackBar('Tautan ubah kata sandi dikirim ke $email.');
-                  } catch (_) {
-                    if (!mounted) return;
-                    _showSnackBar('Gagal mengirim tautan ubah kata sandi.');
-                  }
+                onTap: () {
+                  Navigator.pop(modalContext); // Tutup account sheet
+                  _showChangePasswordBottomSheet(
+                    palette,
+                  ); // Buka form password baru
                 },
               ),
             ],
@@ -371,185 +502,444 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // --- MODAL FORM INPUT PASSWORD BARU ---
+  void _showChangePasswordBottomSheet(AppPalette palette) {
+    final TextEditingController passwordController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: palette.sheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(modalContext).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ubah Kata Sandi Baru',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: palette.ink,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Masukkan password baru (min. 6 karakter)',
+                  filled: true,
+                  fillColor: palette.canvas,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                style: TextStyle(color: palette.ink, fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: palette.accent,
+                    foregroundColor: palette.onAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () async {
+                    final newPassword = passwordController.text.trim();
+                    if (newPassword.length < 6) {
+                      _showSnackBar('Password minimal 6 karakter.');
+                      return;
+                    }
+                    try {
+                      await authService.updatePassword(newPassword);
+                      if (!mounted || !modalContext.mounted) return;
+                      Navigator.pop(modalContext);
+                      _showSnackBar(
+                        'Kata sandi berhasil diperbarui di database!',
+                      );
+                    } catch (e) {
+                      if (!modalContext.mounted) return;
+                      _showSnackBar('Gagal memperbarui kata sandi: $e');
+                    }
+                  },
+                  child: const Text(
+                    'Simpan Kata Sandi',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- MODAL PREFERENCES (TEMA & BAHASA) ---
+  void _showPreferencesBottomSheet(AppPalette palette) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: palette.sheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalContext) {
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: globalThemeMode,
+          builder: (context, currentTheme, _) {
+            final isDark = currentTheme == ThemeMode.dark;
+            return ValueListenableBuilder<String>(
+              valueListenable: globalLanguage,
+              builder: (context, langCode, _) {
+                final isId = langCode == 'id';
+                return Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isId ? 'Preferensi' : 'Preferences',
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: palette.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pengaturan Tema Gelap / Terang (Midnight vs Midnight Deep)
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: Icon(
+                          Icons.dark_mode_outlined,
+                          color: palette.accentInk,
+                        ),
+                        title: Text(
+                          isId ? 'Mode Gelap Pekat' : 'Deep Dark Mode',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: palette.ink,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isId
+                              ? (isDark
+                                    ? 'Aktif (Midnight Deep)'
+                                    : 'Nonaktif (Midnight Default)')
+                              : (isDark
+                                    ? 'Enabled (Midnight Deep)'
+                                    : 'Disabled (Midnight Default)'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: palette.inkMuted,
+                          ),
+                        ),
+                        value: isDark,
+                        activeThumbColor: palette.accent,
+                        onChanged: (val) {
+                          globalThemeMode.value = val
+                              ? ThemeMode.dark
+                              : ThemeMode.light;
+                        },
+                      ),
+                      const Divider(),
+
+                      // Pengaturan Bahasa
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.language_outlined,
+                          color: palette.accentInk,
+                        ),
+                        title: Text(
+                          isId ? 'Bahasa' : 'Language',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: palette.ink,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isId ? 'Bahasa Indonesia' : 'English',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: palette.inkMuted,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.swap_horiz,
+                          color: palette.inkMuted,
+                        ),
+                        onTap: () {
+                          globalLanguage.value = isId ? 'en' : 'id';
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
 
-    return Scaffold(
-      backgroundColor: palette.canvas,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // --- APP BAR / HEADER ---
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            size: 22,
-                            color: palette.ink,
-                          ),
-                          onPressed: () => Navigator.maybePop(context),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Settings',
-                          style: GoogleFonts.bricolageGrotesque(
-                            fontSize: 20,
-                            height: 26 / 20,
-                            fontWeight: FontWeight.bold,
-                            color: palette.ink,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+    return ValueListenableBuilder<String>(
+      valueListenable: globalLanguage,
+      builder: (context, langCode, _) {
+        final isId = langCode == 'id';
 
-                    // --- PROFILE HEADER ---
-                    Row(
+        return Scaffold(
+          backgroundColor: palette.canvas,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Stack(
+                        // --- APP BAR / HEADER ---
+                        Row(
                           children: [
-                            _buildAvatarWidget(palette, size: 72, fontSize: 32),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () =>
-                                    _showEditProfileBottomSheet(palette),
-                                child: Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: palette.accent,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: palette.canvas,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.edit,
-                                    size: 18,
-                                    color: palette.onAccent,
-                                  ),
-                                ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_back,
+                                size: 22,
+                                color: palette.ink,
                               ),
+                              onPressed: () => Navigator.maybePop(context),
                             ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                            const SizedBox(width: 8),
                             Text(
-                              _userName,
+                              isId ? 'Pengaturan' : 'Settings',
                               style: GoogleFonts.bricolageGrotesque(
-                                fontSize: 32,
-                                height: 38 / 32,
+                                fontSize: 20,
+                                height: 26 / 20,
                                 fontWeight: FontWeight.bold,
                                 color: palette.ink,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              authService.currentUser?.email ?? '',
-                              style: TextStyle(
-                                fontSize: 11,
-                                height: 15 / 11,
-                                color: palette.ink.withValues(alpha: 0.6),
-                              ),
-                            ),
                           ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
+                        const SizedBox(height: 20),
 
-                    // --- SECTION: GENERAL ---
-                    _sectionTitle(palette, 'GENERAL'),
-                    const SizedBox(height: 12),
-                    _settingsTile(
-                      palette,
-                      icon: Icons.person_outline,
-                      title: 'Account',
-                      onTap: () => _showAccountBottomSheet(palette),
-                    ),
-                    const SizedBox(height: 36),
-
-                    // --- TOMBOL LOG OUT ---
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogContext) => AlertDialog(
-                              title: const Text('Konfirmasi Log Out'),
-                              content: const Text(
-                                'Apakah Anda yakin ingin keluar dari akun?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(dialogContext),
-                                  child: const Text('Batal'),
+                        // --- PROFILE HEADER ---
+                        Row(
+                          children: [
+                            Stack(
+                              children: [
+                                _buildAvatarWidget(
+                                  palette,
+                                  size: 72,
+                                  fontSize: 32,
                                 ),
-                                TextButton(
-                                  onPressed: () async {
-                                    await authService.signOut();
-                                    if (!context.mounted) return;
-                                    Navigator.pop(dialogContext);
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen(),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        _showEditProfileBottomSheet(palette),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color: palette.accent,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: palette.canvas,
+                                          width: 2,
+                                        ),
                                       ),
-                                      (route) => false,
-                                    );
-                                  },
-                                  child: Text(
-                                    'Keluar',
-                                    style: TextStyle(color: palette.actionInk),
+                                      child: Icon(
+                                        Icons.edit,
+                                        size: 18,
+                                        color: palette.onAccent,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                        child: Text(
-                          'Log Out',
-                          style: TextStyle(
-                            color: palette.actionInk,
-                            fontSize: 13,
-                            height: 18 / 13,
-                            fontWeight: FontWeight.w600,
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _userName,
+                                  style: GoogleFonts.bricolageGrotesque(
+                                    fontSize: 32,
+                                    height: 38 / 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.ink,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  authService.currentUser?.email ?? '',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    height: 15 / 11,
+                                    color: palette.ink.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+
+                        // --- SECTION: PERSONALIZATION ---
+                        _sectionTitle(
+                          palette,
+                          isId ? 'PERSONALISASI' : 'PERSONALIZATION',
+                        ),
+                        const SizedBox(height: 12),
+                        _settingsTile(
+                          palette,
+                          icon: Icons.tune_rounded,
+                          title: isId ? 'Preferensi' : 'Preferences',
+                          onTap: () => _showPreferencesBottomSheet(palette),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // --- SECTION: GENERAL ---
+                        _sectionTitle(palette, isId ? 'UMUM' : 'GENERAL'),
+                        const SizedBox(height: 12),
+                        _settingsTile(
+                          palette,
+                          icon: Icons.person_outline,
+                          title: isId ? 'Akun' : 'Account',
+                          onTap: () => _showAccountBottomSheet(palette),
+                        ),
+                        const SizedBox(height: 12),
+                        _settingsTile(
+                          palette,
+                          icon: Icons.notifications_outlined,
+                          title: isId ? 'Notifikasi' : 'Notifications',
+                          onTap: () =>
+                              _showNotificationsBottomSheet(palette, isId),
+                        ),
+                        const SizedBox(height: 12),
+                        _settingsTile(
+                          palette,
+                          icon: Icons.lock_outline,
+                          title: isId ? 'Data & Privasi' : 'Data & Privacy',
+                          onTap: () => _showDataPrivacyBottomSheet(
+                            palette,
+                            isId,
+                          ), // <--- Hubungkan ke sini
+                        ),
+                        const SizedBox(height: 36),
+
+                        // --- TOMBOL LOG OUT ---
+                        Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: Text(
+                                    isId
+                                        ? 'Konfirmasi Keluar'
+                                        : 'Confirm Log Out',
+                                  ),
+                                  content: Text(
+                                    isId
+                                        ? 'Apakah Anda yakin ingin keluar dari akun?'
+                                        : 'Are you sure you want to log out?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      child: Text(isId ? 'Batal' : 'Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        await authService.signOut();
+                                        if (!context.mounted) return;
+                                        Navigator.pop(dialogContext);
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginScreen(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      },
+                                      child: Text(
+                                        isId ? 'Keluar' : 'Log Out',
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: Text(
+                              isId ? 'Keluar Akun' : 'Log Out',
+                              style: TextStyle(
+                                color: palette.action,
+                                fontSize: 13,
+                                height: 18 / 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: HomeBottomNav(
+                    currentIndex: 4,
+                    onTap: (index) => openNavDestination(context, index),
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 4,
-                onTap: (index) => openNavDestination(context, index),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
