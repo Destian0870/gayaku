@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,9 +22,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = '';
   String? _photoUrl;
   bool _isUploadingPhoto = false;
-
-  bool _isDarkMode = true; // Sesuai tema gelap aplikasi saat ini
-  String _selectedLanguage = 'Indonesia';
 
   @override
   void initState() {
@@ -120,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: TextStyle(fontSize: 12, color: palette.inkMuted),
                     ),
                     value: isEnabled,
-                    activeColor: palette.accent,
+                    activeThumbColor: palette.accent,
                     onChanged: (val) {
                       globalNotificationsEnabled.value = val;
                     },
@@ -661,7 +658,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         value: isDark,
-                        activeColor: palette.accent,
+                        activeThumbColor: palette.accent,
                         onChanged: (val) {
                           globalThemeMode.value = val
                               ? ThemeMode.dark
