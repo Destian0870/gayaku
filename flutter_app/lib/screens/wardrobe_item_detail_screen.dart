@@ -96,7 +96,7 @@ class _WardrobeItemDetailScreenState extends State<WardrobeItemDetailScreen> {
       isScrollControlled: true,
       backgroundColor: AppColors.of(context).sheet,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
-      builder: (_) => _EditSheet(item: _item),
+      builder: (_) => WardrobeEditSheet(item: _item),
     );
     if (edited == null || !mounted) return;
     try {
@@ -216,16 +216,19 @@ class _TopBar extends StatelessWidget {
 }
 
 /// Name, brand and category of one garment. Pops the edited copy.
-class _EditSheet extends StatefulWidget {
-  const _EditSheet({required this.item});
+///
+/// Shared: the detail page edits one item with it, and the catalog's selection
+/// mode reuses it for a single selected tile.
+class WardrobeEditSheet extends StatefulWidget {
+  const WardrobeEditSheet({super.key, required this.item});
 
   final WardrobeItem item;
 
   @override
-  State<_EditSheet> createState() => _EditSheetState();
+  State<WardrobeEditSheet> createState() => _WardrobeEditSheetState();
 }
 
-class _EditSheetState extends State<_EditSheet> {
+class _WardrobeEditSheetState extends State<WardrobeEditSheet> {
   late final TextEditingController _name = TextEditingController(
     text: widget.item.name,
   );

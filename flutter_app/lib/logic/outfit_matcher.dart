@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../models/wardrobe.dart';
@@ -209,4 +211,83 @@ List<SwapSuggestion> improveOutfit(
   }
   out.sort((a, b) => b.newScore.compareTo(a.newScore));
   return out.take(limit).toList();
+}
+
+/// A whole outfit picked for you: one garment per slot, each the best partner
+/// of the set built so far.
+///
+/// [occasion] keeps only garments that suit that theme; when the theme leaves
+/// fewer than two pieces it is dropped rather than returning nothing.
+/// [random] reshuffles among the top few candidates, so tapping again gives a
+/// different set instead of the same one.
+List<WardrobeItem> autoFillOutfit(
+  List<WardrobeItem> catalog, {
+  String? occasion,
+  Random? random,
+  int pool = 3,
+}) {
+  final themed = occasion == null
+      ? catalog
+      : catalog.where((item) => item.occasions.contains(occasion)).toList();
+  final source = themed.length >= 2 ? themed : catalog;
+  if (source.length < 2) return const [];
+
+  // Anchor: the piece that agrees with most of the rest, so the set grows
+  // around a garment that actually has partners.
+  final anchors = source.toList()
+    ..sort((a, b) => _agreement(b, source).compareTo(_agreement(a, source)));
+  final picked = <WardrobeItem>[_choose(anchors, random, pool)];
+
+  for (final slot in wardrobeSlots) {
+    if (picked.any((item) => item.category == slot)) continue;
+    final scored =
+        source
+            .where((item) => item.category == slot)
+            .map((item) => (item: item, score: _fits(picked, item)))
+            .where((candidate) => candidate.score > 0)
+            .toList()
+          ..sort((a, b) => b.score.compareTo(a.score));
+    if (scored.isEmpty) continue;
+    picked.add(_choose([for (final c in scored) c.item], random, pool));
+  }
+
+  picked.sort(
+    (a, b) => wardrobeSlots
+        .indexOf(a.category)
+        .compareTo(wardrobeSlots.indexOf(b.category)),
+  );
+  return picked;
+}
+
+/// Mean pair score against [others]; a clashing pair counts as 0 so one bad
+/// partner drags the anchor down instead of being skipped.
+double _agreement(WardrobeItem item, List<WardrobeItem> others) {
+  var sum = 0.0;
+  var pairs = 0;
+  for (final other in others) {
+    if (identical(item, other) || item.name == other.name) continue;
+    sum += pairScore(item, other);
+    pairs++;
+  }
+  return pairs == 0 ? 0 : sum / pairs;
+}
+
+/// Total pair score against the set so far; 0 when any pair clashes, which is
+/// what keeps two tops out of one outfit.
+double _fits(List<WardrobeItem> picked, WardrobeItem candidate) {
+  var sum = 0.0;
+  for (final item in picked) {
+    final score = pairScore(item, candidate);
+    if (score == 0) return 0;
+    sum += score;
+  }
+  return sum;
+}
+
+/// Best of the first [pool] ranked candidates; null [random] is the strict
+/// best, a seeded one keeps the choice reproducible.
+WardrobeItem _choose(List<WardrobeItem> ranked, Random? random, int pool) {
+  if (random == null || ranked.length == 1) return ranked.first;
+  final window = ranked.take(pool < 1 ? 1 : pool).toList();
+  return window[random.nextInt(window.length)];
 }
