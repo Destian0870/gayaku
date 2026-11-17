@@ -25,6 +25,7 @@ apply: the notebook reuses this repository's scripts where it can, writes everyt
 | `kaggle_merged_dataset.ipynb` | yes | the Kaggle notebook for the 18-class merged set: merge, train, evaluate, export (no stored outputs) |
 | `kaggle_crops_classifier.ipynb` | yes | the Kaggle notebook for the 12-class worn-garment set: cut crops from Fashionpedia, train, measure per class, export (no stored outputs) |
 | `kaggle_scan_tryout.ipynb` | yes | no training: runs the shipped detector and classifier on photos you upload, prints every score and draws the boxes (no stored outputs) |
+| `kaggle_detect_v2.ipynb` | yes | the CFPD question: two arms trained on the same budget (Fashionpedia only, Fashionpedia + CFPD) measured against the shipped detector on one CFPD test split (no stored outputs) |
 | `dataset/` | no | the ultralytics ImageFolder: `{train,val,test}/<Label>/…`, **symlinks** into the catalogue or the CC0 clone |
 | `runs/` | no | ultralytics training and validation output, including `weights/best.pt` |
 | `artifacts/` | partly | `classes.json`, `classes_merged.json`, `merged_dataset.json`, `report.md`, the CSVs and the confusion-matrix PNGs are worth committing; `*.tflite`, `*.pt` and the zip are ignored |
