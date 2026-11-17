@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,9 +22,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = '';
   String? _photoUrl;
   bool _isUploadingPhoto = false;
-
-  bool _isDarkMode = true; // Sesuai tema gelap aplikasi saat ini
-  String _selectedLanguage = 'Indonesia';
 
   @override
   void initState() {
@@ -55,15 +52,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (data != null && mounted) {
         final dbName = data['display_name'] as String?;
-        final fetchedName = (dbName != null && dbName.trim().isNotEmpty) 
-            ? dbName.trim() 
+        final fetchedName = (dbName != null && dbName.trim().isNotEmpty)
+            ? dbName.trim()
             : _userName;
 
         setState(() {
           _userName = fetchedName;
           _photoUrl = data['photo_url'] as String?;
         });
-        
+
         // Update juga nilai global agar Home langsung mengikuti data dari database
         globalUserName.value = fetchedName;
       }
@@ -99,13 +96,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isId 
-                      ? 'Terima pengingat harian untuk mengecek atau merencanakan outfit.' 
-                      : 'Receive daily reminders to check or plan your outfits.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: palette.inkMuted,
-                    ),
+                    isId
+                        ? 'Terima pengingat harian untuk mengecek atau merencanakan outfit.'
+                        : 'Receive daily reminders to check or plan your outfits.',
+                    style: TextStyle(fontSize: 13, color: palette.inkMuted),
                   ),
                   const SizedBox(height: 24),
                   SwitchListTile(
@@ -117,14 +111,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     subtitle: Text(
-                      isId ? 'Notifikasi pukul 07:00 pagi' : 'Notification at 07:00 AM',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: palette.inkMuted,
-                      ),
+                      isId
+                          ? 'Notifikasi pukul 07:00 pagi'
+                          : 'Notification at 07:00 AM',
+                      style: TextStyle(fontSize: 12, color: palette.inkMuted),
                     ),
                     value: isEnabled,
-                    activeColor: palette.accent,
+                    activeThumbColor: palette.accent,
                     onChanged: (val) {
                       globalNotificationsEnabled.value = val;
                     },
@@ -415,9 +408,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     try {
                       final updated = await authService.updateDisplayName(name);
                       if (!mounted || !modalContext.mounted) return;
-                      
+
                       setState(() => _userName = updated.displayName);
-                      
+
                       // [PENTING] Update nilai global agar Home langsung ikut berubah reaktif!
                       globalUserName.value = updated.displayName;
 
@@ -441,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-// --- MODAL 2: ACCOUNT & UBAH PASSWORD ---
+  // --- MODAL 2: ACCOUNT & UBAH PASSWORD ---
   void _showAccountBottomSheet(AppPalette palette) {
     showModalBottomSheet(
       context: context,
@@ -497,7 +490,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(modalContext); // Tutup account sheet
-                  _showChangePasswordBottomSheet(palette); // Buka form password baru
+                  _showChangePasswordBottomSheet(
+                    palette,
+                  ); // Buka form password baru
                 },
               ),
             ],
@@ -580,7 +575,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       await authService.updatePassword(newPassword);
                       if (!mounted || !modalContext.mounted) return;
                       Navigator.pop(modalContext);
-                      _showSnackBar('Kata sandi berhasil diperbarui di database!');
+                      _showSnackBar(
+                        'Kata sandi berhasil diperbarui di database!',
+                      );
                     } catch (e) {
                       if (!modalContext.mounted) return;
                       _showSnackBar('Gagal memperbarui kata sandi: $e');
@@ -599,7 +596,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
- // --- MODAL PREFERENCES (TEMA & BAHASA) ---
+  // --- MODAL PREFERENCES (TEMA & BAHASA) ---
   void _showPreferencesBottomSheet(AppPalette palette) {
     showModalBottomSheet(
       context: context,
@@ -635,7 +632,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Pengaturan Tema Gelap / Terang (Midnight vs Midnight Deep)
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        secondary: Icon(Icons.dark_mode_outlined, color: palette.accentInk),
+                        secondary: Icon(
+                          Icons.dark_mode_outlined,
+                          color: palette.accentInk,
+                        ),
                         title: Text(
                           isId ? 'Mode Gelap Pekat' : 'Deep Dark Mode',
                           style: TextStyle(
@@ -646,14 +646,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         subtitle: Text(
                           isId
-                              ? (isDark ? 'Aktif (Midnight Deep)' : 'Nonaktif (Midnight Default)')
-                              : (isDark ? 'Enabled (Midnight Deep)' : 'Disabled (Midnight Default)'),
-                          style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                              ? (isDark
+                                    ? 'Aktif (Midnight Deep)'
+                                    : 'Nonaktif (Midnight Default)')
+                              : (isDark
+                                    ? 'Enabled (Midnight Deep)'
+                                    : 'Disabled (Midnight Default)'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: palette.inkMuted,
+                          ),
                         ),
                         value: isDark,
-                        activeColor: palette.accent,
+                        activeThumbColor: palette.accent,
                         onChanged: (val) {
-                          globalThemeMode.value = val ? ThemeMode.dark : ThemeMode.light;
+                          globalThemeMode.value = val
+                              ? ThemeMode.dark
+                              : ThemeMode.light;
                         },
                       ),
                       const Divider(),
@@ -661,7 +670,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Pengaturan Bahasa
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(Icons.language_outlined, color: palette.accentInk),
+                        leading: Icon(
+                          Icons.language_outlined,
+                          color: palette.accentInk,
+                        ),
                         title: Text(
                           isId ? 'Bahasa' : 'Language',
                           style: TextStyle(
@@ -672,9 +684,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         subtitle: Text(
                           isId ? 'Bahasa Indonesia' : 'English',
-                          style: TextStyle(fontSize: 12, color: palette.inkMuted),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: palette.inkMuted,
+                          ),
                         ),
-                        trailing: Icon(Icons.swap_horiz, color: palette.inkMuted),
+                        trailing: Icon(
+                          Icons.swap_horiz,
+                          color: palette.inkMuted,
+                        ),
                         onTap: () {
                           globalLanguage.value = isId ? 'en' : 'id';
                         },
@@ -691,7 +709,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     final palette = AppColors.of(context);
 
@@ -744,7 +762,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           children: [
                             Stack(
                               children: [
-                                _buildAvatarWidget(palette, size: 72, fontSize: 32),
+                                _buildAvatarWidget(
+                                  palette,
+                                  size: 72,
+                                  fontSize: 32,
+                                ),
                                 Positioned(
                                   bottom: 0,
                                   right: 0,
@@ -800,7 +822,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 28),
 
                         // --- SECTION: PERSONALIZATION ---
-                        _sectionTitle(palette, isId ? 'PERSONALISASI' : 'PERSONALIZATION'),
+                        _sectionTitle(
+                          palette,
+                          isId ? 'PERSONALISASI' : 'PERSONALIZATION',
+                        ),
                         const SizedBox(height: 12),
                         _settingsTile(
                           palette,
@@ -824,14 +849,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           palette,
                           icon: Icons.notifications_outlined,
                           title: isId ? 'Notifikasi' : 'Notifications',
-                          onTap: () => _showNotificationsBottomSheet(palette, isId),
+                          onTap: () =>
+                              _showNotificationsBottomSheet(palette, isId),
                         ),
                         const SizedBox(height: 12),
                         _settingsTile(
                           palette,
                           icon: Icons.lock_outline,
                           title: isId ? 'Data & Privasi' : 'Data & Privacy',
-                          onTap: () => _showDataPrivacyBottomSheet(palette, isId), // <--- Hubungkan ke sini
+                          onTap: () => _showDataPrivacyBottomSheet(
+                            palette,
+                            isId,
+                          ), // <--- Hubungkan ke sini
                         ),
                         const SizedBox(height: 36),
 
@@ -842,13 +871,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               showDialog(
                                 context: context,
                                 builder: (dialogContext) => AlertDialog(
-                                  title: Text(isId ? 'Konfirmasi Keluar' : 'Confirm Log Out'),
+                                  title: Text(
+                                    isId
+                                        ? 'Konfirmasi Keluar'
+                                        : 'Confirm Log Out',
+                                  ),
                                   content: Text(
-                                    isId ? 'Apakah Anda yakin ingin keluar dari akun?' : 'Are you sure you want to log out?',
+                                    isId
+                                        ? 'Apakah Anda yakin ingin keluar dari akun?'
+                                        : 'Are you sure you want to log out?',
                                   ),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(dialogContext),
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
                                       child: Text(isId ? 'Batal' : 'Cancel'),
                                     ),
                                     TextButton(
@@ -867,7 +903,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       },
                                       child: Text(
                                         isId ? 'Keluar' : 'Log Out',
-                                        style: const TextStyle(color: Colors.red),
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
                                   ],

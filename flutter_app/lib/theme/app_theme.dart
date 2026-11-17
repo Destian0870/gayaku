@@ -248,6 +248,10 @@ abstract final class AppMotion {
 }
 
 // --- STATE GLOBAL REAKTIF UNTUK PREFERENCES ---
-final ValueNotifier<ThemeMode> globalThemeMode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+final ValueNotifier<ThemeMode> globalThemeMode = ValueNotifier<ThemeMode>(
+  ThemeMode.dark,
+);
 final ValueNotifier<String> globalLanguage = ValueNotifier<String>('id');
-final ValueNotifier<bool> globalNotificationsEnabled = ValueNotifier<bool>(true);
+final ValueNotifier<bool> globalNotificationsEnabled = ValueNotifier<bool>(
+  true,
+);
