@@ -77,37 +77,37 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// navy ground, so the ink role lifts to 4.95 on a card.
   final Color actionInk;
 
-  /// Midnight. The default ground: navy canvas, maroon action, light blue mark.
+  /// Sekarang kita set LIGHT menjadi warna putih / cerah bersih
   static const light = AppPalette(
-    canvas: Color(0xFF101F3C),
+    canvas: Color(0xFFF5F7FA), // Putih/Abu sangat muda (Terang)
+    surface: Color(0xFFFFFFFF), // Kartu putih bersih
+    surfaceMuted: Color(0xFFE4E9F2),
+    sheet: Color(0xFFFFFFFF),
+    accentTint: Color(0xFFD6E4EE),
+    ink: Color(0xFF0C1A31), // Teks gelap agar mudah dibaca di background terang
+    inkMuted: Color(0xFF5A6B82),
+    action: Color(0xFFC63A2E),
+    onAction: Color(0xFFFBEDEC),
+    accent: Color(0xFF2B6CB0),
+    accentInk: Color(0xFF2B6CB0),
+    onAccent: Color(0xFFFFFFFF),
+    actionInk: Color(0xFFC63A2E),
+  );
+
+  /// Dan set DARK menjadi warna navy khas aplikasimu (seperti tampilan awalmu)
+  static const dark = AppPalette(
+    canvas: Color(0xFF101F3C), // Warna navy awal aplikasimu (Gelap)
     surface: Color(0xFF1A2E52),
     surfaceMuted: Color(0xFF223C66),
     sheet: Color(0xFF16294B),
     accentTint: Color(0xFF3A5472),
-    ink: Color(0xFFF1F4FA),
+    ink: Color(0xFFF1F4FA), // Teks putih terang
     inkMuted: Color(0xFFA8B4CB),
     action: Color(0xFFC63A2E),
     onAction: Color(0xFFFBEDEC),
     accent: Color(0xFF96C0CE),
     accentInk: Color(0xFF96C0CE),
     onAccent: Color(0xFF0C1A31),
-    actionInk: Color(0xFFE2836F),
-  );
-
-  /// Midnight Deep. The same roles one step down, for a dark system setting.
-  static const dark = AppPalette(
-    canvas: Color(0xFF0A1428),
-    surface: Color(0xFF131F3A),
-    surfaceMuted: Color(0xFF1B2C4E),
-    sheet: Color(0xFF0E1A31),
-    accentTint: Color(0xFF2A4763),
-    ink: Color(0xFFE9EEF8),
-    inkMuted: Color(0xFF93A2BE),
-    action: Color(0xFFC63A2E),
-    onAction: Color(0xFFFBEDEC),
-    accent: Color(0xFF96C0CE),
-    accentInk: Color(0xFF96C0CE),
-    onAccent: Color(0xFF0A1428),
     actionInk: Color(0xFFE2836F),
   );
 
@@ -246,3 +246,8 @@ abstract final class AppMotion {
   /// Entrance of a hero element.
   static const hero = Duration(milliseconds: 350);
 }
+
+// --- STATE GLOBAL REAKTIF UNTUK PREFERENCES ---
+final ValueNotifier<ThemeMode> globalThemeMode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+final ValueNotifier<String> globalLanguage = ValueNotifier<String>('id');
+final ValueNotifier<bool> globalNotificationsEnabled = ValueNotifier<bool>(true);
