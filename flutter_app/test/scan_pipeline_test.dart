@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -27,6 +28,27 @@ Float32List maskWithBox(int size, int x0, int y0, int x1, int y1) {
     }
   }
   return mask;
+}
+
+/// A detector output tensor of the exported shape, all zeros, with the given anchors filled.
+///
+/// Each entry is `(anchor, centreX, centreY, width, height, scores)` where `scores` maps a
+/// Category index to its score.
+Float32List detectorTensor(
+  List<(int, double, double, double, double, Map<int, double>)> entries,
+) {
+  const attributes = 4 + detectorClassCount;
+  final raw = Float32List(attributes * detectorAnchors);
+  for (final (anchor, cx, cy, w, h, scores) in entries) {
+    raw[anchor] = cx;
+    raw[detectorAnchors + anchor] = cy;
+    raw[detectorAnchors * 2 + anchor] = w;
+    raw[detectorAnchors * 3 + anchor] = h;
+    for (final MapEntry(key: cls, value: score) in scores.entries) {
+      raw[(4 + cls) * detectorAnchors + anchor] = score;
+    }
+  }
+  return raw;
 }
 
 void main() {
@@ -150,6 +172,25 @@ void main() {
       expect(out.sublist(0, 4), [10, 20, 30, 255]);
       // Outside: colour kept but transparent, so colour sampling skips it.
       expect(out.sublist(4, 8), [200, 100, 50, 0]);
+    });
+  });
+
+  group('garmentMask', () {
+    test('leaves a matte that covers something untouched', () {
+      final mask = Float32List.fromList([1, 0.9, 0.1, 0]);
+      expect(garmentMask(mask), mask);
+    });
+
+    test('keeps the whole crop when the matte is empty', () {
+      // A shoe box fills its own crop, U-2-Net returns "nothing salient", and the garment used
+      // to vanish from the carousel because the colour read then had no pixels at all.
+      final mask = Float32List.fromList([0.002, 0, 0, 0]);
+      expect(garmentMask(mask), [1, 1, 1, 1]);
+    });
+
+    test('does not resurrect a matte that keeps a sliver', () {
+      final mask = Float32List.fromList([0.8, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      expect(garmentMask(mask), mask);
     });
   });
 
@@ -292,6 +333,156 @@ void main() {
         () => outputFloats(Uint8List(4), TensorType.uint8),
         throwsA(isA<ScanFailure>()),
       );
+    });
+  });
+
+  group('decodeDetectorOutput', () {
+    test('keeps boxes above the score threshold and drops the rest', () {
+      final raw = detectorTensor([
+        (0, 0.5, 0.5, 0.4, 0.4, {0: 0.9}),
+        (1, 0.2, 0.2, 0.1, 0.1, {3: 0.05}),
+      ]);
+      final boxes = decodeDetectorOutput(raw);
+      expect(boxes, hasLength(1));
+      expect(boxes.single.category, 'Tops');
+      expect(boxes.single.score, closeTo(0.9, 1e-6));
+      expect(boxes.single.box.left, closeTo(0.3, 1e-6));
+      expect(boxes.single.box.bottom, closeTo(0.7, 1e-6));
+    });
+
+    test('collapses two boxes of the same Category into the higher score', () {
+      final raw = detectorTensor([
+        (0, 0.5, 0.5, 0.4, 0.4, {0: 0.6}),
+        (1, 0.5, 0.5, 0.4, 0.4, {0: 0.9}),
+      ]);
+      final boxes = decodeDetectorOutput(raw);
+      expect(boxes, hasLength(1));
+      expect(boxes.single.score, closeTo(0.9, 1e-6));
+    });
+
+    test(
+      'collapses same-Category boxes at the 0.79 overlap seen on a real photo',
+      () {
+        // Two Bottoms boxes over the same lap. IoU is about 0.79, which used to survive and
+        // showed the same trousers twice.
+        final raw = detectorTensor([
+          (0, 0.504, 0.6065, 0.714, 0.307, {1: 0.42}),
+          (1, 0.507, 0.637, 0.72, 0.274, {1: 0.49}),
+        ]);
+        final boxes = decodeDetectorOutput(raw);
+        expect(boxes, hasLength(1));
+        expect(boxes.single.score, closeTo(0.49, 1e-6));
+      },
+    );
+
+    test(
+      'keeps a contained box of a different Category, because layers are real',
+      () {
+        final raw = detectorTensor([
+          (0, 0.5, 0.5, 0.4, 0.4, {2: 0.8}),
+          (1, 0.5, 0.5, 0.2, 0.2, {0: 0.7}),
+        ]);
+        final boxes = decodeDetectorOutput(raw);
+        expect(boxes.map((box) => box.category), ['Outerwear', 'Tops']);
+      },
+    );
+
+    test('orders by area, largest first', () {
+      final raw = detectorTensor([
+        (0, 0.2, 0.2, 0.1, 0.1, {0: 0.9}),
+        (1, 0.6, 0.6, 0.5, 0.5, {1: 0.5}),
+      ]);
+      final boxes = decodeDetectorOutput(raw);
+      expect(boxes.map((box) => box.category), ['Bottoms', 'Tops']);
+    });
+
+    test('refuses a tensor shorter than the exported contract', () {
+      expect(
+        () => decodeDetectorOutput(Float32List(16)),
+        throwsA(isA<ScanFailure>()),
+      );
+    });
+  });
+
+  group('selectScanBoxes', () {
+    test('keeps the six largest', () {
+      final boxes = [
+        for (var i = 1; i <= 8; i++)
+          DetectedBox(
+            box: Rect.fromLTWH(0, 0, i / 10, i / 10),
+            categoryIndex: 0,
+            score: 0.9,
+          ),
+      ];
+      final selected = selectScanBoxes(boxes);
+      expect(selected, hasLength(maxScanItems));
+      expect(selected.first.box.width, closeTo(0.8, 1e-9));
+      expect(selected.last.box.width, closeTo(0.3, 1e-9));
+    });
+  });
+
+  group('boxIou', () {
+    test('is 1 for the same box and 0 for disjoint boxes', () {
+      const a = Rect.fromLTRB(0, 0, 1, 1);
+      expect(boxIou(a, a), closeTo(1.0, 1e-9));
+      expect(boxIou(a, const Rect.fromLTRB(2, 2, 3, 3)), 0);
+    });
+
+    test('measures partial overlap', () {
+      const a = Rect.fromLTRB(0, 0, 2, 2);
+      const b = Rect.fromLTRB(1, 0, 3, 2);
+      expect(boxIou(a, b), closeTo(2 / 6, 1e-9));
+    });
+  });
+
+  group('letterboxDetectorInput', () {
+    test('pads a wide photo top and bottom and keeps its aspect ratio', () {
+      // 40x20 becomes 640x320 centered in the canvas, so 160 rows of grey above and below.
+      final rgba = Uint8List(40 * 20 * 4);
+      for (var i = 0; i < rgba.length; i += 4) {
+        rgba[i] = 200;
+        rgba[i + 1] = 10;
+        rgba[i + 2] = 10;
+        rgba[i + 3] = 255;
+      }
+      final canvas = letterboxDetectorInput(rgba, 40, 20);
+      expect(canvas.contentWidth, detectorInputSize);
+      expect(canvas.contentHeight, 320);
+      expect(canvas.contentLeft, 0);
+      expect(canvas.contentTop, 160);
+
+      int pixelAt(int x, int y) {
+        final index = (y * detectorInputSize + x) * 4;
+        return canvas.rgba[index];
+      }
+
+      expect(pixelAt(10, 0), 114, reason: 'top padding is grey');
+      expect(pixelAt(10, 159), 114, reason: 'still padding one row above');
+      expect(pixelAt(10, 160), 200, reason: 'first content row');
+      expect(pixelAt(639, 479), 200, reason: 'last content row');
+      expect(pixelAt(10, 480), 114, reason: 'bottom padding');
+    });
+
+    test('maps a canvas box back onto the photo it came from', () {
+      final rgba = Uint8List(40 * 20 * 4);
+      final canvas = letterboxDetectorInput(rgba, 40, 20);
+      // A box covering the whole content area is the whole photo.
+      final full = detectorBoxToPhoto(
+        const Rect.fromLTRB(0, 0.25, 1, 0.75),
+        canvas,
+      );
+      expect(full.left, closeTo(0, 1e-9));
+      expect(full.top, closeTo(0, 1e-9));
+      expect(full.right, closeTo(1, 1e-9));
+      expect(full.bottom, closeTo(1, 1e-9));
+
+      // Half the content height, starting at the content's top edge.
+      final half = detectorBoxToPhoto(
+        const Rect.fromLTRB(0, 0.25, 1, 0.5),
+        canvas,
+      );
+      expect(half.top, closeTo(0, 1e-9));
+      expect(half.bottom, closeTo(0.5, 1e-9));
     });
   });
 }
