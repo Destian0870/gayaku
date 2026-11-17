@@ -159,10 +159,8 @@ class SupabaseAuthService implements AuthService {
 
   @override
   Future<void> updatePassword(String newPassword) => _guard(() async {
-        await _client.auth.updateUser(
-          sb.UserAttributes(password: newPassword),
-        );
-      });
+    await _client.auth.updateUser(sb.UserAttributes(password: newPassword));
+  });
 
   @override
   Future<AuthUser> updateDisplayName(String name) => _guard(() async {
