@@ -75,4 +75,31 @@ void main() {
     expect(row.imagePath, '/garments/real-1.png');
     expect(row.color, const Color(0xFFD3A277));
   });
+
+  test('each account gets its own cache file', () async {
+    // One shared wardrobe.db showed the previous account's garments after a
+    // sign-out, so the file name has to carry the owner.
+    expect(
+      wardrobeCacheFileName('user-a'),
+      isNot(wardrobeCacheFileName('user-b')),
+    );
+    expect(wardrobeCacheFileName('user-a'), contains('user-a'));
+    // Signed out (demo mode, tests) keeps the old single file.
+    expect(wardrobeCacheFileName(null), 'wardrobe.db');
+
+    // And a second account opening its own file starts empty, even though the
+    // first account's file is still on disk.
+    await initWardrobeStore(
+      factory: databaseFactoryFfi,
+      path: '${temp.path}/${wardrobeCacheFileName('user-a')}',
+    );
+    await addWardrobeItem(item('a-1'));
+    expect(wardrobeItems.value.map((i) => i.id), ['a-1']);
+
+    await initWardrobeStore(
+      factory: databaseFactoryFfi,
+      path: '${temp.path}/${wardrobeCacheFileName('user-b')}',
+    );
+    expect(wardrobeItems.value, isEmpty);
+  });
 }

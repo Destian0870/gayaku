@@ -32,8 +32,14 @@ Future<void> _queue = Future<void>.value();
 /// Pass [path] (and [factory]) to point the store somewhere else — the tests
 /// run it on `sqflite_common_ffi` against a temp file. Calling it again is
 /// safe: the open connection is closed first and the rows are left alone.
-Future<void> initWardrobeStore({DatabaseFactory? factory, String? path}) {
-  final next = _queue.then((_) => _open(factory: factory, path: path));
+Future<void> initWardrobeStore({
+  DatabaseFactory? factory,
+  String? path,
+  String? userId,
+}) {
+  final next = _queue.then(
+    (_) => _open(factory: factory, path: path, userId: userId),
+  );
   // Keep the chain usable even when one open fails.
   _queue = next.then((_) {}, onError: (Object _) {});
   return next;
@@ -92,8 +98,12 @@ Future<void> deleteWardrobeItem(String id) async {
   wardrobeItems.value = await _readAll(db);
 }
 
-Future<void> _open({DatabaseFactory? factory, String? path}) async {
-  final resolved = path ?? await _documentsPath();
+Future<void> _open({
+  DatabaseFactory? factory,
+  String? path,
+  String? userId,
+}) async {
+  final resolved = path ?? await _documentsPath(userId);
   await _ensureParent(resolved);
 
   final previous = _db;
@@ -111,9 +121,16 @@ Future<void> _open({DatabaseFactory? factory, String? path}) async {
   wardrobeItems.value = await _readAll(db);
 }
 
-Future<String> _documentsPath() async {
+/// The cache file for [userId]. One file per account: a single shared
+/// `wardrobe.db` kept the previous user's garments on screen after a sign-out,
+/// because nothing mirrored them away until the next sync succeeded.
+String wardrobeCacheFileName(String? userId) =>
+    (userId == null || userId.isEmpty) ? _dbFileName : 'wardrobe-$userId.db';
+
+Future<String> _documentsPath(String? userId) async {
   final dir = await getApplicationDocumentsDirectory();
-  return '${dir.path}${Platform.pathSeparator}$_dbFileName';
+  return '${dir.path}${Platform.pathSeparator}'
+      '${wardrobeCacheFileName(userId)}';
 }
 
 /// sqflite will not create the folder, and a fresh install has none.
