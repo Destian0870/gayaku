@@ -69,16 +69,27 @@ class GayakuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gayaku',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      // A stored session still starts on its own: opening the app on the login
-      // form while the token is alive made every relaunch look like a logout.
-      home: authService.currentUser == null
-          ? const LoginScreen()
-          : const NavShell(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: globalThemeMode,
+      builder: (context, currentMode, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: globalLanguage,
+          builder: (context, langCode, _) {
+            return MaterialApp(
+              title: 'Gayaku',
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: currentMode,
+              locale: Locale(langCode),
+              // A stored session still starts on its own: opening the app on the login
+              // form while the token is alive made every relaunch look like a logout.
+              home: authService.currentUser == null
+                  ? const LoginScreen()
+                  : const NavShell(),
+            );
+          },
+        );
+      },
     );
   }
 }

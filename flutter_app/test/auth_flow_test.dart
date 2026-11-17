@@ -34,6 +34,10 @@ class _FailingAuthService implements AuthService {
   @override
   Future<AuthUser> updateDisplayName(String name) async =>
       throw const AuthException('Sesi habis, masuk ulang.');
+
+  @override
+  Future<void> updatePassword(String newPassword) async =>
+      throw const AuthException('Sesi habis, masuk ulang.');
 }
 
 void main() {
@@ -96,12 +100,18 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: ProfileScreen()));
     expect(find.text('isabella'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Log Out'));
-    await tester.tap(find.text('Log Out'));
-    await tester.pumpAndSettle();
-    expect(find.text('Konfirmasi Log Out'), findsOneWidget);
+    // The screen localises its own copy now, so match either language instead of pinning one.
+    Finder textAnyOf(List<String> options) => find.byWidgetPredicate(
+      (widget) => widget is Text && options.contains(widget.data),
+    );
 
-    await tester.tap(find.text('Keluar'));
+    final logoutButton = textAnyOf(['Log Out', 'Keluar Akun']);
+    await tester.ensureVisible(logoutButton);
+    await tester.tap(logoutButton);
+    await tester.pumpAndSettle();
+    expect(textAnyOf(['Confirm Log Out', 'Konfirmasi Keluar']), findsOneWidget);
+
+    await tester.tap(textAnyOf(['Log Out', 'Keluar']));
     await tester.pumpAndSettle();
 
     expect(find.byType(LoginScreen), findsOneWidget);
