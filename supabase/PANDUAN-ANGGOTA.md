@@ -41,8 +41,9 @@ Cek berhasil: *Table Editor* menampilkan `profiles` dan `wardrobe_items`; *Stora
 ## 3. Ambil dua nilai untuk app
 
 *Project Settings → API*:
-
+<!-- ehwrpejsiucirdvggadn -->
 - **Project URL** — bentuknya `https://<project-ref>.supabase.co`
+<!-- sb_publishable_Dd0VhSE-irePS0LAI3fODQ_hCc5E1qM -->
 - **publishable key** (project lama menulis **anon** key) — kunci publik, aman masuk repo/build lokal
 
 **Jangan pernah** pakai/commit `service_role` atau `secret` key. Itu melewati RLS.

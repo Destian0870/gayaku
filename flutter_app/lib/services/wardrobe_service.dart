@@ -83,7 +83,7 @@ class SupabaseWardrobeService implements WardrobeService {
   final sb.SupabaseClient _client;
 
   static const _table = 'wardrobe_items';
-  static const _dir = 'cutouts';
+  static const _dir = wardrobeCutoutDirName;
 
   @override
   Future<List<WardrobeItem>> items() async {

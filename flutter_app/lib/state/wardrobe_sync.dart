@@ -19,7 +19,13 @@ import 'wardrobe_store.dart';
 Future<void> loadWardrobeFromBackend() async {
   if (wardrobeService is DemoWardrobeService) return;
   try {
-    wardrobeItems.value = await wardrobeService.items();
+    final remote = await wardrobeService.items();
+    try {
+      await mirrorWardrobeCache(remote);
+    } catch (_) {
+      // No store open (a bare widget test): show the backend rows anyway.
+      wardrobeItems.value = remote;
+    }
   } catch (_) {
     // Offline or signed out: keep what the file already holds.
   }
@@ -30,4 +36,11 @@ Future<void> loadWardrobeFromBackend() async {
 Future<void> saveWardrobeItem(WardrobeItem item) async {
   final stored = await wardrobeService.save(item);
   await addWardrobeItem(stored);
+}
+
+/// Remote first, then the cache — same order, so a rejected delete keeps the
+/// garment on screen instead of hiding a row that still exists.
+Future<void> removeWardrobeItem(String id) async {
+  await wardrobeService.remove(id);
+  await deleteWardrobeItem(id);
 }

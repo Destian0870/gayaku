@@ -91,7 +91,7 @@ it and never see a Supabase type:
 - `flutter_app/lib/services/wardrobe_service.dart` — `WardrobeService`
   (`items()`, `save(WardrobeItem)`, `add(ScanResult)`, `remove(id)`), with the
   same Demo/Supabase pair. `SupabaseWardrobeService` writes the cutout PNG to
-  the app's documents folder (`cutouts/`, migration `20261103091500`) and
+  the app's documents folder (`garments/`, migration `20261103091500`) and
   inserts only the file name into `image_file`.
 - `flutter_app/lib/state/wardrobe_sync.dart` — the seam between the two
   backends: `loadWardrobeFromBackend()`, called from `main()`, fills the
