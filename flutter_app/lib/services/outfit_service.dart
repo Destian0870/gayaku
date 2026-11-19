@@ -1,8 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../logic/ids.dart';
 import '../models/outfit.dart';
 
-/// A combination or planner call that failed with a message the UI can show.
 class OutfitException implements Exception {
   const OutfitException(this.message);
 
@@ -12,30 +13,22 @@ class OutfitException implements Exception {
   String toString() => message;
 }
 
-/// The only seam between the Kombinasi tab and the backend.
 abstract class OutfitService {
-  /// Owner's combinations, newest first.
   Future<List<SavedOutfit>> outfits();
 
-  /// Inserts or replaces [outfit]; the same id updates the same row.
   Future<SavedOutfit> save(SavedOutfit outfit);
 
   Future<void> remove(String id);
 }
 
-/// The only seam between the weekly planner and the backend.
 abstract class PlannerService {
-  /// Every planned day for the owner.
   Future<List<PlannerEntry>> entries();
 
-  /// One outfit per day: planning the same date again replaces that row.
   Future<PlannerEntry> save(PlannerEntry entry);
 
   Future<void> remove(DateTime day);
 }
 
-/// Keeps combinations and plans in memory, for tests and for runs built
-/// without credentials.
 class DemoOutfitService implements OutfitService {
   final _outfits = <SavedOutfit>[];
 
@@ -44,10 +37,21 @@ class DemoOutfitService implements OutfitService {
 
   @override
   Future<SavedOutfit> save(SavedOutfit outfit) async {
+    final toSave = outfit.id.isEmpty
+        ? SavedOutfit(
+            id: newWardrobeItemId(),
+            name: outfit.name,
+            itemIds: outfit.itemIds,
+            threshold: outfit.threshold,
+            favorite: outfit.favorite,
+            createdAt: outfit.createdAt ?? DateTime.now(),
+          )
+        : outfit;
+
     _outfits
-      ..removeWhere((o) => o.id == outfit.id)
-      ..add(outfit);
-    return outfit;
+      ..removeWhere((o) => o.id == toSave.id)
+      ..add(toSave);
+    return toSave;
   }
 
   @override
@@ -64,8 +68,10 @@ class DemoPlannerService implements PlannerService {
   );
 
   @override
-  Future<PlannerEntry> save(PlannerEntry entry) async =>
-      _entries[_day(entry.day)] = entry;
+  Future<PlannerEntry> save(PlannerEntry entry) async {
+    _entries[_day(entry.day)] = entry;
+    return entry;
+  }
 
   @override
   Future<void> remove(DateTime day) async => _entries.remove(_day(day));
@@ -86,13 +92,40 @@ class SupabaseOutfitService implements OutfitService {
     return rows.map(_toOutfit).toList();
   }
 
+  Future<List<SavedOutfit>> favorites() async {
+    final rows = await _guard(
+      () => _client
+          .from(_table)
+          .select()
+          .eq('favorite', true)
+          .order('created_at', ascending: false),
+    );
+    return rows.map(_toOutfit).toList();
+  }
+
+  Future<SavedOutfit?> getById(String id) async {
+    final row = await _guard(
+      () => _client.from(_table).select().eq('id', id).maybeSingle(),
+    );
+    return row == null ? null : _toOutfit(row);
+  }
+
   @override
   Future<SavedOutfit> save(SavedOutfit outfit) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const OutfitException(
+        'Sesi login tidak ditemukan. Silakan masuk ulang.',
+      );
+    }
+
+    final id = outfit.id.isNotEmpty ? outfit.id : newWardrobeItemId();
     final row = await _guard(
       () => _client
           .from(_table)
           .upsert({
-            if (outfit.id.isNotEmpty) 'id': outfit.id,
+            'id': id,
+            'owner_id': userId,
             'name': outfit.name,
             'item_ids': outfit.itemIds,
             'threshold': outfit.threshold,
@@ -103,6 +136,10 @@ class SupabaseOutfitService implements OutfitService {
     );
     return _toOutfit(row);
   }
+
+  Future<void> setFavorite(String id, bool favorite) => _guard(
+    () => _client.from(_table).update({'favorite': favorite}).eq('id', id),
+  );
 
   @override
   Future<void> remove(String id) =>
@@ -124,12 +161,28 @@ class SupabasePlannerService implements PlannerService {
     return rows.map(_toEntry).toList();
   }
 
+  Future<PlannerEntry?> entryForDay(DateTime day) async {
+    final row = await _guard(
+      () => _client.from(_table).select().eq('day', _isoDay(day)).maybeSingle(),
+    );
+    return row == null ? null : _toEntry(row);
+  }
+
   @override
   Future<PlannerEntry> save(PlannerEntry entry) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw const OutfitException(
+        'Sesi login tidak ditemukan. Silakan masuk ulang.',
+      );
+    }
+
     final row = await _guard(
       () => _client
           .from(_table)
           .upsert({
+            'id': newWardrobeItemId(),
+            'owner_id': userId,
             'day': _isoDay(entry.day),
             'outfit_id': entry.outfitId,
             'occasion': entry.occasion,
@@ -140,6 +193,13 @@ class SupabasePlannerService implements PlannerService {
     );
     return _toEntry(row);
   }
+
+  Future<void> setComplete(DateTime day, bool complete) => _guard(
+    () => _client
+        .from(_table)
+        .update({'complete': complete})
+        .eq('day', _isoDay(day)),
+  );
 
   @override
   Future<void> remove(DateTime day) =>
@@ -164,7 +224,6 @@ PlannerEntry _toEntry(Map<String, dynamic> row) => PlannerEntry(
   complete: row['complete'] as bool? ?? false,
 );
 
-/// `yyyy-MM-dd` for a `date` column, in local time.
 String _isoDay(DateTime day) =>
     '${day.year.toString().padLeft(4, '0')}-'
     '${day.month.toString().padLeft(2, '0')}-'
@@ -188,7 +247,6 @@ String _friendly(String message) {
   if (lower.contains('jwt') || lower.contains('expired')) {
     return 'Sesi habis, masuk ulang.';
   }
-  // A project that has not run 20261108160000 yet answers 404/PGRST205.
   if (lower.contains('does not exist') || lower.contains('schema cache')) {
     return 'Tabel kombinasi belum ada di Supabase.';
   }
@@ -198,13 +256,30 @@ String _friendly(String message) {
 OutfitService _outfits = DemoOutfitService();
 PlannerService _planner = DemoPlannerService();
 
-/// The combination backend the Kombinasi tab talks to.
-OutfitService get outfitService => _outfits;
+OutfitService get outfitService {
+  if (_outfits is DemoOutfitService) {
+    try {
+      final client = sb.Supabase.instance.client;
+      _outfits = SupabaseOutfitService(client);
+    } catch (error, stack) {
+      // Supabase was not initialized, so keep the explicit demo backend.
+      debugPrint('Supabase outfit service unavailable: $error');
+      debugPrint('$stack');
+    }
+  }
+  return _outfits;
+}
 
-/// The planner backend the weekly planner talks to.
-PlannerService get plannerService => _planner;
+PlannerService get plannerService {
+  if (_planner is DemoPlannerService) {
+    try {
+      final client = sb.Supabase.instance.client;
+      _planner = SupabasePlannerService(client);
+    } catch (_) {}
+  }
+  return _planner;
+}
 
-/// Swaps the backends; called once from [main] before the first frame.
 void useOutfitService(OutfitService service) => _outfits = service;
 
 void usePlannerService(PlannerService service) => _planner = service;

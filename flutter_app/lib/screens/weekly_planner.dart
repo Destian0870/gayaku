@@ -8,6 +8,7 @@ import '../navigation.dart';
 import '../state/outfit_store.dart';
 import '../state/planner_store.dart';
 import '../state/wardrobe_store.dart';
+import '../state/wardrobe_sync.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
 import '../widgets/note.dart';
@@ -63,11 +64,29 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
     plannerEntries.addListener(_refresh);
     savedOutfits.addListener(_refresh);
     wardrobeItems.addListener(_refresh);
-    unawaited(loadPlannerFromBackend());
+    unawaited(_initBackendData());
+  }
+
+  Future<void> _initBackendData() async {
+    try {
+      await loadWardrobeFromBackend();
+      await loadOutfitsFromBackend();
+      await loadPlannerFromBackend();
+    } catch (error) {
+      _showBackendError(error);
+    }
   }
 
   void _refresh() {
     if (mounted) setState(() {});
+  }
+
+  void _showBackendError(Object error) {
+    if (!mounted) return;
+    final message = error is OutfitException
+        ? error.message
+        : 'Gagal memuat data planner. Coba lagi.';
+    showNote(context, message);
   }
 
   @override
@@ -114,8 +133,8 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
     if (result == null || !mounted) return;
     try {
       await savePlannerEntry(result);
-    } on OutfitException catch (e) {
-      if (mounted) showNote(context, e.message);
+    } catch (error) {
+      _showBackendError(error);
     }
   }
 
@@ -131,8 +150,8 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
           complete: !outfit.complete,
         ),
       );
-    } on OutfitException catch (e) {
-      if (mounted) showNote(context, e.message);
+    } catch (error) {
+      _showBackendError(error);
     }
   }
 
@@ -173,8 +192,8 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
     if (shouldClear != true || !mounted) return;
     try {
       await deletePlannerEntry(date);
-    } on OutfitException catch (e) {
-      if (mounted) showNote(context, e.message);
+    } catch (error) {
+      _showBackendError(error);
     }
   }
 
@@ -255,61 +274,75 @@ class _WeeklyPlannerState extends State<WeeklyPlanner> {
         child: Column(
           children: [
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _weekHeader(dates),
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                height: 15 / 11,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.1,
-                                color: palette.inkMuted,
+              child: RefreshIndicator(
+                color: palette.action,
+                backgroundColor: palette.sheet,
+                onRefresh: () async {
+                  try {
+                    await loadWardrobeFromBackend();
+                    await loadOutfitsFromBackend();
+                    await loadPlannerFromBackend();
+                  } catch (error) {
+                    _showBackendError(error);
+                  }
+                },
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _weekHeader(dates),
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  height: 15 / 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.1,
+                                  color: palette.inkMuted,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Weekly Planner',
-                              style: GoogleFonts.bricolageGrotesque(
-                                fontSize: 24,
-                                height: 30 / 24,
-                                fontWeight: FontWeight.bold,
-                                color: palette.ink,
+                              const SizedBox(height: 4),
+                              Text(
+                                'Weekly Planner',
+                                style: GoogleFonts.bricolageGrotesque(
+                                  fontSize: 24,
+                                  height: 30 / 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: palette.ink,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      IconButton.filledTonal(
-                        tooltip: 'Planner settings',
-                        onPressed: _showSettings,
-                        style: IconButton.styleFrom(
-                          backgroundColor: palette.surface,
-                          foregroundColor: palette.ink,
-                          fixedSize: const Size(46, 46),
+                        IconButton.filledTonal(
+                          tooltip: 'Planner settings',
+                          onPressed: _showSettings,
+                          style: IconButton.styleFrom(
+                            backgroundColor: palette.surface,
+                            foregroundColor: palette.ink,
+                            fixedSize: const Size(46, 46),
+                          ),
+                          icon: const Icon(Icons.tune_rounded),
                         ),
-                        icon: const Icon(Icons.tune_rounded),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _WeekSummary(plannedCount: _plannedCount),
-                  const SizedBox(height: 20),
-                  for (var dayIndex = 0; dayIndex < 7; dayIndex++)
-                    if (_showEmptyDays || _outfits.containsKey(dates[dayIndex]))
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildDayRow(dayIndex, dates[dayIndex]),
-                      ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _WeekSummary(plannedCount: _plannedCount),
+                    const SizedBox(height: 20),
+                    for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+                      if (_showEmptyDays ||
+                          _outfits.containsKey(dates[dayIndex]))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildDayRow(dayIndex, dates[dayIndex]),
+                        ),
+                  ],
+                ),
               ),
             ),
             if (widget.showNav)
@@ -424,6 +457,11 @@ class _PlanOutfitDialogState extends State<_PlanOutfitDialog> {
     super.initState();
     _selectedOutfitId = widget.current?.outfitId;
     _occasionController.addListener(_refresh);
+    if (savedOutfits.value.isEmpty) {
+      loadOutfitsFromBackend().then((_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   void _refresh() {

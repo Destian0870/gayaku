@@ -26,8 +26,9 @@ String newOutfitId() => newWardrobeItemId();
 Future<void> loadOutfitsFromBackend() async {
   try {
     savedOutfits.value = await outfitService.outfits();
-  } catch (_) {
-    // Offline, signed out, or the migration has not run yet.
+  } catch (error, stack) {
+    debugPrint('Outfit sync failed; keeping current list: $error');
+    debugPrint('$stack');
   }
 }
 

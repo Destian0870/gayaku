@@ -39,13 +39,15 @@ Future<void> main() async {
         publishableKey: _supabaseKey,
       );
       client = Supabase.instance.client;
+
+      debugPrint('Supabase user at startup: ${client.auth.currentUser?.id}');
       useAuthService(SupabaseAuthService(client));
       useWardrobeService(SupabaseWardrobeService(client));
       useOutfitService(SupabaseOutfitService(client));
       usePlannerService(SupabasePlannerService(client));
-    } catch (_) {
-      // Wrong URL or no network at launch: demo services keep the UI usable
-      // instead of leaving the splash screen up forever.
+    } catch (error, stack) {
+      debugPrint('Supabase initialization failed; using demo services: $error');
+      debugPrint('$stack');
     }
   }
 
