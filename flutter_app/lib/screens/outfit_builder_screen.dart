@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../logic/outfit_matcher.dart';
@@ -30,6 +32,12 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
   late final TextEditingController _name;
   late List<WardrobeItem> _picked;
   late double _threshold;
+
+  /// Reroll source for [autoFillOutfit]; kept so a second tap can differ.
+  final _rng = Random();
+
+  /// Occasion the auto-fill aims for; null means "tema apa saja".
+  String? _theme;
 
   /// The garments offered per slot: the injected override, else the live store.
   List<WardrobeItem> get _catalog => widget.catalog ?? wardrobeItems.value;
@@ -90,6 +98,28 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
     });
   }
 
+  /// Fills every slot with the best partner of the set so far, honouring the
+  /// chosen theme. Tapping again reshuffles among the near-best candidates.
+  void _autoFill() {
+    final filled = autoFillOutfit(_catalog, occasion: _theme, random: _rng);
+    if (filled.length < 2) {
+      showNote(context, 'Belum cukup item untuk mengisi otomatis');
+      return;
+    }
+    setState(() {
+      _picked = filled;
+      if (_name.text.trim().isEmpty) {
+        _name.text = _theme == null
+            ? 'Kombinasi Otomatis'
+            : 'Kombinasi $_theme';
+      }
+    });
+    showNote(
+      context,
+      'Terisi otomatis: ${(outfitScore(filled) * 100).round()}%',
+    );
+  }
+
   Future<void> _save() async {
     final name = _name.text.trim();
     if (_picked.length < 2) {
@@ -134,6 +164,15 @@ class _OutfitBuilderScreenState extends State<OutfitBuilderScreen> {
                     _TopBar(editing: widget.existing != null),
                     const SizedBox(height: 16),
                     _NameField(controller: _name),
+                    const SizedBox(height: 16),
+                    _AutoFillBar(
+                      themes: {
+                        for (final item in _catalog) ...item.occasions,
+                      }.toList()..sort(),
+                      theme: _theme,
+                      onTheme: (value) => setState(() => _theme = value),
+                      onFill: _autoFill,
+                    ),
                     const SizedBox(height: 16),
                     _ScoreCard(
                       score: _score,
@@ -397,6 +436,87 @@ class _ScoreCard extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Theme picker plus the one button that fills every slot for you.
+class _AutoFillBar extends StatelessWidget {
+  const _AutoFillBar({
+    required this.themes,
+    required this.theme,
+    required this.onTheme,
+    required this.onFill,
+  });
+
+  final List<String> themes;
+  final String? theme;
+  final ValueChanged<String?> onTheme;
+  final VoidCallback onFill;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadius.panel,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 18, color: palette.actionInk),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Isi otomatis',
+                  style: textTheme.labelLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.ink,
+                  ),
+                ),
+              ),
+              FilledButton.icon(
+                key: const ValueKey('autofill'),
+                onPressed: onFill,
+                icon: const Icon(Icons.shuffle, size: 16),
+                label: Text(
+                  'Isi Otomatis',
+                  style: textTheme.labelLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: palette.action,
+                  foregroundColor: palette.onAction,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppRadius.chip,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (themes.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final option in <String?>[null, ...themes])
+                  ChoiceChip(
+                    label: Text(option ?? 'Semua tema'),
+                    selected: theme == option,
+                    onSelected: (_) => onTheme(option),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

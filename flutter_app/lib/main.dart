@@ -28,21 +28,17 @@ Future<void> main() async {
   // different face at runtime.
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  // The wardrobe is a database, not a constant: read it before the first frame
-  // so the home and wardrobe screens never flash an empty catalog.
-  await initWardrobeStore();
-
-  // ponytail: SQLite is what the screens read today; Supabase is the shared
-  // copy behind the same service seam. Without credentials the app runs on
-  // DemoAuthService/DemoWardrobeService, so the UI still works before a
-  // project exists - see supabase/README.md for the switch-over.
+  // Supabase first: the cache file is per account, so the store needs to know
+  // who is signed in before it opens anything. A restored session answers that
+  // without a network round trip.
+  SupabaseClient? client;
   if (_supabaseUrl.isNotEmpty && _supabaseKey.isNotEmpty) {
     try {
       await Supabase.initialize(
         url: _supabaseUrl,
         publishableKey: _supabaseKey,
       );
-      final client = Supabase.instance.client;
+      client = Supabase.instance.client;
       useAuthService(SupabaseAuthService(client));
       useWardrobeService(SupabaseWardrobeService(client));
       useOutfitService(SupabaseOutfitService(client));
@@ -53,7 +49,13 @@ Future<void> main() async {
     }
   }
 
+  // The wardrobe is a database, not a constant: read it before the first frame
+  // so the home and wardrobe screens never flash an empty catalog.
+  await initWardrobeStore(userId: client?.auth.currentUser?.id);
+
   runApp(const GayakuApp());
+
+  if (client != null) followAuthChanges(client);
 
   // Supabase is the shared wardrobe and SQLite is the offline copy. Fired after
   // the first frame, not awaited: the token refresh retries with backoff, so a
@@ -62,6 +64,29 @@ Future<void> main() async {
   unawaited(loadWardrobeFromBackend());
   unawaited(loadOutfitsFromBackend());
   unawaited(loadPlannerFromBackend());
+}
+
+/// Keeps the local cache in step with whoever is signed in. The file is per
+/// account, so a sign-in opens that account's file and pulls its rows, and a
+/// sign-out closes it — previously one shared `wardrobe.db` meant the next
+/// person saw the previous account's garments until a sync happened to succeed.
+void followAuthChanges(SupabaseClient client) {
+  client.auth.onAuthStateChange.listen((state) async {
+    if (state.event == AuthChangeEvent.signedOut) {
+      await closeWardrobeStore();
+      return;
+    }
+    if (state.event != AuthChangeEvent.signedIn &&
+        state.event != AuthChangeEvent.initialSession) {
+      return;
+    }
+    final id = state.session?.user.id;
+    if (id == null) return;
+    await initWardrobeStore(userId: id);
+    await loadWardrobeFromBackend();
+    await loadOutfitsFromBackend();
+    await loadPlannerFromBackend();
+  });
 }
 
 class GayakuApp extends StatelessWidget {
