@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import '../logic/outfit_matcher.dart';
 import '../models/wardrobe.dart';
 import '../navigation.dart';
+import '../services/wardrobe_service.dart';
 import '../state/outfit_store.dart';
 import '../state/wardrobe_store.dart';
+import '../state/wardrobe_sync.dart';
 import '../theme/app_theme.dart';
 import '../widgets/home_bottom_nav.dart';
+import '../widgets/note.dart';
 import '../widgets/placeholder_image.dart';
 import '../widgets/wardrobe_item_card.dart';
 import 'outfit_builder_screen.dart';
+import 'wardrobe_item_detail_screen.dart';
 
 /// Wardrobe hub with two tabs: the item catalog and the saved combinations.
 ///
@@ -46,6 +50,11 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   int _minFormality = 1;
   late int _tab;
   late bool _favoritesOnly;
+
+  /// Ids picked by a long press; non-empty means the catalog is selecting.
+  final Set<String> _selected = {};
+
+  bool get _selecting => _selected.isNotEmpty;
 
   @override
   void initState() {
@@ -204,6 +213,143 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     }
   }
 
+  void _toggle(WardrobeItem item) {
+    setState(() {
+      if (!_selected.remove(item.id)) _selected.add(item.id);
+    });
+  }
+
+  void _clearSelection() => setState(_selected.clear);
+
+  /// Long press: select the tile and preview it, with the actions the current
+  /// selection allows — edit only makes sense for exactly one garment.
+  Future<void> _preview(WardrobeItem item) async {
+    setState(() => _selected.add(item.id));
+    final action = await showModalBottomSheet<_ItemAction>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.of(context).sheet,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+      builder: (_) =>
+          _ItemPreviewSheet(item: item, selectedCount: _selected.length),
+    );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case _ItemAction.edit:
+        await _editOne(item);
+      case _ItemAction.delete:
+        await _deleteSelected();
+      case _ItemAction.selectMore:
+        break;
+    }
+  }
+
+  Future<void> _editOne(WardrobeItem item) async {
+    final edited = await showModalBottomSheet<WardrobeItem>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.of(context).sheet,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+      builder: (_) => WardrobeEditSheet(item: item),
+    );
+    if (edited == null || !mounted) return;
+    try {
+      await saveWardrobeItem(edited);
+      if (!mounted) return;
+      _clearSelection();
+      showNote(context, 'Perubahan tersimpan');
+    } on WardrobeException catch (e) {
+      if (mounted) showNote(context, e.message);
+    }
+  }
+
+  /// Deletes every selected garment that no combination still lists; the ones
+  /// in use are reported instead of silently breaking a saved look.
+  Future<void> _deleteSelected() async {
+    final inUse = <String>{
+      for (final outfit in savedOutfits.value) ...outfit.itemIds,
+    };
+    final targets = _selected.toList();
+    final free = targets.where((id) => !inUse.contains(id)).toList();
+    if (free.isEmpty) {
+      showNote(
+        context,
+        'Item ini masih dipakai di kombinasi. Hapus kombinasinya dulu.',
+      );
+      return;
+    }
+
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: palette.sheet,
+        title: Text(
+          free.length == 1 ? 'Hapus baju?' : 'Hapus ${free.length} baju?',
+          style: textTheme.titleLarge!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: palette.ink,
+          ),
+        ),
+        content: Text(
+          free.length == 1
+              ? 'Item terpilih akan dihapus dari lemarimu.'
+              : '${free.length} item terpilih akan dihapus dari lemarimu.',
+          style: textTheme.labelLarge!.copyWith(
+            fontWeight: FontWeight.w500,
+            color: palette.inkMuted,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'Batal',
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
+            ),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: palette.actionInk,
+              side: BorderSide(color: palette.actionInk),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.chip),
+            ),
+            child: Text(
+              'Hapus',
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    var removed = 0;
+    try {
+      for (final id in free) {
+        await removeWardrobeItem(id);
+        removed++;
+      }
+    } on WardrobeException catch (e) {
+      if (mounted) showNote(context, e.message);
+    }
+    if (!mounted) return;
+    _clearSelection();
+    final skipped = targets.length - free.length;
+    showNote(
+      context,
+      '$removed baju dihapus'
+      '${skipped > 0 ? ', $skipped dilewati karena masih dipakai kombinasi' : ''}',
+    );
+  }
+
   List<WardrobeItem> get _visible {
     final query = _query.trim().toLowerCase();
     return _catalog.where((item) {
@@ -259,7 +405,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     const SizedBox(height: 16),
                     _TabToggle(
                       tab: _tab,
-                      onChanged: (t) => setState(() => _tab = t),
+                      onChanged: (t) => setState(() {
+                        _tab = t;
+                        _selected.clear();
+                      }),
                     ),
                     const SizedBox(height: 16),
                     if (_tab == 0) ..._catalogTab() else ..._outfitTab(),
@@ -292,6 +441,20 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         onQuery: (value) => setState(() => _query = value),
         onFilter: _openFilters,
       ),
+      if (_selecting) ...[
+        const SizedBox(height: 12),
+        _SelectionBar(
+          count: _selected.length,
+          onEdit: () {
+            final item = _catalog
+                .where((candidate) => candidate.id == _selected.first)
+                .firstOrNull;
+            if (item != null) _editOne(item);
+          },
+          onDelete: _deleteSelected,
+          onClear: _clearSelection,
+        ),
+      ],
       const SizedBox(height: 16),
       if (items.isEmpty)
         Padding(
@@ -315,7 +478,17 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           childAspectRatio: 0.75,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          children: [for (final item in items) WardrobeItemCard(item: item)],
+          children: [
+            for (final item in items)
+              WardrobeItemCard(
+                item: item,
+                selected: _selected.contains(item.id),
+                // While selecting, a tap adds or drops a garment instead of
+                // leaving for the detail page.
+                onTap: _selecting ? () => _toggle(item) : null,
+                onLongPress: () => _preview(item),
+              ),
+          ],
         ),
     ];
   }
@@ -1051,6 +1224,263 @@ class _Chip extends StatelessWidget {
             fontWeight: FontWeight.w500,
             color: selected ? palette.onAction : palette.inkMuted,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What the preview sheet asks the catalog to do next.
+enum _ItemAction { edit, delete, selectMore }
+
+/// Above the grid while garments are selected: how many, plus the actions that
+/// count allows — edit needs exactly one, delete takes the lot.
+class _SelectionBar extends StatelessWidget {
+  const _SelectionBar({
+    required this.count,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onClear,
+  });
+
+  final int count;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: AppRadius.panel,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '$count dipilih',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
+            ),
+          ),
+          if (count == 1)
+            IconButton(
+              key: const ValueKey('selection-edit'),
+              tooltip: 'Edit baju',
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              color: palette.ink,
+              style: IconButton.styleFrom(
+                backgroundColor: palette.sheet,
+                minimumSize: const Size(44, 44),
+              ),
+            ),
+          const SizedBox(width: 8),
+          IconButton(
+            key: const ValueKey('selection-delete'),
+            tooltip: count == 1 ? 'Hapus baju' : 'Hapus $count baju',
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline, size: 20),
+            color: palette.ink,
+            style: IconButton.styleFrom(
+              backgroundColor: palette.sheet,
+              minimumSize: const Size(44, 44),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Batalkan pilihan',
+            onPressed: onClear,
+            icon: const Icon(Icons.close, size: 18),
+            color: palette.inkMuted,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Long-press preview: the photo big, the attributes, and the two actions the
+/// current selection allows.
+class _ItemPreviewSheet extends StatelessWidget {
+  const _ItemPreviewSheet({required this.item, required this.selectedCount});
+
+  final WardrobeItem item;
+  final int selectedCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final single = selectedCount == 1;
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: palette.accentTint,
+                  borderRadius: AppRadius.pill,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            AspectRatio(
+              aspectRatio: 1.15,
+              child: ClipRRect(
+                borderRadius: AppRadius.hero,
+                child: PlaceholderImage(
+                  imagePath: item.imagePath,
+                  icon: Icons.checkroom_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              item.name,
+              style: textTheme.headlineSmall!.copyWith(
+                fontWeight: FontWeight.w700,
+                color: palette.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              item.brand.isEmpty
+                  ? item.category
+                  : '${item.category} • ${item.brand}',
+              style: textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w500,
+                color: palette.inkMuted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (item.colorName.isNotEmpty) _Tag(item.colorName),
+                _Tag('Formalitas ${item.formality}/5'),
+                for (final occasion in item.occasions) _Tag(occasion),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (!single)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  '$selectedCount item dipilih. Edit hanya untuk satu item.',
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ),
+            Row(
+              children: [
+                if (single) ...[
+                  Expanded(
+                    child: FilledButton.icon(
+                      key: const ValueKey('preview-edit'),
+                      onPressed: () =>
+                          Navigator.of(context).pop(_ItemAction.edit),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: Text(
+                        'Edit',
+                        style: textTheme.labelLarge!.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: palette.action,
+                        foregroundColor: palette.onAction,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.panel,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('preview-delete'),
+                    onPressed: () =>
+                        Navigator.of(context).pop(_ItemAction.delete),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: Text(
+                      single ? 'Hapus' : 'Hapus $selectedCount',
+                      style: textTheme.labelLarge!.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: palette.actionInk,
+                      side: BorderSide(color: palette.actionInk),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadius.panel,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: () =>
+                    Navigator.of(context).pop(_ItemAction.selectMore),
+                child: Text(
+                  single ? 'Pilih item lain' : 'Lanjut pilih item lain',
+                  style: textTheme.labelLarge!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: palette.inkMuted,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Read-only attribute pill on the preview sheet.
+class _Tag extends StatelessWidget {
+  const _Tag(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: palette.surfaceMuted,
+        borderRadius: AppRadius.pill,
+      ),
+      child: Text(
+        label,
+        style: textTheme.labelMedium!.copyWith(
+          fontWeight: FontWeight.w500,
+          color: palette.ink,
         ),
       ),
     );
