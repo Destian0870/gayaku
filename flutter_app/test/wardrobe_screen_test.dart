@@ -52,11 +52,17 @@ void main() {
     expect(find.text('Silk Blouse'), findsOneWidget);
     expect(find.text('Tops • Zara'), findsOneWidget);
 
+    // Categories are inside the filter sheet now, not a chip row.
+    await tester.tap(find.byTooltip('Filter'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Bottoms'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Terapkan'));
     await tester.pumpAndSettle();
 
     expect(find.text('Straight Leg Jeans'), findsOneWidget);
     expect(find.text('Silk Blouse'), findsNothing);
+    expect(find.textContaining(RegExp(r'^Total \d+ bottoms$')), findsOneWidget);
   });
 
   testWidgets('WardrobeScreen switches tabs, searches and filters', (
@@ -71,11 +77,15 @@ void main() {
 
     // Both tabs are offered, and the combinations tab starts empty.
     expect(find.text('Katalog'), findsOneWidget);
-    expect(find.text('Kombinasi (0)'), findsOneWidget);
-    await tester.tap(find.text('Kombinasi (0)'));
+    expect(find.text('Kombinasi'), findsOneWidget);
+    await tester.tap(find.text('Kombinasi'));
     await tester.pumpAndSettle();
+    // The subtitle counts combinations on this tab.
+    expect(find.text('Total 0 kombinasi'), findsOneWidget);
     expect(find.text('Semua'), findsOneWidget);
-    expect(find.text('Buat Kombinasi'), findsOneWidget);
+    // The standalone button is gone: the corner + builds a combination.
+    expect(find.text('Buat Kombinasi'), findsNothing);
+    expect(find.byTooltip('Buat Kombinasi'), findsOneWidget);
     expect(find.text('Belum ada kombinasi tersimpan.'), findsOneWidget);
 
     await tester.tap(find.text('Katalog'));
@@ -101,6 +111,11 @@ void main() {
 
     expect(find.text('Silk Blouse'), findsOneWidget);
     expect(find.text('Classic Sneakers'), findsNothing);
+    // An active filter is named in the subtitle, not just counted.
+    expect(
+      find.textContaining(RegExp(r'^Total \d+ items formal$')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('WardrobeScreen favourite button marks a combination', (
@@ -123,7 +138,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Kombinasi (1)'));
+    await tester.tap(find.text('Kombinasi'));
     await tester.pumpAndSettle();
 
     expect(find.text('Kombinasi Uji'), findsOneWidget);
@@ -165,7 +180,7 @@ void main() {
       await tester.pumpWidget(const MaterialApp(home: WardrobeScreen()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Kombinasi (2)'));
+      await tester.tap(find.text('Kombinasi'));
       await tester.pumpAndSettle();
       expect(find.text('Favorit Uji'), findsOneWidget);
       expect(find.text('Bukan Favorit'), findsOneWidget);
@@ -174,6 +189,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Favorit Uji'), findsOneWidget);
       expect(find.text('Bukan Favorit'), findsNothing);
+      // The subtitle says the list is the favourites, not the whole store.
+      expect(find.text('Total 1 kombinasi favorit'), findsOneWidget);
 
       savedOutfits.value = [
         SavedOutfit(
@@ -217,7 +234,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Kombinasi (2)'));
+    await tester.tap(find.text('Kombinasi'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Favorit'));
     await tester.pumpAndSettle();

@@ -24,28 +24,46 @@ the same conversion: https://github.com/PINTO0309/PINTO_model_zoo (061_U-2-Net).
 
 ## `garment_classifier.tflite` — garment classifier
 
-**Shipped today** is the CC0 bootstrap export; the Kaggle-trained catalogue model takes the
-same slot later (`docs/adr/0003`).
+Names the garment inside a box the detector found. **Shipped today is the 12-class
+worn-garment model** (`docs/adr/0012`): it was trained on Fashionpedia item crops, the same
+photographs the detector saw, so both stages agree about what a scan looks like. The 18-class
+merged model (`docs/adr/0008`) it replaced is still in `ml_workspace/yolo/artifacts/` as the
+previous generation.
 
 | | |
 |---|---|
-| Model | torchvision MobileNetV3-small fine-tuned to 10 classes at 224×224 |
-| Licence | weights trained by us; torchvision's ImageNet initialisation is BSD-3-Clause |
-| Training data | `alexeygrigorev/clothing-dataset-small` (CC0 — that is the uploader's claim over its labels; the photographs are third-party and are not redistributed here) |
-| Class list | `ml_workspace/bootstrap/artifacts/classes.json` — T-Shirt, Shirt, Longsleeve, Outwear, Dress, Skirt, Pants, Shorts, Shoes, Hat; the order `flutter_app/lib/logic/garment_labels.dart` mirrors |
-| sha256 | `4dea19d6b3dbe30bd5a8dc9686803afdd657e9dedbf234d0fd61e5a6be313457` |
-| Size | 6,129,368 bytes (6.1 MB) |
-| Input | `image` — `[1, 224, 224, 3]` float32, NHWC RGB in `[0, 1]`, ImageNet normalisation baked into the graph |
-| Output | `Identity` — `[1, 10]` float32 softmax |
+| Model | Ultralytics YOLOv8n-cls fine-tuned to 12 classes at 224×224 |
+| Licence | **AGPL-3.0** — Ultralytics weights trained by us (`docs/adr/0006`); coursework artifact, not for redistribution |
+| Training data | `detection-datasets/fashionpedia` item boxes cut by `ml_workspace/scripts/fashionpedia_crops.py`: 22,719 crops, capped at 2,000 per class, split per photograph 18,157 / 2,286 / 2,276 (`docs/adr/0012`) |
+| Measured on `test` | top-1 **0.6784**, top-5 0.9631, macro-F1 0.6675 over 2,276 crops |
+| Class list | `ml_workspace/yolo/artifacts/crops/classes.json` — Celana_Panjang, Celana_Pendek, Gaun, Jaket, Kaos, Kemeja, Mantel, Rok, Rompi, Sepatu, Sweter, Topi; the order `flutter_app/lib/logic/garment_labels.dart` mirrors |
+| sha256 | `dbc61f21563f90e32b0a896a79a711ac6ee461e235a0cd27fe6135170c9fb81e` |
+| Size | 5,846,659 bytes (5.8 MB) |
+| Input | `[1, 3, 224, 224]` float32, **NCHW** RGB in `[0, 1]`, normalisation baked into the graph; `rgbaToInputFloats` reads the layout off the tensor, so an NHWC export works as well |
+| Output | `[1, 12]` float32 softmax |
 
-**Final model**, exported by `ml_workspace/kaggle/fashion_classifier.ipynb` with class list
-`ml_workspace/artifacts/classes.json`:
+Class names are Indonesian because the UI shows them; `garmentLabelCategory` maps each one onto
+one of the five Categories. Swapping this asset and regenerating `garment_labels.dart` must
+happen in the same commit — `gen_dart_labels.py` refuses a class list whose length does not
+match the shipped asset's output width.
 
-- **Weights trained by us** (torchvision MobileNetV3-small, ImageNet-initialised; the
-  torchvision weights are BSD-3-Clause).
-- **Training data is the Kaggle Fashion Product Images catalogue whose MIT tag covers
-  labels, not the photographs — coursework artifacts, not for redistribution.**
-- Landing it means replacing this asset and regenerating
-  `flutter_app/lib/logic/garment_labels.dart` in the same commit — `gen_dart_labels.py`
-  refuses a class list whose length does not match the shipped asset's output width — and
-  adding the new sha256 and size here.
+## `garment_detector.tflite` — garment detector
+
+Finds the garments in one photo and gives each a coarse Category, before the classifier names
+the crop inside each box (`docs/adr/0009`, `docs/adr/0011`).
+
+| | |
+|---|---|
+| Model | Ultralytics YOLOv8n detection fine-tuned to 5 Categories at 640×640 |
+| Licence | **AGPL-3.0** — Ultralytics weights trained by us (`docs/adr/0006`); coursework artifact, not for redistribution |
+| Training data | Fashionpedia — annotations CC BY 4.0, photographs keep the terms of the sites they came from; 4,030 train / 1,158 val / 2,000 test photographs |
+| Measured on `test` | mAP50 **0.7081**, mAP50-95 0.5417; per Category 0.78–0.80 except Accessories 0.382 |
+| Class list | `['Tops', 'Bottoms', 'Outerwear', 'Shoes', 'Accessories']`, in output order (`detectorCategories` in `lib/logic/scan_pipeline.dart`) |
+| sha256 | `72d2ba68cc390ecae3755c13f026a12acc5743f3a84818c6781455e55dd866cb` |
+| Size | 12,767,821 bytes (12.8 MB) |
+| Input | `serving_default_args_0` — `[1, 3, 640, 640]` float32, **NCHW** RGB in `[0, 1]` |
+| Output | `serving_default_output_0_output` — `[1, 9, 8400]` float32: centre x, centre y, width, height, then five Category scores, no objectness |
+
+The `.tflite` is copied from `ml_workspace/yolo/artifacts/detector/`, where `report.md`,
+`per_category_ap.csv` and the confusion matrix sit next to it.
+

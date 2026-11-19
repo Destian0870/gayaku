@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import '../navigation.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,9 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => const NavShell()));
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)

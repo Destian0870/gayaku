@@ -195,6 +195,8 @@ def convert_split(
     test_count: int,
     seed: int,
     min_px: float,
+    skip_existing: bool = False,
+    max_boxes: int = 0,
 ) -> dict:
     """Write one split's photographs and labels; returns its counters."""
     label_dir = out / "labels" / split
@@ -205,11 +207,14 @@ def convert_split(
     stats = {
         "rows_seen": 0,
         "images_written": 0,
+        "images_reused": 0,
         "boxes_written": 0,
         "dropped_parts": 0,
         "dropped_tiny": 0,
         "dropped_invalid": 0,
         "images_without_items": 0,
+        "images_dropped_by_cap": 0,
+        "capped_boxes_dropped": 0,
         "per_category": Counter(),
     }
     for index, row in enumerate(rows):
@@ -227,9 +232,37 @@ def convert_split(
         if not lines:
             stats["images_without_items"] += 1
             continue
+        if max_boxes:
+            # Keep at most max_boxes boxes per Category per split, taken in row order, which the
+            # caller has already shuffled with --seed for train. A split that is capped is
+            # balanced on purpose: Outerwear has 14,771 boxes against Shoes' 47,600 without it.
+            kept, taken = [], Counter()
+            for line in lines:
+                category = CATEGORIES[int(line.split()[0])]
+                if stats["per_category"][category] + taken[category] < max_boxes:
+                    taken[category] += 1
+                    kept.append(line)
+                else:
+                    stats["capped_boxes_dropped"] += 1
+            if not kept:
+                stats["images_dropped_by_cap"] += 1
+                continue
+            lines = kept
         stem = f"{split}_{row['image_id']}"
-        decode_image(row["image"]).convert("RGB").save(image_dir / f"{stem}.jpg", "JPEG", quality=92)
-        (label_dir / f"{stem}.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        image_path = image_dir / f"{stem}.jpg"
+        label_path = label_dir / f"{stem}.txt"
+        if skip_existing and image_path.is_file() and label_path.is_file():
+            # Counters are rebuilt from the label on disk, not from the row, so a resumed run
+            # reports the tree as it stands. Dropped-box counters still describe every row,
+            # because `yolo_lines` above has already run.
+            reused = [line for line in label_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            stats["images_reused"] += 1
+            stats["boxes_written"] += len(reused)
+            for line in reused:
+                stats["per_category"][CATEGORIES[int(line.split()[0])]] += 1
+            continue
+        decode_image(row["image"]).convert("RGB").save(image_path, "JPEG", quality=92)
+        label_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         stats["images_written"] += 1
         stats["boxes_written"] += len(lines)
         for line in lines:
@@ -246,8 +279,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--dataset-info",
         type=Path,
-        default=DEFAULT_HF_DIR / "dataset_infos.json",
-        help="the HuggingFace metadata file that maps category integers to names",
+        default=None,
+        help="the HuggingFace metadata file that maps category integers to names "
+        "(default: <hf-dir>/dataset_infos.json)",
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--limit-per-split", type=int, default=0, help="smoke run: cap rows per split")
@@ -256,7 +290,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=20261102)
     parser.add_argument("--min-box-px", type=float, default=8.0, help="drop boxes thinner than this")
     parser.add_argument("--force", action="store_true", help="rebuild the output tree")
+    parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="reuse photographs already written to --out; unsafe to combine with a different --min-box-px",
+    )
+    parser.add_argument(
+        "--max-boxes-per-category",
+        type=int,
+        default=0,
+        help="keep at most N boxes per Category in the train split, in row order (0 keeps every "
+        "box); val and test stay whole; a capped run must write a fresh tree, so do not combine "
+        "it with --skip-existing",
+    )
     args = parser.parse_args(argv)
+    if args.dataset_info is None:
+        # Default to the metadata beside the shards. A Kaggle run downloads both into
+        # /kaggle/temp, while the repository default only exists on a developer machine --
+        # reading the wrong path there failed with "missing" for a file that was present.
+        args.dataset_info = args.hf_dir / "dataset_infos.json"
 
     try:
         parquet = sorted((args.hf_dir / "data").glob("*.parquet"))
@@ -306,11 +358,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"converting {split} ({len(rows)} rows)")
             results[split] = convert_split(
                 split, rows, args.out, args.limit_per_split, args.test_from_train, args.seed,
-                args.min_box_px,
+                args.min_box_px, args.skip_existing,
+                # The cap is a training-cost decision: val and test stay whole, because a capped
+                # evaluation split measures the cap, not the model.
+                args.max_boxes_per_category if split == "train" else 0,
             )
 
         (args.out / "data.yaml").write_text(
-            "path: .\n"
+            "# Written by fashionpedia_to_yolo.py. `path` is absolute because Ultralytics\n"
+            "# resolves a relative one against its own datasets_dir setting, not against this\n"
+            "# file; re-run the converter if the tree moves.\n"
+            f"path: {args.out.resolve().as_posix()}\n"
             "train: images/train\n"
             "val: images/val\n"
             "test: images/test\n"
@@ -330,6 +388,8 @@ def main(argv: list[str] | None = None) -> int:
                 "test_from_train": args.test_from_train,
                 "min_box_px": args.min_box_px,
                 "limit_per_split": args.limit_per_split,
+                "skip_existing": args.skip_existing,
+                "max_boxes_per_category": args.max_boxes_per_category,
             },
             "splits": results,
         }
@@ -341,12 +401,23 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{'split':<12}{'images':>8}{'boxes':>9}  per Category")
         for split, stats in results.items():
             print(
-                f"{split:<12}{stats['images_written']:>8}{stats['boxes_written']:>9}  {stats['per_category']}"
+                f"{split:<12}{stats['images_written'] + stats['images_reused']:>8}"
+                f"{stats['boxes_written']:>9}  {stats['per_category']}"
             )
+        reused = {split: stats["images_reused"] for split, stats in results.items()}
+        if any(reused.values()):
+            print(f"reused from a previous run (not re-encoded): {reused}")
         dropped = {split: stats["dropped_parts"] for split, stats in results.items()}
         print(f"part boxes dropped: {dropped}")
         empty = {split: stats["images_without_items"] for split, stats in results.items()}
         print(f"images with no item box (skipped): {empty}")
+        if args.max_boxes_per_category:
+            capped = {split: stats["capped_boxes_dropped"] for split, stats in results.items()}
+            capped_images = {split: stats["images_dropped_by_cap"] for split, stats in results.items()}
+            print(
+                f"cap {args.max_boxes_per_category} boxes/Category: {sum(capped.values())} boxes and "
+                f"{sum(capped_images.values())} photographs left out {capped}"
+            )
         print(f"written: {args.out / 'data.yaml'}")
         print(f"written: {args.out / 'manifest.json'}")
         return 0

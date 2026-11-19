@@ -12,7 +12,10 @@ import '../widgets/placeholder_image.dart';
 import 'outfit_detail_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({super.key});
+  const FavoritesScreen({super.key, this.showNav = true});
+
+  /// False inside `NavShell`, which draws the one shared bar.
+  final bool showNav;
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
@@ -344,13 +347,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: HomeBottomNav(
-                currentIndex: 0,
-                onTap: (index) => openNavDestination(context, index),
+            if (widget.showNav)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: HomeBottomNav(
+                  currentIndex: 0,
+                  onTap: (index) => openNavDestination(context, index),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -561,7 +565,7 @@ class _LookCard extends StatelessWidget {
                         fontSize: 11,
                         height: 15 / 11,
                         fontWeight: FontWeight.w600,
-                        shadows: [Shadow(color: palette.ink, blurRadius: 8)],
+                        shadows: [Shadow(color: palette.canvas, blurRadius: 8)],
                       ),
                     ),
                   ),
@@ -592,7 +596,7 @@ class _LookCard extends StatelessWidget {
                       fontSize: 11,
                       height: 15 / 11,
                       fontWeight: FontWeight.w600,
-                      color: palette.action,
+                      color: palette.actionInk,
                     ),
                   ),
                 ],
