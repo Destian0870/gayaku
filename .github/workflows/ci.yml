@@ -16,6 +16,11 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Pinned: `stable` moved to a SDK where `package:flutter/material.dart` is deprecated,
+          # which turned 45 lines of existing test code into analyzer issues overnight and failed
+          # every pull request. 3.47.2 is what the team runs locally and what this repository is
+          # checked against. Bump it in its own commit, with the analyzer clean on the new SDK.
+          flutter-version: 3.47.2
       - run: flutter pub get
       - name: format
         run: dart format --output=none --set-exit-if-changed lib test

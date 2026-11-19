@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
+import 'package:flutter/foundation.dart';
 
 /// Who is signed in, without any Supabase type leaking into the UI.
 class AuthUser {
@@ -46,6 +47,9 @@ abstract class AuthService {
 
   /// Sends the "reset your password" mail to [email].
   Future<void> requestPasswordReset(String email);
+
+  /// Updates the signed-in user's password directly in Supabase.
+  Future<void> updatePassword(String newPassword);
 }
 
 /// Stands in for the backend in tests and in runs built without credentials,
@@ -78,6 +82,9 @@ class DemoAuthService implements AuthService {
 
   @override
   Future<void> requestPasswordReset(String email) async {}
+
+  @override
+  Future<void> updatePassword(String newPassword) async {}
 
   @override
   Future<AuthUser> updateDisplayName(String name) async {
@@ -151,6 +158,11 @@ class SupabaseAuthService implements AuthService {
       _guard(() => _client.auth.resetPasswordForEmail(email.trim()));
 
   @override
+  Future<void> updatePassword(String newPassword) => _guard(() async {
+    await _client.auth.updateUser(sb.UserAttributes(password: newPassword));
+  });
+
+  @override
   Future<AuthUser> updateDisplayName(String name) => _guard(() async {
     final user = _client.auth.currentUser;
     if (user == null) throw const AuthException('Sesi habis, masuk ulang.');
@@ -210,3 +222,6 @@ AuthService get authService => _auth;
 
 /// Swaps the backend; called once from [main] before the first frame.
 void useAuthService(AuthService service) => _auth = service;
+
+// Penampung state nama user secara global yang reaktif
+final ValueNotifier<String> globalUserName = ValueNotifier<String>('User');
